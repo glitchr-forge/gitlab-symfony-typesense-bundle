@@ -1,92 +1,339 @@
-# Typesets
+# ACSEOTypesenseBundle
 
+This bundle provides integration with [Typesense](https://typesense.org/) with Symfony. 
 
+It relies on the official [TypeSense PHP](https://github.com/typesense/typesense-php) package
 
-## Getting started
+Features include:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin http://gitlab.glitchr.dev/public-repository/symfony/bundles/typesense-bundle.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](http://gitlab.glitchr.dev/public-repository/symfony/bundles/typesense-bundle/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- Doctrine object transformer to Typesense indexable data
+- Usefull services to search in collections 
+- Listeners for Doctrine events for automatic indexing
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+Install the bundle using composer 
+
+```bash
+composer require acseo/typesense-bundle
+````
+
+Enable the bundle in you Symfony project
+
+```php
+
+<?php
+// config/bundles.php
+
+return [
+    ACSEO\TypesenseBundle\ACSEOTypesenseBundle::class => ['all' => true],
+```
+
+## Configuration
+
+Configure the Bundle
+
+```
+# .env
+TYPESENSE_URL=http://localhost:8108
+TYPESENSE_KEY=123
+```
+
+```yaml
+# config/packages/acseo_typesense.yml
+acseo_typesense:
+    # Typesense host settings
+    typesense:
+        url: '%env(resolve:TYPESENSE_URL)%'
+        key: '%env(resolve:TYPESENSE_KEY)%'
+        collection_prefix: 'test_'                 # Optional : add prefix to all collection 
+                                                   #            names in Typesense
+    # Collection settings
+    collections:
+        books:                                     # Typesense collection name
+            entity: 'App\Entity\Book'              # Doctrine Entity class
+            fields: 
+                #
+                # Keeping Database and Typesense synchronized with ids
+                #
+                id:                                # Entity attribute name
+                    name: id                       # Typesense attribute name
+                    type: primary                  # Attribute type
+                #
+                # Using again id as a sortable field (int32 required)
+                #
+                sortable_id:
+                    entity_attribute: id             # Entity attribute name forced
+                    name: sortable_id                # Typesense field name
+                    type: int32
+                title: 
+                    name: title
+                    type: string
+                author:
+                     name: author
+                     type: object                    # Object conversion with __toString()
+                author.country:
+                    name: author_country           
+                    type: string
+                    facet: true                      # Declare field as facet (required to use "group_by" query option)
+                    entity_attribute: author.country # Equivalent of $book->getAuthor()->getCountry()
+                genres:
+                    name: genres
+                    type: collection                 # Convert ArrayCollection to array of strings
+                publishedAt: 
+                    name: publishedAt
+                    type: datetime
+                    optional: true                   # Declare field as optional
+            default_sorting_field: sortable_id       # Default sorting field. Must be int32 or float
+            symbols_to_index: ['+']                  # Optional - You can add + to this list to make the word c++ indexable verbatim.
+        users:
+            entity: App\Entity\User
+            fields:
+                id:
+                    name: id
+                    type: primary
+                sortable_id:
+                    entity_attribute: id
+                    name: sortable_id
+                    type: int32
+                email:
+                    name: email
+                    type: string
+            default_sorting_field: sortable_id
+            token_separators: ['+', '-', '@', '.']  # Optional - This will cause contact+docs-example@typesense.org to be indexed as contact, docs, example, typesense and org.
+```
+
+You can use basic types supported by Typesense for your fields : string, int32, float, etc.
+You can also use specific type names, such as : primary, collection, object
+
+Data conversion from Doctrine entity to Typesense data is managed by `ACSEO\TypesenseBundle\Transformer\DoctrineToTypesenseTransformer`
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Create index and populate data
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+This bundle comes with useful commands in order to create and index your data
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```yaml
+# Creation collections structure
+php bin/console typesense:create
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+# Import collections with Doctrine entities
+php bin/console typesense:import
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Search documents
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+This bundle creates dynamic generic **finders** services that allows you to query Typesense
 
-## License
-For open source projects, say how it is licensed.
+The finder services are named like this  : typesense.finder.*collection_name*
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+You can inject the generic finder in your Controller or into other services. 
+
+You can also create specific finder for a collection. See documentation below.
+
+```yaml
+# config/services.yaml
+services:
+    App\Controller\BookController:
+        arguments:
+            $bookFinder: '@typesense.finder.books'    
+```
+
+```php
+<?php
+
+// src/Controller/BookController.php
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use ACSEO\TypesenseBundle\Finder\TypesenseQuery;
+
+//
+class BookController extends AbstractController
+{
+    private $bookFinder;
+
+    public function __construct($bookFinder)
+    {
+        $this->bookFinder = $bookFinder;
+    }
+
+    public function search()
+    {
+        $query = new TypesenseQuery('Jules Vernes', 'author');
+
+        // Get Doctrine Hydrated objects
+        $results = $this->bookFinder->query($query)->getResults();
+        
+        // dump($results)
+        // array:2 [▼
+        //    0 => App\Entity\Book {#522 ▶}
+        //    1 => App\Entity\Book {#525 ▶}
+        //]
+        
+        // Get raw results from Typesence
+        $rawResults = $this->bookFinder->rawQuery($query)->getResults();
+        
+        // dump($rawResults)
+        // array:2 [▼
+        //    0 => array:3 [▼
+        //        "document" => array:4 [▼
+        //        "author" => "Jules Vernes"
+        //        "id" => "100"
+        //        "published_at" => 1443744000
+        //        "title" => "Voyage au centre de la Terre "
+        //       ]
+        //       "highlights" => array:1 [▶]
+        //       "seq_id" => 4
+        //    ]
+        //    1 => array:3 [▼
+        //        "document" => array:4 [▶]
+        //        "highlights" => array:1 [▶]
+        //        "seq_id" => 6
+        //    ]
+        // ]
+    }
+```
+
+### Querying Typesense
+
+The class `TypesenseQuery()` class takes 2 arguments :
+
+* The search terme (`q`)
+* The fields to search on (`queryBy`)
+
+You can create more complex queries using all the possible Typsense [search arguments](https://typesense.org/docs/0.21.0/api/documents.html#arguments)
+
+```php
+<?php
+
+use ACSEO\TypesenseBundle\Finder\TypesenseQuery;
+
+$simpleQuery = new TypesenseQuery('search term', 'collection field to search in');
+
+$complexQuery = new TypesenseQuery('search term', 'collection field to search in')
+                      ->filterBy('theme: [adventure, thriller]')
+                      ->addParameter('key', 'value')
+                      ->sortBy('year:desc');
+```
+
+### Create specific finder for a collection
+
+You can easily create specific finders for each collection that you declare.
+
+```yaml
+# config/packages/acseo_typesense.yml
+acseo_typesense:
+    # ...
+    # Collection settings
+    collections:
+        books:                                       # Typesense collection name
+            # ...                                    # Colleciton fields definition
+            # ...
+            finders:                                 # Declare your specific finder
+                books_autocomplete:                  # Finder name
+                    finder_parameters:               # Parameters used by the finder
+                        query_by: title              #
+                        limit: 10                    # You can add as key / valuesspecifications
+                        prefix: true                 # based on Typesense Request 
+                        num_typos: 1                 #
+                        drop_tokens_threshold: 1     #
+```
+
+This configuration will create a service named `@typesense.finder.books.books_autocomplete`.  
+You can inject the specific finder in your Controller or into other services
+
+```yaml
+# config/services.yaml
+services:
+    App\Controller\BookController:
+        arguments:
+            $autocompleteBookFinder: '@typesense.finder.books.books_autocomplete'
+```
+
+and then use it like this :
+
+```php
+<?php
+// src/Controller/BookController.php
+
+class BookController extends AbstractController
+{
+    private $autocompleteBookFinder;
+
+    public function __construct($autocompleteBookFinder)
+    {
+        $this->autocompleteBookFinder = $autocompleteBookFinder;
+    }
+
+    public function autocomplete($term = '')
+    {
+        $results = $this->autocompleteBookFinder->search($term)->getResults();
+        // or if you want raw results
+        $rawResults = $this->autocompleteBookFinder->search($term)->getRawResults();
+    }
+```
+
+### Use different kind of services
+
+This bundles creates different services that you can use in your Controllers or anywhere you want.
+
+* `typesense.client` : the basic client inherited from the official `typesense-php` package 
+* `typesense.collection_client` : this service allows you to do basic actions on collections, and allows to perform `search` and `multisearch` action.
+* `typesense.finder.*` : this generated service allows you to perform `query` or `rawQuery` on a specific collection. Example of a generated service : `typesense.finder.candidates`
+* `typesense.specificfinder.*.*` : this generated service allows you to run pre-configured requests (declared in : `config/packages/acseo_typesense.yml`). Example of a generated service : `typesense.specificfinder.candidates.default`
+
+Note : there a other services. You can use the `debug:container` command in order to see all of them.
+
+### Doctrine Listeners
+
+Doctrine listeners will update Typesense with Entity data during the following events :
+
+* postPersist
+* postUpdate
+* preDelete
+
+### Perform multisearch
+
+You can create [multisearch](https://typesense.org/docs/0.21.0/api/documents.html#federated-multi-search) requests and get results using the `collectionClient` service.
+
+```php
+// Peform multisearch
+
+$searchRequests = [
+    (new TypesenseQuery('Jules'))->addParameter('collection', 'author'),
+    (new TypesenseQuery('Paris'))->addParameter('collection', 'library')  
+];
+
+$commonParams = new TypesenseQuery()->addParameter('query_by', 'name');
+
+$response = $this->collectionClient->multisearch($searchRequests, $commonParams);
+```
+
+## Cookbook 
+----------------
+
+* [Use Typesense to make an autocomplete field](doc/cookbook/autocomplete.md)
+
+
+## Testing the Bundle
+
+tests are written in the `tests` directory.
+
+*  **Unit** tests doesn't require a running Typesense server
+*  **Functional** tests require a running Typesense server
+
+You can launch the tests with the following commands : 
+
+```bash
+# Unit test
+$ php ./vendor/bin/phpunit tests/Unit
+
+# Functional test
+# First, start a Typesense server with Docker
+$ composer run-script typesenseServer
+$ php ./vendor/bin/phpunit tests/Functional
+```
+
+
+

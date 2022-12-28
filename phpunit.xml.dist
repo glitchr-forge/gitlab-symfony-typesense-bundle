@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" colors="true" beStrictAboutOutputDuringTests="true" beStrictAboutTestsThatDoNotTestAnything="false" convertDeprecationsToExceptions="false" verbose="true" bootstrap="vendor/autoload.php">
+  <coverage>
+    <include>
+      <directory>./src</directory>
+    </include>
+    <exclude>
+      <directory>./src/Resources</directory>
+    </exclude>
+  </coverage>
+  <php>
+    <env name="KERNEL_CLASS" value="App\Kernel" />
+    <env name="TYPESENSE_URL" value="http://localhost:8108" />
+    <env name="TYPESENSE_KEY" value="123" />
+  </php>
+  <testsuites>
+    <testsuite name="ACSEO Typesense Test Suite">
+      <directory>./tests</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>
