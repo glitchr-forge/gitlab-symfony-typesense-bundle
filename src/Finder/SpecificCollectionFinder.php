@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Finder;
+namespace Symfony\UX\Typesense\Finder;
 
 class SpecificCollectionFinder
 {

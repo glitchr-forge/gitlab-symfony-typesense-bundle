@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Controller;
+namespace Symfony\UX\Typesense\Controller;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

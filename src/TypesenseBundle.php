@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle;
+namespace Symfony\UX\Typesense;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class ACSEOTypesenseBundle extends Bundle
+class TypesenseBundle extends Bundle
 {
 }

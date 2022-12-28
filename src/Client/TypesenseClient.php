@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Client;
+namespace Symfony\UX\Typesense\Client;
 
 use Typesense\Aliases;
 use Typesense\Client;

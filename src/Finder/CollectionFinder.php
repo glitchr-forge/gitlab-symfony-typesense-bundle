@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Finder;
+namespace Symfony\UX\Typesense\Finder;
 
-use ACSEO\TypesenseBundle\Client\CollectionClient;
+use Symfony\UX\Typesense\Client\CollectionClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 

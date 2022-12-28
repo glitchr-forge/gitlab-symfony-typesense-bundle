@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\EventListener;
+namespace Symfony\UX\Typesense\EventListener;
 
-use ACSEO\TypesenseBundle\Manager\CollectionManager;
-use ACSEO\TypesenseBundle\Manager\DocumentManager;
-use ACSEO\TypesenseBundle\Transformer\DoctrineToTypesenseTransformer;
+use Symfony\UX\Typesense\Manager\CollectionManager;
+use Symfony\UX\Typesense\Manager\DocumentManager;
+use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 

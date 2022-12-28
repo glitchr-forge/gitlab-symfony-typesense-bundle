@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Transformer;
+namespace Symfony\UX\Typesense\Transformer;
 
 use Doctrine\Common\Util\ClassUtils;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;

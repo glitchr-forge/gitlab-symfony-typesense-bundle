@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Command;
+namespace Symfony\UX\Typesense\Command;
 
-use ACSEO\TypesenseBundle\Manager\CollectionManager;
+use Symfony\UX\Typesense\Manager\CollectionManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;

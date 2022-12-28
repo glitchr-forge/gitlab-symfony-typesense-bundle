@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Exception;
+namespace Symfony\UX\Typesense\Exception;
 
 use Symfony\Contracts\HttpClient\ResponseInterface;
 

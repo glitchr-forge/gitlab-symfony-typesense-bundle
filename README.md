@@ -1,4 +1,4 @@
-# ACSEOTypesenseBundle
+# SymfonyXTYPESENSE
 
 This bundle provides integration with [Typesense](https://typesense.org/) with Symfony. 
 
@@ -26,7 +26,7 @@ Enable the bundle in you Symfony project
 // config/bundles.php
 
 return [
-    ACSEO\TypesenseBundle\ACSEOTypesenseBundle::class => ['all' => true],
+    ACSEO\TypesenseBundle\SymfonyXTYPESENSE::class => ['all' => true],
 ```
 
 ## Configuration

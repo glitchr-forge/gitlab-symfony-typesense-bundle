@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Client;
+namespace Symfony\UX\Typesense\Client;
 
-use ACSEO\TypesenseBundle\Finder\TypesenseQuery;
+use Symfony\UX\Typesense\Finder\TypesenseQuery;
 
 class CollectionClient
 {

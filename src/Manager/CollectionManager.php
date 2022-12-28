@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Manager;
+namespace Symfony\UX\Typesense\Manager;
 
-use ACSEO\TypesenseBundle\Client\CollectionClient;
-use ACSEO\TypesenseBundle\Transformer\AbstractTransformer;
+use Symfony\UX\Typesense\Client\CollectionClient;
+use Symfony\UX\Typesense\Transformer\AbstractTransformer;
 
 class CollectionManager
 {

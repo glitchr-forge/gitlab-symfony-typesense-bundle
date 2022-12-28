@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Manager;
+namespace Symfony\UX\Typesense\Manager;
 
-use ACSEO\TypesenseBundle\Client\TypesenseClient;
+use Symfony\UX\Typesense\Client\TypesenseClient;
 
 class DocumentManager
 {
