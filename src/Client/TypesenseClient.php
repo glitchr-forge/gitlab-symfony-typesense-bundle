@@ -20,14 +20,12 @@ class TypesenseClient
 
     public function __construct(string $url, ?string $apiKey = null)
     {
+        if(!$apiKey) return;
         if ($url === 'null') {
             return;
         }
 
         $urlParsed = parse_url($url);
-
-        if(!$apiKey)
-            throw new \Exception("Typesense API key not defined.");
 
         $this->client = new Client([
             'nodes' => [
@@ -48,7 +46,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->collections;
+        return $this->client?->collections;
     }
 
     public function getAliases(): ?Aliases
@@ -57,7 +55,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->aliases;
+        return $this->client?->aliases;
     }
 
     public function getKeys(): ?Keys
@@ -66,7 +64,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->keys;
+        return $this->client?->keys;
     }
 
     public function getDebug(): ?Debug
@@ -75,7 +73,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->debug;
+        return $this->client?->debug;
     }
 
     public function getMetrics(): ?Metrics
@@ -84,7 +82,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->metrics;
+        return $this->client?->metrics;
     }
 
     public function getHealth(): ?Health
@@ -93,7 +91,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->health;
+        return $this->client?->health;
     }
 
     public function getOperations(): ?Operations
@@ -102,7 +100,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->operations;
+        return $this->client?->operations;
     }
 
     public function getMultiSearch(): ?MultiSearch
@@ -111,7 +109,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->multiSearch;
+        return $this->client?->multiSearch;
     }
 
     /**
@@ -124,7 +122,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->{$name}(...$arguments);
+        return $this->client?->{$name}(...$arguments);
     }
 
     public function __get($name)
@@ -133,7 +131,7 @@ class TypesenseClient
             return null;
         }
 
-        return $this->client->{$name};
+        return $this->client?->{$name};
     }
 
     public function isOperationnal(): bool
