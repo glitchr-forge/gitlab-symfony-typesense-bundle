@@ -14,7 +14,7 @@
     <env name="TYPESENSE_KEY" value="123" />
   </php>
   <testsuites>
-    <testsuite name="ACSEO Typesense Test Suite">
+    <testsuite name="Typesense Test Suite">
       <directory>./tests</directory>
     </testsuite>
   </testsuites>

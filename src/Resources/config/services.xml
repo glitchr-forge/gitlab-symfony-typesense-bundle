@@ -7,10 +7,8 @@
         <defaults public="true"/>
 
         <!-- Abstract definition for client. -->
-        <service id="typesense.client_prototype" class="Symfony\UX\Typesense\Client\TypesenseClient" public="true"
-                 abstract="true">
-            <argument/> <!-- host -->
-            <argument/> <!-- key -->
+        <service id="typesense.client_prototype" class="Symfony\UX\Typesense\Client\TypesenseClient" public="true" abstract="true">
+            <argument type="service" id="parameter_bag"/>
         </service>
 
         <!-- Abstract definition for all generic finders. -->

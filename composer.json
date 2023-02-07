@@ -8,11 +8,6 @@
             "name": "Marco Meyer",
             "email": "marco.meyer@glitchr.io"
         }
-    ,
-        {
-            "name": "Nicolas Potier (Fork from acseo/typesense-bundle)",
-            "email": "nicolas.potier@acseo.fr"
-        }
     ],
     "require": {
         "php": "^7.4||^8.0",

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Tests\Functional\Entity;
+namespace Symfony\UX\Typesense\Tests\Functional\Entity;
 
 class Author
 {

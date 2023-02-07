@@ -11,16 +11,19 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('acseo_typesense');
+        $treeBuilder = new TreeBuilder('typesense');
 
         $treeBuilder->getRootNode()
             ->children()
-                ->arrayNode('typesense')
+                ->arrayNode('server')
                     ->info('Typesense server information')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('url')->isRequired()->cannotBeEmpty()->end()
-                        ->scalarNode('key')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('secret')->defaultNull()->end()
+                        ->scalarNode('host')->defaultValue("localhost")->end()
+                        ->scalarNode('port')->defaultValue(8108)->end()
+                        ->scalarNode('use_https')->defaultFalse()->end()
+                        ->arrayNode('options')->end()
                         ->scalarNode('collection_prefix')->end()
                     ->end()
                 ->end()

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Tests\Functional;
+namespace Symfony\UX\Typesense\Tests\Functional;
 
-use ACSEO\TypesenseBundle\Client\CollectionClient;
-use ACSEO\TypesenseBundle\Client\TypesenseClient;
-use ACSEO\TypesenseBundle\Command\CreateCommand;
-use ACSEO\TypesenseBundle\Command\ImportCommand;
-use ACSEO\TypesenseBundle\Finder\CollectionFinder;
-use ACSEO\TypesenseBundle\Finder\TypesenseQuery;
-use ACSEO\TypesenseBundle\Manager\CollectionManager;
-use ACSEO\TypesenseBundle\Manager\DocumentManager;
-use ACSEO\TypesenseBundle\Tests\Functional\Entity\Author;
-use ACSEO\TypesenseBundle\Tests\Functional\Entity\Book;
-use ACSEO\TypesenseBundle\Transformer\DoctrineToTypesenseTransformer;
+use Symfony\UX\Typesense\Client\CollectionClient;
+use Symfony\UX\Typesense\Client\TypesenseClient;
+use Symfony\UX\Typesense\Command\CreateCommand;
+use Symfony\UX\Typesense\Command\ImportCommand;
+use Symfony\UX\Typesense\Finder\CollectionFinder;
+use Symfony\UX\Typesense\Finder\TypesenseQuery;
+use Symfony\UX\Typesense\Manager\CollectionManager;
+use Symfony\UX\Typesense\Manager\DocumentManager;
+use Symfony\UX\Typesense\Tests\Functional\Entity\Author;
+use Symfony\UX\Typesense\Tests\Functional\Entity\Book;
+use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Configuration;
@@ -69,15 +69,15 @@ class AllowNullConnexionTest extends KernelTestCase
      */
     public function testSearchByAuthor()
     {
-        $typeSenseClient       = new TypesenseClient('null', 'null');
+        $typeSenseClient       = new TypesenseClient(null);
         $collectionClient      = new CollectionClient($typeSenseClient);
-        $book                  = new Book(1, 'test', new Author('Nicolas Potier', 'France'), new \DateTime());
+        $book                  = new Book(1, 'test', new Author('John Doe', 'France'), new \DateTime());
         $em                    = $this->getMockedEntityManager([$book]);
         $collectionDefinitions = $this->getCollectionDefinitions(\get_class($book));
         $bookDefinition        = $collectionDefinitions['books'];
 
         $bookFinder = new CollectionFinder($collectionClient, $em, $bookDefinition);
-        $results    = $bookFinder->rawQuery(new TypesenseQuery('Nicolas', 'author'))->getResults();
+        $results    = $bookFinder->rawQuery(new TypesenseQuery('John', 'author'))->getResults();
         self::assertNull($results);
     }
 
@@ -176,7 +176,7 @@ class AllowNullConnexionTest extends KernelTestCase
 
     private function getMockedBooks()
     {
-        $author = new Author('Nicolas Potier', 'France');
+        $author = new Author('John Doe', 'France');
         $books  = [];
 
         for ($i = 0; $i < self::NB_BOOKS; ++$i) {

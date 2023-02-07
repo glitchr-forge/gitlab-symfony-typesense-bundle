@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\Bundle\TypesenseBundle\Tests\Unit\DependencyInjection;
+namespace Symfony\UX\Typesense\Tests\Unit\DependencyInjection;
 
 
-use ACSEO\TypesenseBundle\DependencyInjection\ACSEOTypesenseExtension;
+use Symfony\UX\Typesense\DependencyInjection\TypesenseExtension;
 // use FOS\ElasticaBundle\Doctrine\MongoDBPagerProvider;
 // use FOS\ElasticaBundle\Doctrine\ORMPagerProvider;
 // use FOS\ElasticaBundle\Doctrine\PHPCRPagerProvider;
@@ -24,17 +24,17 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * @internal
  */
-class ACSEOTypesenseExtensionTest extends TestCase
+class TypesenseExtensionTest extends TestCase
 {
 
     public function testTypesenseClientDefinition()
     {
         $containerBuilder = new ContainerBuilder();
-        $containerBuilder->registerExtension($extension = new ACSEOTypesenseExtension());
+        $containerBuilder->registerExtension($extension = new TypesenseExtension());
         $containerBuilder->setParameter('kernel.debug', true);
 
         $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__.'/fixtures'));
-        $loader->load('acseo_typesense.yml');
+        $loader->load('typesense.yml');
 
         $extensionConfig = $containerBuilder->getExtensionConfig($extension->getAlias());
         $extension->load($extensionConfig, $containerBuilder);
@@ -44,17 +44,17 @@ class ACSEOTypesenseExtensionTest extends TestCase
         $clientDefinition = $containerBuilder->findDefinition('typesense.client');
 
         $this->assertSame('http://localhost:8108', $clientDefinition->getArgument(0));
-        $this->assertSame('ACSEO', $clientDefinition->getArgument(1));
+        $this->assertSame('typesense', $clientDefinition->getArgument(1));
     }
 
     public function testFinderServiceDefinition()
     {
         $containerBuilder = new ContainerBuilder();
-        $containerBuilder->registerExtension($extension = new ACSEOTypesenseExtension());
+        $containerBuilder->registerExtension($extension = new TypesenseExtension());
         $containerBuilder->setParameter('kernel.debug', true);
 
         $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__.'/fixtures'));
-        $loader->load('acseo_typesense.yml');
+        $loader->load('typesense.yml');
 
         $extensionConfig = $containerBuilder->getExtensionConfig($extension->getAlias());
         $extension->load($extensionConfig, $containerBuilder);
@@ -73,11 +73,11 @@ class ACSEOTypesenseExtensionTest extends TestCase
     public function testFinderServiceDefinitionWithCollectionPrefix()
     {
         $containerBuilder = new ContainerBuilder();
-        $containerBuilder->registerExtension($extension = new ACSEOTypesenseExtension());
+        $containerBuilder->registerExtension($extension = new TypesenseExtension());
         $containerBuilder->setParameter('kernel.debug', true);
 
         $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__.'/fixtures'));
-        $loader->load('acseo_typesense_collection_prefix.yml');
+        $loader->load('typesense_collection_prefix.yml');
 
         $extensionConfig = $containerBuilder->getExtensionConfig($extension->getAlias());
         $extension->load($extensionConfig, $containerBuilder);
@@ -89,7 +89,7 @@ class ACSEOTypesenseExtensionTest extends TestCase
         $finderBooksDefinitionArguments = $finderBooksDefinition->getArguments();
         $arguments = array_pop($finderBooksDefinitionArguments);
         
-        $this->assertSame('acseo_prefix_books', $arguments['typesense_name']);
+        $this->assertSame('prefix_books', $arguments['typesense_name']);
         $this->assertSame('books', $arguments['name']);
     }
 }

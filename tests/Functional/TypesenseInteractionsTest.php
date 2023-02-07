@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace ACSEO\TypesenseBundle\Tests\Functional;
+namespace Symfony\UX\Typesense\Tests\Functional;
 
-use ACSEO\TypesenseBundle\Client\CollectionClient;
-use ACSEO\TypesenseBundle\Client\TypesenseClient;
-use ACSEO\TypesenseBundle\Command\CreateCommand;
-use ACSEO\TypesenseBundle\Command\ImportCommand;
-use ACSEO\TypesenseBundle\EventListener\TypesenseIndexer;
-use ACSEO\TypesenseBundle\Finder\CollectionFinder;
-use ACSEO\TypesenseBundle\Finder\TypesenseQuery;
-use ACSEO\TypesenseBundle\Manager\CollectionManager;
-use ACSEO\TypesenseBundle\Manager\DocumentManager;
-use ACSEO\TypesenseBundle\Tests\Functional\Entity\Author;
-use ACSEO\TypesenseBundle\Tests\Functional\Entity\Book;
-use ACSEO\TypesenseBundle\Transformer\DoctrineToTypesenseTransformer;
+use Symfony\UX\Typesense\Client\CollectionClient;
+use Symfony\UX\Typesense\Client\TypesenseClient;
+use Symfony\UX\Typesense\Command\CreateCommand;
+use Symfony\UX\Typesense\Command\ImportCommand;
+use Symfony\UX\Typesense\EventListener\TypesenseIndexer;
+use Symfony\UX\Typesense\Finder\CollectionFinder;
+use Symfony\UX\Typesense\Finder\TypesenseQuery;
+use Symfony\UX\Typesense\Manager\CollectionManager;
+use Symfony\UX\Typesense\Manager\DocumentManager;
+use Symfony\UX\Typesense\Tests\Functional\Entity\Author;
+use Symfony\UX\Typesense\Tests\Functional\Entity\Book;
+use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Configuration;
@@ -71,15 +71,15 @@ class TypesenseInteractionsTest extends KernelTestCase
      */
     public function testSearchByAuthor()
     {
-        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $collectionClient      = new CollectionClient($typeSenseClient);
-        $book                  = new Book(1, 'test', new Author('Nicolas Potier', 'France'), new \DateTime());
+        $book                  = new Book(1, 'test', new Author('John Doe', 'France'), new \DateTime());
         $em                    = $this->getMockedEntityManager([$book]);
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
         $bookDefinition        = $collectionDefinitions['books'];
 
         $bookFinder = new CollectionFinder($collectionClient, $em, $bookDefinition);
-        $results    = $bookFinder->rawQuery(new TypesenseQuery('Nicolas', 'author'))->getResults();
+        $results    = $bookFinder->rawQuery(new TypesenseQuery('John', 'author'))->getResults();
         self::assertCount(self::NB_BOOKS, $results, "result doesn't contains ".self::NB_BOOKS.' elements');
         self::assertArrayHasKey('document', $results[0], "First item does not have the key 'document'");
         self::assertArrayHasKey('highlights', $results[0], "First item does not have the key 'highlights'");
@@ -91,9 +91,9 @@ class TypesenseInteractionsTest extends KernelTestCase
      */
     public function testSearchByTitle()
     {
-        $typeSenseClient  = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient  = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $collectionClient = new CollectionClient($typeSenseClient);
-        $book             = new Book(1, 'test', new Author('Nicolas Potier', 'France'), new \DateTime());
+        $book             = new Book(1, 'test', new Author('John Doe', 'France'), new \DateTime());
 
         $em                    = $this->getMockedEntityManager([$book]);
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
@@ -114,15 +114,15 @@ class TypesenseInteractionsTest extends KernelTestCase
      */
     public function testCreateAndDelete()
     {
-        $book = new Book(1000, 'ACSEO', new Author('Nicolas Potier', 'France'), new \DateTime());
+        $book = new Book(1000, 'typesense', new Author('John Doe', 'France'), new \DateTime());
 
-        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $collectionClient      = new CollectionClient($typeSenseClient);
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
         $propertyAccessor      = PropertyAccess::createPropertyAccessor();
         $transformer           = new DoctrineToTypesenseTransformer($collectionDefinitions, $propertyAccessor);
         $collectionManager     = new CollectionManager($collectionClient, $transformer, $collectionDefinitions);
-        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $documentManager       = new DocumentManager($typeSenseClient);
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
         $bookDefinition        = $collectionDefinitions['books'];
@@ -189,7 +189,7 @@ class TypesenseInteractionsTest extends KernelTestCase
         $author = $this->getMockBuilder('\App\Entity\Author')->getMock();
 
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
-        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $propertyAccessor      = PropertyAccess::createPropertyAccessor();
         $collectionClient      = new CollectionClient($typeSenseClient);
         $transformer           = new DoctrineToTypesenseTransformer($collectionDefinitions, $propertyAccessor);
@@ -211,7 +211,7 @@ class TypesenseInteractionsTest extends KernelTestCase
         // Prepare all mocked objects required to run the command
         $books                 = $this->getMockedBooks();
         $collectionDefinitions = $this->getCollectionDefinitions(Book::class);
-        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_URL'], $_ENV['TYPESENSE_KEY']);
+        $typeSenseClient       = new TypesenseClient($_ENV['TYPESENSE_KEY'], $_ENV['TYPESENSE_URL']);
         $propertyAccessor      = PropertyAccess::createPropertyAccessor();
         $collectionClient      = new CollectionClient($typeSenseClient);
         $transformer           = new DoctrineToTypesenseTransformer($collectionDefinitions, $propertyAccessor);
@@ -273,7 +273,7 @@ class TypesenseInteractionsTest extends KernelTestCase
 
     private function getMockedBooks()
     {
-        $author = new Author('Nicolas Potier', 'France');
+        $author = new Author('John Doe', 'France');
         $books  = [];
 
         for ($i = 0; $i < self::NB_BOOKS; ++$i) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ACSEO\Bundle\TypesenseBundle\Tests\Unit\Finder;
 
-use ACSEO\TypesenseBundle\Finder\TypesenseResponse;
+use Symfony\UX\Typesense\Finder\TypesenseResponse;
 use PHPUnit\Framework\TestCase;
 
 class TypesenseResponseTest extends TestCase

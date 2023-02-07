@@ -10,8 +10,8 @@ to search for data, and return a JSON Response that could be used to populate th
 First of all, we will need a finder in order to search for data. A specific finder can easily be declared.
 
 ```yaml
-# config/packages/acseo_typesense.yml
-acseo_typesense:
+# config/packages/typesense.yml
+typesense:
     # ...
     # Collection settings
     collections:

@@ -46,10 +46,9 @@ class TypesenseExtension extends Extension
         );
         $loader->load('services.xml');
 
-        $this->loadClient($config['typesense'], $container);
+        $this->loadClient($config['server'], $container);
 
         $this->loadCollections($config['collections'], $container);
-
         $this->loadCollectionManager($container);
         $this->loadCollectionsFinder($container);
 
@@ -69,8 +68,10 @@ class TypesenseExtension extends Extension
         $clientId = ('typesense.client');
 
         $clientDef = new ChildDefinition('typesense.client_prototype');
-        $clientDef->replaceArgument(0, $config['url'] ?? "");
-        $clientDef->replaceArgument(1, $config['key'] ?? "");
+        $clientDef->replaceArgument(0, $config['secret']);
+        $clientDef->replaceArgument(1, $config['host']);
+        $clientDef->replaceArgument(2, $config['port']);
+        $clientDef->replaceArgument(3, $config['use_https']);
         $container->setDefinition($clientId, $clientDef);
 
         $this->parameters['collection_prefix'] = $config['collection_prefix'] ?? '';
@@ -93,10 +94,10 @@ class TypesenseExtension extends Extension
 
             foreach ($config['fields'] as $key => $fieldConfig) {
                 if (!isset($fieldConfig['name'])) {
-                    throw new \Exception('acseo_typesense.collections.'.$name.'.'.$key.'.name must be set');
+                    throw new \Exception('typesense.collections.'.$name.'.'.$key.'.name must be set');
                 }
                 if (!isset($fieldConfig['type'])) {
-                    throw new \Exception('acseo_typesense.collections.'.$name.'.'.$key.'.type must be set');
+                    throw new \Exception('typesense.collections.'.$name.'.'.$key.'.type must be set');
                 }
 
                 if ($fieldConfig['type'] === 'primary') {
@@ -121,7 +122,7 @@ class TypesenseExtension extends Extension
                     $finderConfig['name']            = $name;
                     $finderConfig['finder_name']     = $finderName;
                     if (!isset($finderConfig['finder_parameters']['query_by'])) {
-                        throw new \Exception('acseo_typesense.collections.'.$finderName.'.finder_parameters.query_by must be set');
+                        throw new \Exception('typesense.collections.'.$finderName.'.finder_parameters.query_by must be set');
                     }
                     $this->findersConfig[$finderName] = $finderConfig;
                 }
