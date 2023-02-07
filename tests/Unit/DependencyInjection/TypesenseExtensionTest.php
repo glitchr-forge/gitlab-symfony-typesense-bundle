@@ -34,7 +34,7 @@ class TypesenseExtensionTest extends TestCase
         $containerBuilder->setParameter('kernel.debug', true);
 
         $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__.'/fixtures'));
-        $loader->load('typesense.yml');
+        $loader->load('typesense.yaml');
 
         $extensionConfig = $containerBuilder->getExtensionConfig($extension->getAlias());
         $extension->load($extensionConfig, $containerBuilder);

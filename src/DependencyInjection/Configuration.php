@@ -9,11 +9,13 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
+    private $treeBuilder;
+    public function getTreeBuilder() : TreeBuilder { return $this->treeBuilder; }
+
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('typesense');
-
-        $treeBuilder->getRootNode()
+        $this->treeBuilder = new TreeBuilder('typesense');
+        $this->treeBuilder->getRootNode()
             ->children()
                 ->arrayNode('server')
                     ->info('Typesense server information')
@@ -23,7 +25,10 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('host')->defaultValue("localhost")->end()
                         ->scalarNode('port')->defaultValue(8108)->end()
                         ->scalarNode('use_https')->defaultFalse()->end()
-                        ->arrayNode('options')->end()
+                        ->arrayNode('options')
+                            ->defaultValue([])
+                            ->scalarPrototype()->end()
+                        ->end()
                         ->scalarNode('collection_prefix')->end()
                     ->end()
                 ->end()
@@ -73,6 +78,6 @@ class Configuration implements ConfigurationInterface
             ->end()
         ;
 
-        return $treeBuilder;
+        return $this->treeBuilder;
     }
 }

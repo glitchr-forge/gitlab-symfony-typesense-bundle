@@ -4,5 +4,6 @@ namespace Symfony\UX\Typesense;
 
 interface TypesenseInterface
 {
-    public function __toTypesense();
+    public function __typesense(): ?string;
+    public function __typesenseGetter(string $propertyName, array $propertyInfo): mixed;
 }

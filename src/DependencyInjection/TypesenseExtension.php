@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\DependencyInjection;
 
+use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -36,15 +37,19 @@ class TypesenseExtension extends Extension
 
     public function load(array $configs, ContainerBuilder $container)
     {
-        $configuration = new Configuration();
+        //
+        // Load service declaration (includes services, controllers,..)
 
-        $config = $this->processConfiguration($configuration, $configs);
-
-        $loader = new XMlFileLoader(
-            $container,
-            new FileLocator(__DIR__.'/../Resources/config')
-        );
+        // Format XML
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
+
+        // Configuration file: ./config/package/base.yaml
+        $processor = new Processor();
+        $configuration = new Configuration();
+        $config = $processor->processConfiguration($configuration, $configs);
+
+        $this->setConfiguration($container, $config, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
 
         $this->loadClient($config['server'], $container);
 
@@ -58,6 +63,17 @@ class TypesenseExtension extends Extension
         $this->configureController($container);
     }
 
+    public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = "")
+    {
+        foreach ($config as $key => $value) {
+
+            if (!empty($globalKey)) $key = $globalKey . "." . $key;
+
+            if (is_array($value)) $this->setConfiguration($container, $value, $key);
+            else $container->setParameter($key, $value);
+        }
+    }
+
     /**
      * Loads the configured clients.
      *
@@ -65,15 +81,6 @@ class TypesenseExtension extends Extension
      */
     private function loadClient($config, ContainerBuilder $container)
     {
-        $clientId = ('typesense.client');
-
-        $clientDef = new ChildDefinition('typesense.client_prototype');
-        $clientDef->replaceArgument(0, $config['secret']);
-        $clientDef->replaceArgument(1, $config['host']);
-        $clientDef->replaceArgument(2, $config['port']);
-        $clientDef->replaceArgument(3, $config['use_https']);
-        $container->setDefinition($clientId, $clientDef);
-
         $this->parameters['collection_prefix'] = $config['collection_prefix'] ?? '';
     }
 

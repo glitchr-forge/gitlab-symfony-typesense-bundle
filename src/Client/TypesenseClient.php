@@ -18,16 +18,15 @@ use Typesense\Operations;
 
 class TypesenseClient
 {
-    private $client;
-
     public function __construct(ParameterBagInterface $parameterBag)
     {
         $this->parameterBag = $parameterBag;
     }
 
-    public function prepare(): array
+    public function prepare(?string $connectionName = null /* to be used later */): array
     {
         $apiKey = $this->parameterBag->get("typesense.server.secret");
+
         if(!$apiKey) {
 
             if(is_cli()) throw new TypesenseException("Typesense API Key missing");
@@ -37,92 +36,46 @@ class TypesenseClient
         $host = $this->parameterBag->get("typesense.server.host");
         $urlParsed = parse_url($host);
 
-        $host     = $urlParsed["host"] ?? $host;
-        $port     = $urlParsed["port"] ?? $this->parameterBag->get("typesense.server.host");
-        $protocol = $urlParsed["schema"] ?? ($this->parameterBag->get("typesense.server.use_https") ? "https" : "http");
+        $host     = $urlParsed["host"] ?? $host ?? "localhost";
+        $port     = $urlParsed["port"] ?? $this->parameterBag->get("typesense.server.port") ?? 8108;
+        $protocol = $urlParsed["scheme"] ?? ($this->parameterBag->get("typesense.server.use_https") ? "https" : "http");
 
-        $nodes = ['host' => $host, 'port' => $port, 'protocol' => $protocol];
-        $options = array_merge(
-            ['connection_timeout_seconds' => 5],
-            $this->parameterBag->get("typesense.server.options") ?? []
-        );
+        $node = ['host' => $host, 'port' => $port, 'protocol' => $protocol];
+        $options = $this->parameterBag->get("typesense.server.options") ?? [];
 
-        return [$apiKey, $nodes, ...$options];
+        return [$apiKey, $node, $options];
     }
 
-    public function connect(string $apiKey, array $nodes, ...$options): array
+    private ?Client $client = null;
+    public function getClient(): ?Client
     {
-        if(!$this->client) {
-
-            list($nodes, $apiKey, $options) = $this->prepare();
-            $this->client = new Client(array_merge($options, ["nodes" => $nodes, "api_key" => $apiKey]));
-        }
+        if(!$this->client)
+            $this->client = $this->connect();
 
         return $this->client;
     }
 
-    public function getCollections(): ?Collections
-    {
+    protected ?string $clientUrl = null;
+    public function getClientUrl(): ?string {
+
         if(!$this->client)
             $this->client = $this->connect();
 
-        return $this->client?->collections;
+        return $this->clientUrl;
     }
 
-    public function getAliases(): ?Aliases
+    public function connect(?string $connectionName = null): ?Client
     {
-        if(!$this->client)
-            $this->client = $this->connect();
+        if(!$this->client) {
 
-        return $this->client?->aliases;
-    }
+            list($apiKey, $node, $options) = $this->prepare($connectionName);
 
-    public function getKeys(): ?Keys
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
+            $this->client = new Client(array_merge($options, ["nodes" => [$node], "api_key" => $apiKey]));
+            if ($this->client)
+                $this->clientUrl = $node["protocol"]."://".$node["host"].":".$node["port"];
+        }
 
-        return $this->client?->keys;
-    }
-
-    public function getDebug(): ?Debug
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
-
-        return $this->client?->debug;
-    }
-
-    public function getMetrics(): ?Metrics
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
-
-        return $this->client?->metrics;
-    }
-
-    public function getHealth(): ?Health
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
-
-        return $this->client?->health;
-    }
-
-    public function getOperations(): ?Operations
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
-
-        return $this->client?->operations;
-    }
-
-    public function getMultiSearch(): ?MultiSearch
-    {
-        if(!$this->client)
-            $this->client = $this->connect();
-
-        return $this->client?->multiSearch;
+        return $this->client;
     }
 
     /**
@@ -147,6 +100,9 @@ class TypesenseClient
 
     public function isOperationnal(): bool
     {
+        if(!$this->client)
+            $this->client = $this->connect();
+
         return $this->client !== null;
     }
 }

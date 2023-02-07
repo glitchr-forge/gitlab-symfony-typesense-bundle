@@ -7,7 +7,7 @@
         <defaults public="true"/>
 
         <!-- Abstract definition for client. -->
-        <service id="typesense.client_prototype" class="Symfony\UX\Typesense\Client\TypesenseClient" public="true" abstract="true">
+        <service id="typesense.client" class="Symfony\UX\Typesense\Client\TypesenseClient" public="true">
             <argument type="service" id="parameter_bag"/>
         </service>
 
@@ -69,6 +69,11 @@
         <service id="typesense.command.create" class="Symfony\UX\Typesense\Command\CreateCommand" public="true">
             <tag name="console.command"/>
             <argument type="service" id="typesense.collection_manager"/>
+        </service>
+
+        <service id="typesense.command.connection.test" class="Symfony\UX\Typesense\Command\ConnectionTestCommand" public="true">
+            <tag name="console.command"/>
+            <argument type="service" id="typesense.client"/>
         </service>
 
         <service id="typesense.command.import" class="Symfony\UX\Typesense\Command\ImportCommand" public="true">

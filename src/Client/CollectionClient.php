@@ -13,6 +13,7 @@ class CollectionClient
     public function __construct(TypesenseClient $client)
     {
         $this->client = $client;
+
     }
 
     public function search(string $collectionName, TypesenseQuery $query)

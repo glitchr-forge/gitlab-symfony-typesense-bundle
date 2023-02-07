@@ -7,6 +7,7 @@ namespace Symfony\UX\Typesense\Transformer;
 use Doctrine\Common\Util\ClassUtils;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\UX\Typesense\TypesenseInterface;
 
 class DoctrineToTypesenseTransformer extends AbstractTransformer
 {
@@ -28,6 +29,8 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
     public function convert($entity): array
     {
         $entityClass = ClassUtils::getClass($entity);
+        if(!$entity instanceof TypesenseInterface)
+            throw new \Exception("Class %s does not implement \"".TypesenseInterface::class."\"");
 
         if (!isset($this->entityToCollectionMapping[$entityClass])) {
             throw new \Exception(sprintf('Class %s is not supported for Doctrine To Typesense Transformation', $entityClass));
@@ -37,14 +40,15 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
 
         $fields = $this->collectionDefinitions[$this->entityToCollectionMapping[$entityClass]]['fields'];
 
-        foreach ($fields as $fieldsInfo) {
+        foreach ($fields as $field) {
+
             try {
-                $value = $this->accessor->getValue($entity, $fieldsInfo['entity_attribute']);
+                $value = $entity->__typesenseGetter($field['entity_attribute'], $field);
             } catch (RuntimeException $exception) {
                 $value = null;
             }
 
-            $name = $fieldsInfo['name'];
+            $name = $field['name'];
 
             $data[$name] = $this->castValue(
                 $entityClass,
