@@ -18,6 +18,11 @@ use Typesense\Operations;
 
 class TypesenseClient
 {
+    /**
+     * @var ParameterBagInterface $parameterBag
+     */
+    protected $parameterBag;
+
     public function __construct(ParameterBagInterface $parameterBag)
     {
         $this->parameterBag = $parameterBag;

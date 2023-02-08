@@ -36,9 +36,14 @@ class TypesenseQuery
         return $this->searchParameters;
     }
 
-    public function hasParameter($key): bool
+    public function getParameter(string $key): ?string
     {
-        return isset($this->searchParameters[$key]) ? true : false;
+        return $this->searchParameters[$key] ?? null;
+    }
+
+    public function hasParameter(string $key): bool
+    {
+        return isset($this->searchParameters[$key]);
     }
 
     /**
@@ -62,8 +67,17 @@ class TypesenseQuery
     /**
      * Filter conditions for refining your search results. A field can be matched against one or more values.
      */
+
     public function filterBy(string $filterBy): self
     {
+        return $this->addParameter('filter_by', $filterBy);
+    }
+
+    public function addFilterBy(string $filterBy): self
+    {
+        $_filterBy = $this->getParameter("filter_by");
+        $filterBy = $_filterBy ? trim($_filterBy . " && " . $filterBy, " &") : $filterBy;
+
         return $this->addParameter('filter_by', $filterBy);
     }
 

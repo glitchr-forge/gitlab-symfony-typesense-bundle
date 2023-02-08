@@ -4,18 +4,29 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Manager;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\UX\Typesense\Client\CollectionClient;
+use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
 use Symfony\UX\Typesense\Transformer\AbstractTransformer;
 
 class CollectionManager
 {
+    use DiscriminatorTrait;
+
     private $collectionDefinitions;
     private $collectionClient;
     private $transformer;
 
-    public function __construct(CollectionClient $collectionClient, AbstractTransformer $transformer, array $collectionDefinitions)
+    /**
+     * @var EntityManagerInterface
+     */
+    protected $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager, CollectionClient $collectionClient, AbstractTransformer $transformer, array $collectionDefinitions)
     {
-        $this->collectionDefinitions = $collectionDefinitions;
+        $this->entityManager = $entityManager;
+        $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
         $this->collectionClient      = $collectionClient;
         $this->transformer           = $transformer;
     }
@@ -51,6 +62,7 @@ class CollectionManager
     public function deleteCollection($collectionDefinitionName)
     {
         $definition = $this->collectionDefinitions[$collectionDefinitionName];
+
         $this->collectionClient->delete($definition['typesense_name']);
     }
 
@@ -64,6 +76,7 @@ class CollectionManager
         $definition       = $this->collectionDefinitions[$collectionDefinitionName];
         $fieldDefinitions = $definition['fields'];
         $fields           = [];
+
         foreach ($fieldDefinitions as $key => $fieldDefinition) {
             $fieldDefinition['type'] = $this->transformer->castType($fieldDefinition['type']);
             $fields[]                = $fieldDefinition;

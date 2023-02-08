@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Command;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\UX\Typesense\Manager\CollectionManager;
 use Symfony\Component\Console\Command\Command;

@@ -5,19 +5,25 @@ declare(strict_types=1);
 namespace Symfony\UX\Typesense\Transformer;
 
 use Doctrine\Common\Util\ClassUtils;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
 use Symfony\UX\Typesense\TypesenseInterface;
 
 class DoctrineToTypesenseTransformer extends AbstractTransformer
 {
+    use DiscriminatorTrait;
+
     private $collectionDefinitions;
     private $entityToCollectionMapping;
     private $accessor;
+    protected $entityManager;
 
-    public function __construct(array $collectionDefinitions, PropertyAccessorInterface $accessor)
+    public function __construct(EntityManagerInterface $entityManager, array $collectionDefinitions, PropertyAccessorInterface $accessor)
     {
-        $this->collectionDefinitions = $collectionDefinitions;
+        $this->entityManager = $entityManager;
+        $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
         $this->accessor              = $accessor;
 
         $this->entityToCollectionMapping = [];
@@ -43,7 +49,11 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
         foreach ($fields as $field) {
 
             try {
-                $value = $entity->__typesenseGetter($field['entity_attribute'], $field);
+                if(array_key_exists("discriminator", $field)) {
+                    $value = $this->entityManager->getClassMetadata(get_class($entity))->discriminatorValue;
+                } else {
+                    $value = $entity->__typesenseGetter($field['entity_attribute'], $field);
+                }
             } catch (RuntimeException $exception) {
                 $value = null;
             }
