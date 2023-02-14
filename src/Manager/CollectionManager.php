@@ -79,6 +79,7 @@ class CollectionManager
 
         foreach ($fieldDefinitions as $key => $fieldDefinition) {
             $fieldDefinition['type'] = $this->transformer->castType($fieldDefinition['type']);
+            $fieldDefinition["name"] ??= $key;
             $fields[]                = $fieldDefinition;
         }
 

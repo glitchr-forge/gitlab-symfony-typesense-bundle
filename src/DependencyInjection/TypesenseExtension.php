@@ -103,9 +103,8 @@ class TypesenseExtension extends Extension
             $primaryKeyExists = false;
 
             foreach ($config['fields'] as $key => $fieldConfig) {
-                if (!isset($fieldConfig['name'])) {
-                    throw new \Exception('typesense.collections.'.$name.'.'.$key.'.name must be set');
-                }
+
+                $fieldConfig["name"] = $key;
                 if (!isset($fieldConfig['type'])) {
                     throw new \Exception('typesense.collections.'.$name.'.'.$key.'.type must be set');
                 }
@@ -119,9 +118,11 @@ class TypesenseExtension extends Extension
             }
 
             if (!$primaryKeyExists) {
+
                 $config['fields']['id'] = [
-                    'name' => 'entity_id',
-                    'type' => 'primary',
+                    'name' => 'id',
+                    'entity_id' => 'id',
+                    'type' => 'primary'
                 ];
             }
 

@@ -36,7 +36,7 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
     {
         $entityClass = ClassUtils::getClass($entity);
         if(!$entity instanceof TypesenseInterface)
-            throw new \Exception("Class %s does not implement \"".TypesenseInterface::class."\"");
+            throw new \Exception("Class ".$entityClass." does not implement \"".TypesenseInterface::class."\"");
 
         if (!isset($this->entityToCollectionMapping[$entityClass])) {
             throw new \Exception(sprintf('Class %s is not supported for Doctrine To Typesense Transformation', $entityClass));
@@ -46,19 +46,19 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
 
         $fields = $this->collectionDefinitions[$this->entityToCollectionMapping[$entityClass]]['fields'];
 
-        foreach ($fields as $field) {
+        foreach ($fields as $key => $field) {
 
             try {
                 if(array_key_exists("discriminator", $field)) {
                     $value = $this->entityManager->getClassMetadata(get_class($entity))->discriminatorValue;
                 } else {
-                    $value = $entity->__typesenseGetter($field['entity_attribute'], $field);
+                    $value = $entity->__typesenseGetter($field['entity_attribute'] ?? $field["name"]?? $key, $field);
                 }
             } catch (RuntimeException $exception) {
                 $value = null;
             }
 
-            $name = $field['name'];
+            $name = $field['name'] ?? $key;
 
             $data[$name] = $this->castValue(
                 $entityClass,
@@ -73,6 +73,8 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
     public function castValue(string $entityClass, string $propertyName, $value)
     {
         $collection = $this->entityToCollectionMapping[$entityClass];
+        $this->collectionDefinitions[$collection]['fields'][$propertyName]["name"] ??= $propertyName;
+
         $key        = array_search(
             $propertyName,
             array_column(
@@ -80,6 +82,7 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
                 'name'
             ), true
         );
+
         $collectionFieldsDefinitions = array_values($this->collectionDefinitions[$collection]['fields']);
         $originalType                = $collectionFieldsDefinitions[$key]['type'];
         $castedType                  = $this->castType($originalType);
@@ -89,7 +92,6 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
                 if ($value instanceof \DateTime) {
                     return $value->getTimestamp();
                 }
-
                 return null;
             case self::TYPE_OBJECT.self::TYPE_STRING:
                 return $value->__toString();

@@ -65,7 +65,10 @@ class TypesenseIndexer
         $collection = $this->getCollectionName($entity);
         $data       = $this->transformer->convert($entity);
 
-        $this->documentsToUpdate[] = [$collection, $data['id'], $data];
+        $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
+        $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
+        if($entityId)
+            $this->documentsToUpdate[] = [$collection, $entityId, $data];
     }
 
     private function checkPrimaryKeyExists($collectionConfig)
