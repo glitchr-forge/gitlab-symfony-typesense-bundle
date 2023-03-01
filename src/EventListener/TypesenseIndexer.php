@@ -43,10 +43,11 @@ class TypesenseIndexer
             return;
         }
 
-        $collection = $this->getCollectionName($entity);
+        $collections = $this->getCollectionNames($entity);
         $data       = $this->transformer->convert($entity);
 
-        $this->documentsToIndex[] = [$collection, $data];
+        foreach($collections as $collection)
+            $this->documentsToIndex[] = [$collection, $data];
     }
 
     public function postUpdate(LifecycleEventArgs $args)
@@ -57,18 +58,19 @@ class TypesenseIndexer
             return;
         }
 
-        $collectionDefinitionKey = $this->getCollectionName($entity);
-        $collectionConfig        = $this->collectionManager->getCollectionDefinitions()[$collectionDefinitionKey];
+        $collections = $this->getCollectionNames($entity);
+        foreach($collections as $collection) {
 
-        $this->checkPrimaryKeyExists($collectionConfig);
+            $collectionConfig = $this->collectionManager->getCollectionDefinitions()[$collection];
+            $this->checkPrimaryKeyExists($collectionConfig);
 
-        $collection = $this->getCollectionName($entity);
-        $data       = $this->transformer->convert($entity);
+            $data = $this->transformer->convert($entity);
 
-        $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
-        $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
-        if($entityId)
-            $this->documentsToUpdate[] = [$collection, $entityId, $data];
+            $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
+            $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
+            if ($entityId)
+                $this->documentsToUpdate[] = [$collection, $entityId, $data];
+        }
     }
 
     private function checkPrimaryKeyExists($collectionConfig)
@@ -105,9 +107,9 @@ class TypesenseIndexer
             return;
         }
 
-        $collection = $this->getCollectionName($entity);
-
-        $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
+        $collections = $this->getCollectionNames($entity);
+        foreach($collections as $collection)
+            $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
     }
 
     public function postFlush()
@@ -129,7 +131,10 @@ class TypesenseIndexer
     private function updateDocuments()
     {
         foreach ($this->documentsToUpdate as $documentToUpdate) {
-            $this->documentManager->delete($documentToUpdate[0], $documentToUpdate[1]);
+
+            try { $this->documentManager->delete($documentToUpdate[0], $documentToUpdate[1]); }
+            catch(\Typesense\Exceptions\ObjectNotFound $e) { }
+
             $this->documentManager->index($documentToUpdate[0], $documentToUpdate[2]);
         }
     }
@@ -155,10 +160,17 @@ class TypesenseIndexer
         return !in_array($entityClassname, array_values($this->managedClassNames), true);
     }
 
-    private function getCollectionName($entity)
+    private function getCollectionNames($entity): array
     {
         $entityClassname = ClassUtils::getClass($entity);
 
-        return array_search($entityClassname, $this->managedClassNames, true);
+        $collectionNames = [];
+        foreach($this->managedClassNames as $key => $managedClassName) {
+
+            if(is_instanceof($entityClassname, $managedClassName))
+                $collectionNames[] = $key;
+        }
+
+        return $collectionNames;
     }
 }

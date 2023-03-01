@@ -100,12 +100,12 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
                     $value->map(function ($v) {
                         return $v->__toString();
                     })->toArray()
-                ));
+                )) ?? [];
             case self::TYPE_STRING.self::TYPE_STRING:
             case self::TYPE_PRIMARY.self::TYPE_STRING:
                 return (string) $value;
             default:
-                return is_array($value) ? array_filter($value) : $value;
+                return is_array($value) ? array_values(array_filter($value)) : $value;
         }
     }
 }
