@@ -68,7 +68,6 @@ class ImportCommand extends Command
 
         $collectionDefinitions = $this->collectionManager->getCollectionDefinitions();
         foreach ($collectionDefinitions as $collectionDefinition) {
-
             $collectionName = $collectionDefinition['typesense_name'];
             $class          = $collectionDefinition['entity'];
 
@@ -87,7 +86,6 @@ class ImportCommand extends Command
 
             $result = $this->documentManager->import($collectionName, $data, $action);
             if ($this->printErrors($io, $result)) {
-
                 $this->isError = true;
                 $io->error('Error happened during the import of the collection : '.$collectionName.' (you can see them with the option -v)');
 

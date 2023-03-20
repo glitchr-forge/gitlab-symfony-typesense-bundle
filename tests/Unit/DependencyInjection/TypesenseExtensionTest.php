@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Tests\Unit\DependencyInjection;
 
-
 use Symfony\UX\Typesense\DependencyInjection\TypesenseExtension;
 // use FOS\ElasticaBundle\Doctrine\MongoDBPagerProvider;
 // use FOS\ElasticaBundle\Doctrine\ORMPagerProvider;
@@ -26,7 +25,6 @@ use Symfony\Component\Yaml\Yaml;
  */
 class TypesenseExtensionTest extends TestCase
 {
-
     public function testTypesenseClientDefinition()
     {
         $containerBuilder = new ContainerBuilder();
@@ -65,7 +63,7 @@ class TypesenseExtensionTest extends TestCase
         $finderBooksDefinition = $containerBuilder->findDefinition('typesense.finder.books');
         $finderBooksDefinitionArguments = $finderBooksDefinition->getArguments();
         $arguments = array_pop($finderBooksDefinitionArguments);
-        
+
         $this->assertSame('books', $arguments['typesense_name']);
         $this->assertSame('books', $arguments['name']);
     }
@@ -88,7 +86,7 @@ class TypesenseExtensionTest extends TestCase
         $finderBooksDefinition = $containerBuilder->findDefinition('typesense.finder.books');
         $finderBooksDefinitionArguments = $finderBooksDefinition->getArguments();
         $arguments = array_pop($finderBooksDefinitionArguments);
-        
+
         $this->assertSame('prefix_books', $arguments['typesense_name']);
         $this->assertSame('books', $arguments['name']);
     }

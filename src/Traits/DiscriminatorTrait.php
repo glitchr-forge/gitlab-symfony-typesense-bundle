@@ -7,16 +7,13 @@ trait DiscriminatorTrait
     public function extendsSubclasses(array $collectionDefinitions)
     {
         foreach ($collectionDefinitions as $name => $def) {
-
             $entityName = $def["entity"] ?? null;
-            if($entityName) {
-
+            if ($entityName) {
                 $classMetadata = $this->entityManager->getClassMetadata($entityName);
                 $discriminatorColumn = $classMetadata->discriminatorColumn["name"];
                 $discriminatorValue  = $classMetadata->discriminatorValue;
 
-                if(!array_key_exists($discriminatorColumn, $collectionDefinitions[$name]["fields"])) {
-
+                if (!array_key_exists($discriminatorColumn, $collectionDefinitions[$name]["fields"])) {
                     $collectionDefinitions[$name]["fields"][$discriminatorColumn] = [
                         "name" => $discriminatorColumn,
                         "discriminator" => true,
@@ -26,11 +23,9 @@ trait DiscriminatorTrait
                     ];
                 }
 
-                foreach($classMetadata->subClasses as $subclass) {
-
+                foreach ($classMetadata->subClasses as $subclass) {
                     $isDeclared = count(array_keys(array_column($collectionDefinitions, 'entity'), $subclass)) > 0;
-                    if(!$isDeclared) {
-
+                    if (!$isDeclared) {
                         $basename = explode("\\", $subclass);
                         $basename = strtolower($basename[count($basename)-1]);
 

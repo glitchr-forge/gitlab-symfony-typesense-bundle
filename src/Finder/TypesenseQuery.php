@@ -9,13 +9,13 @@ class TypesenseQuery
     public const INFIX_OFF = "off";
     public const INFIX_ALWAYS = "always";
     public const INFIX_FALLBACK = "fallback";
-    
+
     private const INFIX_ALLOWED_VALUES = [
         self::INFIX_OFF,
         self::INFIX_ALWAYS,
         self::INFIX_FALLBACK,
     ];
-    
+
     private $searchParameters;
 
     public function __construct(string $q = null, string $queryBy = null)
@@ -221,26 +221,26 @@ class TypesenseQuery
     {
         return $this->addParameter('hidden_hits', $hiddenHits);
     }
-    
+
     /**
-     * If infix index is enabled for this field, infix searching can be done on a per-field basis by 
-     * sending a comma separated string parameter called infix to the search query. 
-     * 
+     * If infix index is enabled for this field, infix searching can be done on a per-field basis by
+     * sending a comma separated string parameter called infix to the search query.
+     *
      * This parameter can have 3 values:
-     * 
+     *
      * off: infix search is disabled, which is default
      * always: infix search is performed along with regular search
      * fallback: infix search is performed if regular search does not produce results
      */
     public function infix(string $infix): self
     {
-        if(!in_array($infix, self::INFIX_ALLOWED_VALUES)) {
+        if (!in_array($infix, self::INFIX_ALLOWED_VALUES)) {
             return $this;
         }
-        
+
         return $this->addParameter('infix', $infix);
     }
-    
+
     /**
      * Generic method that allows to add any parameter to the TypesenseQuery.
      */

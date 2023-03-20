@@ -10,7 +10,10 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 class Configuration implements ConfigurationInterface
 {
     private $treeBuilder;
-    public function getTreeBuilder() : TreeBuilder { return $this->treeBuilder; }
+    public function getTreeBuilder(): TreeBuilder
+    {
+        return $this->treeBuilder;
+    }
 
     public function getConfigTreeBuilder(): TreeBuilder
     {

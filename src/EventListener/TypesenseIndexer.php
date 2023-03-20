@@ -46,8 +46,9 @@ class TypesenseIndexer
         $collections = $this->getCollectionNames($entity);
         $data       = $this->transformer->convert($entity);
 
-        foreach($collections as $collection)
+        foreach ($collections as $collection) {
             $this->documentsToIndex[] = [$collection, $data];
+        }
     }
 
     public function postUpdate(LifecycleEventArgs $args)
@@ -59,8 +60,7 @@ class TypesenseIndexer
         }
 
         $collections = $this->getCollectionNames($entity);
-        foreach($collections as $collection) {
-
+        foreach ($collections as $collection) {
             $collectionConfig = $this->collectionManager->getCollectionDefinitions()[$collection];
             $this->checkPrimaryKeyExists($collectionConfig);
 
@@ -68,8 +68,9 @@ class TypesenseIndexer
 
             $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
             $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
-            if ($entityId)
+            if ($entityId) {
                 $this->documentsToUpdate[] = [$collection, $entityId, $data];
+            }
         }
     }
 
@@ -108,8 +109,9 @@ class TypesenseIndexer
         }
 
         $collections = $this->getCollectionNames($entity);
-        foreach($collections as $collection)
+        foreach ($collections as $collection) {
             $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
+        }
     }
 
     public function postFlush()
@@ -131,9 +133,10 @@ class TypesenseIndexer
     private function updateDocuments()
     {
         foreach ($this->documentsToUpdate as $documentToUpdate) {
-
-            try { $this->documentManager->delete($documentToUpdate[0], $documentToUpdate[1]); }
-            catch(\Typesense\Exceptions\ObjectNotFound $e) { }
+            try {
+                $this->documentManager->delete($documentToUpdate[0], $documentToUpdate[1]);
+            } catch(\Typesense\Exceptions\ObjectNotFound $e) {
+            }
 
             $this->documentManager->index($documentToUpdate[0], $documentToUpdate[2]);
         }
@@ -165,10 +168,10 @@ class TypesenseIndexer
         $entityClassname = ClassUtils::getClass($entity);
 
         $collectionNames = [];
-        foreach($this->managedClassNames as $key => $managedClassName) {
-
-            if(is_instanceof($entityClassname, $managedClassName))
+        foreach ($this->managedClassNames as $key => $managedClassName) {
+            if (is_instanceof($entityClassname, $managedClassName)) {
                 $collectionNames[] = $key;
+            }
         }
 
         return $collectionNames;
