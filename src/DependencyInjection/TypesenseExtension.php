@@ -121,7 +121,7 @@ class TypesenseExtension extends Extension
 
                 $config['fields']['id'] = [
                     'name' => 'id',
-                    'entity_id' => 'id',
+                    'entity_attribute' => 'id',
                     'type' => 'primary'
                 ];
             }

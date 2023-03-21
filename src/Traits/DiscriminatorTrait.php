@@ -21,7 +21,7 @@ trait DiscriminatorTrait
                         "name" => $discriminatorColumn,
                         "discriminator" => true,
                         "type" => "string",
-                        "infix" => true,
+                        "facet" => true,
                         "entity_attribute" => $discriminatorColumn
                     ];
                 }

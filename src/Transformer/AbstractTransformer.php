@@ -8,6 +8,7 @@ abstract class AbstractTransformer
 {
     public const TYPE_COLLECTION   = 'collection';
     public const TYPE_DATETIME     = 'datetime';
+    public const TYPE_BOOLEAN      = 'bool';
     public const TYPE_PRIMARY      = 'primary';
     public const TYPE_OBJECT       = 'object';
     public const TYPE_ARRAY_STRING = 'string[]';

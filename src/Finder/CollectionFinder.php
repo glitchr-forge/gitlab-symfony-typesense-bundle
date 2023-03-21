@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Finder;
 
+use App\Entity\Marketplace\Sales\Fee;
 use Symfony\UX\Typesense\Client\CollectionClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
@@ -57,6 +58,23 @@ class CollectionFinder implements CollectionFinderInterface
 
     private function search(TypesenseQuery $query)
     {
+        $classMetadata = $this->em->getClassMetadata($this->collectionDefinition['entity']);
+        if(!$classMetadata->discriminatorColumn && $query->getParameter("discriminate_by"))
+            throw new \LogicException("Class \"".$this->collectionDefinition['entity']."\" doesn't have discriminator values");
+
+        $classNames = array_filter(
+            explode(",", $query->getParameter("discriminate_by") ?? ""),
+            fn($c) => !empty(trim($c ?? ""))
+        );
+
+        foreach($classNames as $className) {
+
+            $relation = str_starts_with(trim($className), "^") ? ":!=" : ":=";
+            $classMetadata = $this->em->getClassMetadata(trim($className," ^"));
+
+            $query->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
+        }
+
         $result = $this->collectionClient->search($this->collectionDefinition['typesense_name'], $query);
 
         return new TypesenseResponse($result);

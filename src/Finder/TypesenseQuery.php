@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Finder;
 
+use Symfony\Component\ErrorHandler\Error\ClassNotFoundError;
+
 class TypesenseQuery
 {
     public const INFIX_OFF = "off";
@@ -79,6 +81,28 @@ class TypesenseQuery
         $filterBy = $_filterBy ? trim($_filterBy . " && " . $filterBy, " &") : $filterBy;
 
         return $this->addParameter('filter_by', $filterBy);
+    }
+
+    public function notInstanceOf(string $class): self
+    {
+        if(!class_exists($class))
+            throw new ClassNotFoundError("Class \"".$class."\" is doesn't exists");
+
+        $_discriminateBy = $this->getParameter("discriminate_by");
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", ^" . $class, " ,") : "^" . $class;
+
+        return $this->addParameter('discriminate_by', $discriminateBy);
+    }
+
+    public function instanceOf(string $class): self
+    {
+        if(!class_exists($class))
+            throw new ClassNotFoundError("Class \"".$class."\" is doesn't exists");
+
+        $_discriminateBy = $this->getParameter("discriminate_by");
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", " . $class, " ,") : $class;
+
+        return $this->addParameter('discriminate_by', $discriminateBy);
     }
 
     /**
