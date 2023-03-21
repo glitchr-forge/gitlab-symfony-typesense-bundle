@@ -24,7 +24,10 @@ class ConnectionTestCommand extends Command
         $this->typesenseClient = $typesenseClient;
     }
 
-    function str_blankspace(int $length) { return $length < 1 ? "" : str_repeat(" ", $length); }
+    public function str_blankspace(int $length)
+    {
+        return $length < 1 ? "" : str_repeat(" ", $length);
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -37,21 +40,17 @@ class ConnectionTestCommand extends Command
         $output->getFormatter()->setStyle('red,bkg', new OutputFormatterStyle(null, 'red'));
 
         $io->writeln("");
-        if($ok === null) {
-
+        if ($ok === null) {
             $msg = ' [WARN] "' . $url . '" is not responding.';
             $io->writeln('<warning,bkg>' . str_blankspace(strlen($msg)));
             $io->info($msg);
             $io->writeln(str_blankspace(strlen($msg)) . '</warning,bkg>');
-
-        } else if(!$ok) {
-
+        } elseif (!$ok) {
             $msg = ' [FAIL] "' . $url . '" is in BAD health condition.';
             $io->writeln('<red,bkg>' . str_blankspace(strlen($msg)));
             $io->writeln($msg);
             $io->writeln(str_blankspace(strlen($msg)) . '</red,bkg>');
         } else {
-
             $msg = ' [OK] "' . $url . '" is in GOOD health condition.';
             $io->writeln('<info,bkg>' . str_blankspace(strlen($msg)));
             $io->writeln($msg);

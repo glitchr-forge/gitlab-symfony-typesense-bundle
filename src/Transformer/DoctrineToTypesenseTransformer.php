@@ -35,8 +35,9 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
     public function convert($entity): array
     {
         $entityClass = ClassUtils::getClass($entity);
-        if(!$entity instanceof TypesenseInterface)
+        if (!$entity instanceof TypesenseInterface) {
             throw new \Exception("Class ".$entityClass." does not implement \"".TypesenseInterface::class."\"");
+        }
 
         if (!isset($this->entityToCollectionMapping[$entityClass])) {
             throw new \Exception(sprintf('Class %s is not supported for Doctrine To Typesense Transformation', $entityClass));
@@ -47,9 +48,8 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
         $fields = $this->collectionDefinitions[$this->entityToCollectionMapping[$entityClass]]['fields'];
 
         foreach ($fields as $key => $field) {
-
             try {
-                if(array_key_exists("discriminator", $field)) {
+                if (array_key_exists("discriminator", $field)) {
                     $value = $this->entityManager->getClassMetadata(get_class($entity))->discriminatorValue;
                 } else {
                     $value = $entity->__typesenseGetter($field['entity_attribute'] ?? $field["name"]?? $key, $field);
@@ -80,7 +80,8 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
             array_column(
                 $this->collectionDefinitions[$collection]['fields'],
                 'name'
-            ), true
+            ),
+            true
         );
 
         $collectionFieldsDefinitions = array_values($this->collectionDefinitions[$collection]['fields']);

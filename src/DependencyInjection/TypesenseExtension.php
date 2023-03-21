@@ -69,11 +69,15 @@ class TypesenseExtension extends Extension
     public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = "")
     {
         foreach ($config as $key => $value) {
+            if (!empty($globalKey)) {
+                $key = $globalKey . "." . $key;
+            }
 
-            if (!empty($globalKey)) $key = $globalKey . "." . $key;
-
-            if (is_array($value)) $this->setConfiguration($container, $value, $key);
-            else $container->setParameter($key, $value);
+            if (is_array($value)) {
+                $this->setConfiguration($container, $value, $key);
+            } else {
+                $container->setParameter($key, $value);
+            }
         }
     }
 
@@ -103,7 +107,6 @@ class TypesenseExtension extends Extension
             $primaryKeyExists = false;
 
             foreach ($config['fields'] as $key => $fieldConfig) {
-
                 $fieldConfig["name"] = $key;
                 if (!isset($fieldConfig['type'])) {
                     throw new \Exception('typesense.collections.'.$name.'.'.$key.'.type must be set');
@@ -118,7 +121,6 @@ class TypesenseExtension extends Extension
             }
 
             if (!$primaryKeyExists) {
-
                 $config['fields']['id'] = [
                     'name' => 'id',
                     'entity_attribute' => 'id',
@@ -127,9 +129,7 @@ class TypesenseExtension extends Extension
             }
 
             if (isset($config['finders'])) {
-
                 foreach ($config['finders'] as $finderName => $finderConfig) {
-
                     $finderName                      = $name.'.'.$finderName;
                     $finderConfig['collection_name'] = $collectionName;
                     $finderConfig['name']            = $name;
@@ -154,7 +154,6 @@ class TypesenseExtension extends Extension
                 'symbols_to_index'      => $config['symbols_to_index'],
             ];
         }
-
     }
 
     /**
@@ -198,7 +197,6 @@ class TypesenseExtension extends Extension
     private function loadFinderServices(ContainerBuilder $container)
     {
         foreach ($this->finderConfig as $name => $config) {
-
             $finderName     = $config['finder_name'];
             $collectionName = $config['name'];
             $finderId       = sprintf('typesense.finder.%s', $collectionName);
@@ -223,7 +221,6 @@ class TypesenseExtension extends Extension
             $finderName                  = $config['finder_name'];
             $finderId                    = sprintf('typesense.specificfinder.%s', $finderName);
             $finderServices[$finderName] = new Reference($finderId);
-
         }
 
         $controllerDef = $container->getDefinition('typesense.autocomplete_controller');

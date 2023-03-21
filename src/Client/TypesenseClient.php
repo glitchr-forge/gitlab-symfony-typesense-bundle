@@ -32,9 +32,10 @@ class TypesenseClient
     {
         $apiKey = $this->parameterBag->get("typesense.server.secret");
 
-        if(!$apiKey) {
-
-            if(is_cli()) throw new TypesenseException("Typesense API Key missing");
+        if (!$apiKey) {
+            if (is_cli()) {
+                throw new TypesenseException("Typesense API Key missing");
+            }
             return [];
         }
 
@@ -54,30 +55,32 @@ class TypesenseClient
     private ?Client $client = null;
     public function getClient(): ?Client
     {
-        if(!$this->client)
+        if (!$this->client) {
             $this->client = $this->connect();
+        }
 
         return $this->client;
     }
 
     protected ?string $clientUrl = null;
-    public function getClientUrl(): ?string {
-
-        if(!$this->client)
+    public function getClientUrl(): ?string
+    {
+        if (!$this->client) {
             $this->client = $this->connect();
+        }
 
         return $this->clientUrl;
     }
 
     public function connect(?string $connectionName = null): ?Client
     {
-        if(!$this->client) {
-
+        if (!$this->client) {
             list($apiKey, $node, $options) = $this->prepare($connectionName);
 
             $this->client = new Client(array_merge($options, ["nodes" => [$node], "api_key" => $apiKey]));
-            if ($this->client)
+            if ($this->client) {
                 $this->clientUrl = $node["protocol"]."://".$node["host"].":".$node["port"];
+            }
         }
 
         return $this->client;
@@ -89,24 +92,27 @@ class TypesenseClient
      */
     public function __call($name, $arguments)
     {
-        if(!$this->client)
+        if (!$this->client) {
             $this->client = $this->connect();
+        }
 
         return $this->client?->{$name}(...$arguments);
     }
 
     public function __get($name)
     {
-        if(!$this->client)
+        if (!$this->client) {
             $this->client = $this->connect();
+        }
 
         return $this->client?->{$name};
     }
 
     public function isOperationnal(): bool
     {
-        if(!$this->client)
+        if (!$this->client) {
             $this->client = $this->connect();
+        }
 
         return $this->client !== null;
     }
