@@ -22,19 +22,19 @@ class CollectionFinder implements CollectionFinderInterface
         $this->em               = $em;
     }
 
-    public function rawQuery(TypesenseQuery $query)
+    public function rawQuery(TypesenseQuery $query): TypesenseResponse
     {
         return $this->search($query);
     }
 
-    public function query(TypesenseQuery $query)
+    public function query(TypesenseQuery $query, bool $cacheable = false): TypesenseResponse
     {
-        $results = $this->search($query);
+        $queryResponse = $this->search($query);
 
-        return $this->hydrate($results);
+        return $this->hydrate($queryResponse, $cacheable);
     }
 
-    private function hydrate($results)
+    private function hydrate($results, bool $cacheable = false)
     {
         $ids             = [];
         $primaryKeyInfos = $this->getPrimaryKeyInfo();
@@ -42,14 +42,22 @@ class CollectionFinder implements CollectionFinderInterface
             $ids[] = $result['document'][$primaryKeyInfos['documentAttribute']];
         }
 
-        $hydratedResults = [];
-        if (count($ids)) {
-            $rsm = new ResultSetMappingBuilder($this->em);
-            $rsm->addRootEntityFromClassMetadata($this->collectionDefinition['entity'], 'e');
-            $tableName       = $this->em->getClassMetadata($this->collectionDefinition['entity'])->getTableName();
-            $query           = $this->em->createNativeQuery('SELECT * FROM '.$tableName.' WHERE '.$primaryKeyInfos['entityAttribute'].' IN ('.implode(', ', $ids).') ORDER BY FIELD(id,'.implode(', ', $ids).')', $rsm);
-            $hydratedResults = $query->getResult();
-        }
+        if (!count($ids)) return $results;
+
+        $results = $this->em
+            ->createQueryBuilder()
+
+            ->select('e')
+            ->from($this->collectionDefinition['entity'], "e")
+
+            ->where($primaryKeyInfos["entityAttribute"] ." IN (:ids)")
+            ->orderBy("FIELD(e.".$primaryKeyInfos["entityAttribute"].", ".implode(', ', $ids))
+            ->setParameter("ids", $ids)
+            ->setCacheable($cacheable)
+            ->getQuery()->getResult();
+
+        dump($results);
+exit(1);
         $results->setHydratedHits($hydratedResults);
         $results->setHydrated(true);
 
