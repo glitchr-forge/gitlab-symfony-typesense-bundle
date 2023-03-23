@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Symfony\UX\Typesense\Client;
 
 use Symfony\UX\Typesense\Finder\TypesenseQuery;
+use Symfony\UX\Typesense\Manager\TypesenseManager;
 
 class CollectionClient
 {

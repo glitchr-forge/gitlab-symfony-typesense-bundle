@@ -7,8 +7,10 @@ trait DiscriminatorTrait
     public function extendsSubclasses(array $collectionDefinitions)
     {
         foreach ($collectionDefinitions as $name => $def) {
+
             $entityName = $def["entity"] ?? null;
             if ($entityName) {
+
                 $classMetadata = $this->entityManager->getClassMetadata($entityName);
                 $discriminatorColumn = $classMetadata->discriminatorColumn["name"];
                 $discriminatorValue  = $classMetadata->discriminatorValue;

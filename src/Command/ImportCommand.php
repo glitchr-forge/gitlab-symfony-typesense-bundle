@@ -6,6 +6,7 @@ namespace Symfony\UX\Typesense\Command;
 
 use Symfony\UX\Typesense\Manager\CollectionManager;
 use Symfony\UX\Typesense\Manager\DocumentManager;
+use Symfony\UX\Typesense\Manager\TypesenseManager;
 use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -19,9 +20,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 class ImportCommand extends Command
 {
     private $em;
-    private $collectionManager;
-    private $documentManager;
-    private $transformer;
+    private $typesenseManager;
     private const ACTIONS = [
         'create',
         'upsert',
@@ -29,17 +28,10 @@ class ImportCommand extends Command
     ];
     private $isError = false;
 
-    public function __construct(
-        EntityManagerInterface $em,
-        CollectionManager $collectionManager,
-        DocumentManager $documentManager,
-        DoctrineToTypesenseTransformer $transformer
-    ) {
+    public function __construct(TypesenseManager $typesenseManager) {
+
         parent::__construct();
-        $this->em                = $em;
-        $this->collectionManager = $collectionManager;
-        $this->documentManager   = $documentManager;
-        $this->transformer       = $transformer;
+        $this->typesenseManager = $typesenseManager;
     }
 
     protected function configure()
@@ -59,60 +51,76 @@ class ImportCommand extends Command
 
         $action = $input->getOption('action');
 
-        $this->em->getConnection()->getConfiguration()->setSQLLogger(null);
+        $this->typesenseManager->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
 
         $execStart = microtime(true);
         $populated = 0;
 
         $io->newLine();
 
-        $collectionDefinitions = $this->collectionManager->getCollectionDefinitions();
-        foreach ($collectionDefinitions as $collectionDefinition) {
-            $collectionName = $collectionDefinition['typesense_name'];
-            $class          = $collectionDefinition['entity'];
+        
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-            $q        = $this->em->createQuery('select e from '.$class.' e');
-            $entities = $q->toIterable();
+            $output->writeln(sprintf('<info>Connection Typesense: </info> <comment>%s</comment>', $connectionName));
 
-            $nbEntities = (int) $this->em->createQuery('select COUNT(u.id) from '.$class.' u')->getSingleScalarResult();
-            $populated += $nbEntities;
+            $collectionDefinitions = $this->typesenseManager->getCollectionManager($connectionName)->getCollectionDefinitions();
+            foreach ($collectionDefinitions as $collectionDefinition) {
 
-            $data = [];
-            foreach ($entities as $entity) {
-                $data[] = $this->transformer->convert($entity);
+                $collectionName = $collectionDefinition['typesense_name'];
+                $class = $collectionDefinition['entity'];
+
+                $q = $this->typesenseManager->getEntityManager()->createQuery('select e from ' . $class . ' e');
+                $entities = $q->toIterable();
+
+                $nbEntities = (int) $this->typesenseManager->getEntityManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
+                $populated += $nbEntities;
+
+                $data = [];
+                foreach ($entities as $entity) {
+                    $data[] = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
+                }
+
+                $output->writeln("\t" . 'Importing <info>[' . $collectionName . '] ' . $class . '</info> ');
+                try {
+
+                    $response = $this->typesenseManager->getDocumentManager($connectionName)->import($collectionName, $data, $action);
+
+                } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
+
+                    $this->isError = true;
+                    $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $collectionName));
+                    continue;
+                }
+
+                if ($this->printErrors($io, $response)) {
+                    $this->isError = true;
+                    $io->error('Error happened during the import of the collection : ' . $collectionName . ' (you can see them with the option -v)');
+
+                    return 2;
+                }
+
+                $io->text("\t". 'DONE.');
+                $io->newLine();
             }
 
-            $io->text('Importing <info>['.$collectionName.'] '.$class.'</info> ');
-
-            $result = $this->documentManager->import($collectionName, $data, $action);
-            if ($this->printErrors($io, $result)) {
-                $this->isError = true;
-                $io->error('Error happened during the import of the collection : '.$collectionName.' (you can see them with the option -v)');
-
-                return 2;
-            }
-
-            $io->text('DONE.');
             $io->newLine();
+            if (!$this->isError) {
+                $io->success(sprintf(
+                    '%s element%s populated in %s seconds',
+                    $populated,
+                    $populated > 1 ? 's' : '',
+                    round(microtime(true) - $execStart, PHP_ROUND_HALF_DOWN)
+                ));
+            }
         }
-
-        $io->newLine();
-        if (!$this->isError) {
-            $io->success(sprintf(
-                '%s element%s populated in %s seconds',
-                $populated,
-                $populated > 1 ? 's' : '',
-                round(microtime(true) - $execStart, PHP_ROUND_HALF_DOWN)
-            ));
-        }
-
+        
         return 0;
     }
 
-    private function printErrors(SymfonyStyle $io, array $result): bool
+    private function printErrors(SymfonyStyle $io, array $response): bool
     {
         $isError = false;
-        foreach ($result as $item) {
+        foreach ($response as $item) {
             if (!$item['success']) {
                 $isError = true;
                 $io->error($item['error']);

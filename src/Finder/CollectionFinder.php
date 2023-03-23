@@ -8,6 +8,7 @@ use App\Entity\Marketplace\Sales\Fee;
 use Symfony\UX\Typesense\Client\CollectionClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use Symfony\UX\Typesense\Manager\TypesenseManager;
 
 class CollectionFinder implements CollectionFinderInterface
 {
@@ -15,13 +16,15 @@ class CollectionFinder implements CollectionFinderInterface
     private $collectionClient;
     private $em;
 
-    public function __construct(CollectionClient $collectionClient, EntityManagerInterface $em, array $collectionDefinition)
+    public function getName():string { return $this->collectionDefinition["name"]; }
+    public function __construct(TypesenseManager $typesenseManager, EntityManagerInterface $em, array $collectionDefinition)
     {
         $this->collectionDefinition = $collectionDefinition;
-        $this->collectionClient = $collectionClient;
+        $this->collectionClient = $typesenseManager->getCollectionManager()->getCollectionClient();
         $this->em               = $em;
     }
 
+    public function getDefinition(): array { return $this->collectionDefinition; }
     public function rawQuery(TypesenseQuery $query): TypesenseResponse
     {
         return $this->search($query);
@@ -30,38 +33,46 @@ class CollectionFinder implements CollectionFinderInterface
     public function query(TypesenseQuery $query, bool $cacheable = false): TypesenseResponse
     {
         $queryResponse = $this->search($query);
-
         return $this->hydrate($queryResponse, $cacheable);
     }
 
-    private function hydrate($results, bool $cacheable = false)
+    public function facet(string $facetBy, ?TypesenseQuery $query = null): mixed
+    {
+        if($query) $query = clone $query;
+        $query ??= new TypesenseQuery();
+
+        $query->addQueryBy($facetBy);
+        $query->facetBy($facetBy);
+
+        return $this->search($query)->getFacetCounts();
+    }
+
+    private function hydrate($response, bool $cacheable = false)
     {
         $ids             = [];
         $primaryKeyInfos = $this->getPrimaryKeyInfo();
-        foreach ($results->getResults() as $result) {
+        foreach ($response->getResults() as $result) {
             $ids[] = $result['document'][$primaryKeyInfos['documentAttribute']];
         }
 
-        if (!count($ids)) return $results;
+        if (!count($ids)) return $response;
 
-        $results = $this->em
+        $classMetadata = $this->em->getClassMetadata($this->collectionDefinition['entity']);
+        $response->setHydratedHits($this->em
             ->createQueryBuilder()
+                ->select('e')
+                ->from($this->collectionDefinition['entity'], "e")
+                ->where("e.".$primaryKeyInfos["entityAttribute"] ." IN (:ids)")
+                ->orderBy("FIELD(e.".$primaryKeyInfos["entityAttribute"].", ".implode(', ', $ids).")")
+                ->setParameter("ids", $ids)
+                ->setCacheable($cacheable)
+            ->getQuery()
+                ->useQueryCache($cacheable)
+                ->setCacheRegion($classMetadata->cache["region"] ?? null)
+            ->getResult()
+        );
 
-            ->select('e')
-            ->from($this->collectionDefinition['entity'], "e")
-
-            ->where($primaryKeyInfos["entityAttribute"] ." IN (:ids)")
-            ->orderBy("FIELD(e.".$primaryKeyInfos["entityAttribute"].", ".implode(', ', $ids))
-            ->setParameter("ids", $ids)
-            ->setCacheable($cacheable)
-            ->getQuery()->getResult();
-
-        dump($results);
-exit(1);
-        $results->setHydratedHits($hydratedResults);
-        $results->setHydrated(true);
-
-        return $results;
+        return $response->setHydrated(true);
     }
 
     private function search(TypesenseQuery $query)
@@ -84,7 +95,6 @@ exit(1);
         }
 
         $result = $this->collectionClient->search($this->collectionDefinition['typesense_name'], $query);
-
         return new TypesenseResponse($result);
     }
 

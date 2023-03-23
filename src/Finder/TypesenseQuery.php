@@ -20,12 +20,11 @@ class TypesenseQuery
 
     private $searchParameters;
 
-    public function __construct(string $q = null, string $queryBy = null)
+    public function __construct(string $q = "", string $queryBy = null)
     {
         $this->searchParameters = [];
-        if ($q !== null) {
-            $this->addParameter('q', $q);
-        }
+        $this->addParameter('q', $q);
+
         if ($queryBy !== null) {
             $this->addParameter('query_by', $queryBy);
         }
@@ -81,6 +80,24 @@ class TypesenseQuery
         $filterBy = $_filterBy ? trim($_filterBy . " && " . $filterBy, " &") : $filterBy;
 
         return $this->addParameter('filter_by', $filterBy);
+    }
+
+    public function q(string $q): self
+    {
+        return $this->addParameter('q', $q);
+    }
+
+    public function queryBy(string $filterBy): self
+    {
+        return $this->addParameter('query_by', $filterBy);
+    }
+
+    public function addQueryBy(string $filterBy): self
+    {
+        $_filterBy = $this->getParameter("query_by");
+        $filterBy = $_filterBy ? trim($_filterBy . ", " . $filterBy) : $filterBy;
+
+        return $this->addParameter('query_by', $filterBy);
     }
 
     public function notInstanceOf(string $class): self

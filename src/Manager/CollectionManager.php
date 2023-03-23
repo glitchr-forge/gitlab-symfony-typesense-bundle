@@ -7,33 +7,39 @@ namespace Symfony\UX\Typesense\Manager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\UX\Typesense\Client\CollectionClient;
+use Symfony\UX\Typesense\Client\TypesenseClient;
 use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
 use Symfony\UX\Typesense\Transformer\AbstractTransformer;
 
 class CollectionManager
 {
-    use DiscriminatorTrait;
+    protected $collectionDefinitions;
+    protected $collectionClient;
+    protected $doctrineTransformer;
 
-    private $collectionDefinitions;
-    private $collectionClient;
-    private $transformer;
-
+    protected $client;
+    protected $typesenseManager;
     /**
      * @var EntityManagerInterface
      */
-    protected $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager, CollectionClient $collectionClient, AbstractTransformer $transformer, array $collectionDefinitions)
+    public function __construct(TypesenseManager $typesenseManager, ?string $connectionName = null)
     {
-        $this->entityManager = $entityManager;
-        $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
-        $this->collectionClient      = $collectionClient;
-        $this->transformer           = $transformer;
+        $this->client = $typesenseManager->getConnection($connectionName);
+        $this->collectionDefinitions = $this->client->getCollectionDefinitions();
+        $this->collectionClient      = $this->client->getCollectionClient();
+
+        $this->typesenseManager = $typesenseManager;
     }
 
-    public function getCollectionDefinitions()
+    public function getCollectionDefinitions(): array
     {
         return $this->collectionDefinitions;
+    }
+
+    public function getCollectionClient(): CollectionClient
+    {
+        return $this->collectionClient;
     }
 
     public function getManagedClassNames()
@@ -66,19 +72,17 @@ class CollectionManager
         $this->collectionClient->delete($definition['typesense_name']);
     }
 
-    public function deleteCollextion($collectionDefinitionName)
-    {
-        return $this->deleteCollection($collectionDefinitionName);
-    }
-
     public function createCollection($collectionDefinitionName)
     {
         $definition       = $this->collectionDefinitions[$collectionDefinitionName];
         $fieldDefinitions = $definition['fields'];
         $fields           = [];
 
+        if($this->typesenseManager->getDoctrineTransformer($this->client->getConnectionName()) == null) return;
+
         foreach ($fieldDefinitions as $key => $fieldDefinition) {
-            $fieldDefinition['type'] = $this->transformer->castType($fieldDefinition['type']);
+
+            $fieldDefinition['type'] = $this->typesenseManager->getDoctrineTransformer($this->client->getConnectionName())->castType($fieldDefinition['type']);
             $fieldDefinition["name"] ??= $key;
             $fields[]                = $fieldDefinition;
         }

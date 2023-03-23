@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Transformer;
 
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
@@ -20,11 +21,11 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
     private $accessor;
     protected $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager, array $collectionDefinitions, PropertyAccessorInterface $accessor)
+    public function __construct(EntityManagerInterface $entityManager, array $collectionDefinitions)
     {
         $this->entityManager = $entityManager;
         $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
-        $this->accessor              = $accessor;
+        $this->accessor              = PropertyAccess::createPropertyAccessor();
 
         $this->entityToCollectionMapping = [];
         foreach ($this->collectionDefinitions as $collection => $collectionDefinition) {

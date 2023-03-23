@@ -6,72 +6,69 @@ namespace Symfony\UX\Typesense\EventListener;
 
 use Symfony\UX\Typesense\Manager\CollectionManager;
 use Symfony\UX\Typesense\Manager\DocumentManager;
+use Symfony\UX\Typesense\Manager\TypesenseManager;
 use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 class TypesenseIndexer
 {
-    private $documentManager;
-    private $collectionManager;
-    private $transformer;
     private $managedClassNames;
-
     private $objetsIdThatCanBeDeletedByObjectHash = [];
 
     private $documentsToIndex                     = [];
     private $documentsToUpdate                    = [];
     private $documentsToDelete                    = [];
 
-    public function __construct(
-        CollectionManager $collectionManager,
-        DocumentManager $documentManager,
-        DoctrineToTypesenseTransformer $transformer
-    ) {
-        $this->collectionManager = $collectionManager;
-        $this->documentManager   = $documentManager;
-        $this->transformer       = $transformer;
+    public function __construct(TypesenseManager $typesenseManager) {
 
-        $this->managedClassNames  = $this->collectionManager->getManagedClassNames();
+        $this->typesenseManager = $typesenseManager;
     }
 
     public function postPersist(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-        if ($this->entityIsNotManaged($entity)) {
-            return;
-        }
+            $entity = $args->getObject();
+            if ($this->entityIsNotManaged($entity, $connectionName)) {
+                return;
+            }
 
-        $collections = $this->getCollectionNames($entity);
-        $data       = $this->transformer->convert($entity);
+            $collections = $this->getCollectionNames($entity, $connectionName);
+            $data = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
 
-        foreach ($collections as $collection) {
-            $this->documentsToIndex[] = [$collection, $data];
+            foreach ($collections as $collection) {
+                $this->documentsToIndex[] = [$collection, $data];
+            }
         }
     }
 
     public function postUpdate(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
+         foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-        if ($this->entityIsNotManaged($entity)) {
-            return;
-        }
+             $entity = $args->getObject();
 
-        $collections = $this->getCollectionNames($entity);
-        foreach ($collections as $collection) {
-            $collectionConfig = $this->collectionManager->getCollectionDefinitions()[$collection];
-            $this->checkPrimaryKeyExists($collectionConfig);
+             if ($this->entityIsNotManaged($entity, $connectionName)) {
+                 return;
+             }
 
-            $data = $this->transformer->convert($entity);
+             $collections = $this->getCollectionNames($entity, $connectionName);
+             foreach ($collections as $collection) {
 
-            $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
-            $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
-            if ($entityId) {
-                $this->documentsToUpdate[] = [$collection, $entityId, $data];
-            }
-        }
+                 $collectionConfig = $this->typesenseManager->getCollectionManager($connectionName)->getCollectionDefinitions()[$collection];
+                 $this->checkPrimaryKeyExists($collectionConfig);
+
+                 $data = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
+
+                 $primaryField = array_search_by($collectionConfig["fields"], "type", "primary");
+                 $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
+                 if ($entityId) {
+
+                     $this->documentsToUpdate[] = [$collection, $entityId, $data];
+                 }
+             }
+         }
     }
 
     private function checkPrimaryKeyExists($collectionConfig)
@@ -87,30 +84,36 @@ class TypesenseIndexer
 
     public function preRemove(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-        if ($this->entityIsNotManaged($entity)) {
-            return;
+            $entity = $args->getObject();
+
+            if ($this->entityIsNotManaged($entity, $connectionName)) {
+                return;
+            }
+
+            $data = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
+
+            $this->objetsIdThatCanBeDeletedByObjectHash[spl_object_hash($entity)] = $data['id'];
         }
-
-        $data = $this->transformer->convert($entity);
-
-        $this->objetsIdThatCanBeDeletedByObjectHash[spl_object_hash($entity)] = $data['id'];
     }
 
     public function postRemove(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-        $entityHash = spl_object_hash($entity);
+            $entity = $args->getObject();
 
-        if (!isset($this->objetsIdThatCanBeDeletedByObjectHash[$entityHash])) {
-            return;
-        }
+            $entityHash = spl_object_hash($entity);
 
-        $collections = $this->getCollectionNames($entity);
-        foreach ($collections as $collection) {
-            $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
+            if (!isset($this->objetsIdThatCanBeDeletedByObjectHash[$entityHash])) {
+                return;
+            }
+
+            $collections = $this->getCollectionNames($entity, $connectionName);
+            foreach ($collections as $collection) {
+                $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
+            }
         }
     }
 
@@ -156,19 +159,19 @@ class TypesenseIndexer
         $this->documentsToDelete = [];
     }
 
-    private function entityIsNotManaged($entity)
+    private function entityIsNotManaged($entity, ?string $connectionName = null)
     {
         $entityClassname = ClassUtils::getClass($entity);
-
-        return !in_array($entityClassname, array_values($this->managedClassNames), true);
+        return !in_array($entityClassname, array_values($this->typesenseManager->getManagedClassNames($connectionName)), true);
     }
 
-    private function getCollectionNames($entity): array
+    private function getCollectionNames($entity, ?string $connectionName = null): array
     {
         $entityClassname = ClassUtils::getClass($entity);
+        $connectionName = $this->typesenseManager->getConnectionName($connectionName);
 
         $collectionNames = [];
-        foreach ($this->managedClassNames as $key => $managedClassName) {
+        foreach ($this->typesenseManager->getManagedClassNames($connectionName) as $key => $managedClassName) {
             if (is_instanceof($entityClassname, $managedClassName)) {
                 $collectionNames[] = $key;
             }

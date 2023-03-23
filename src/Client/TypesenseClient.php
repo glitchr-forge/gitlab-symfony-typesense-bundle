@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Symfony\UX\Typesense\Client;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\UX\Typesense\Exception\TypesenseException;
+use Symfony\UX\Typesense\Finder\CollectionFinder;
+use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
 use Typesense\Aliases;
 use Typesense\Client;
 use Typesense\Collections;
@@ -18,36 +21,76 @@ use Typesense\Operations;
 
 class TypesenseClient
 {
+    use DiscriminatorTrait;
+
+    /**
+     * @var string $connectionName
+     */
+    protected $connectionName;
     /**
      * @var ParameterBagInterface $parameterBag
      */
     protected $parameterBag;
 
-    public function __construct(ParameterBagInterface $parameterBag)
+    protected $collectionDefinitions;
+    protected $collectionClient;
+
+    protected $entityManager;
+
+    protected array $finders = [];
+
+    public function __construct(string $connectionName, array $collectionDefinitions, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
     {
+        $this->entityManager = $entityManager;
+
+        $this->connectionName = $connectionName;
+        $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
+
+        $this->collectionClient = new CollectionClient($this);
         $this->parameterBag = $parameterBag;
     }
 
-    public function prepare(?string $connectionName = null /* to be used later */): array
+    public function getCollectionDefinitions() { return $this->collectionDefinitions; }
+    public function getCollectionClient() { return $this->collectionClient; }
+
+    public function getConnectionName()
     {
-        $apiKey = $this->parameterBag->get("typesense.server.secret");
+        return $this->connectionName;
+    }
+
+    public function addFinder(CollectionFinder $collectionFinder)
+    {
+        $this->finders[$collectionFinder->getName()] = $collectionFinder;
+        return $this;
+    }
+
+    public function getFinders(): array { return $this->finders; }
+    public function getFinder(string $collectionName): ?CollectionFinder
+    {
+        return $this->finders[$collectionName] ?? null;
+    }
+
+    public function prepare(): array
+    {
+        $connectionName = $this->connectionName;
+        $apiKey = $this->parameterBag->get("typesense.connections.".$connectionName.".secret");
 
         if (!$apiKey) {
             if (is_cli()) {
                 throw new TypesenseException("Typesense API Key missing");
             }
-            return [];
+            return [null, [], []];
         }
 
-        $host = $this->parameterBag->get("typesense.server.host");
+        $host = $this->parameterBag->get("typesense.connections.".$connectionName.".host");
         $urlParsed = parse_url($host);
 
         $host     = $urlParsed["host"] ?? $host ?? "localhost";
-        $port     = $urlParsed["port"] ?? $this->parameterBag->get("typesense.server.port") ?? 8108;
-        $protocol = $urlParsed["scheme"] ?? ($this->parameterBag->get("typesense.server.use_https") ? "https" : "http");
+        $port     = $urlParsed["port"] ?? $this->parameterBag->get("typesense.connections.".$connectionName.".port") ?? 8108;
+        $protocol = $urlParsed["scheme"] ?? ($this->parameterBag->get("typesense.connections.".$connectionName.".use_https") ? "https" : "http");
 
         $node = ['host' => $host, 'port' => $port, 'protocol' => $protocol];
-        $options = $this->parameterBag->get("typesense.server.options") ?? [];
+        $options = $this->parameterBag->get("typesense.connections.".$connectionName.".options") ?? [];
 
         return [$apiKey, $node, $options];
     }
@@ -72,10 +115,11 @@ class TypesenseClient
         return $this->clientUrl;
     }
 
-    public function connect(?string $connectionName = null): ?Client
+    public function connect(): ?Client
     {
         if (!$this->client) {
-            list($apiKey, $node, $options) = $this->prepare($connectionName);
+            list($apiKey, $node, $options) = $this->prepare();
+            if($apiKey == null) return null;
 
             $this->client = new Client(array_merge($options, ["nodes" => [$node], "api_key" => $apiKey]));
             if ($this->client) {

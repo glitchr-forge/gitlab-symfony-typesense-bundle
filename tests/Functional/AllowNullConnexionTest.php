@@ -69,7 +69,7 @@ class AllowNullConnexionTest extends KernelTestCase
      */
     public function testSearchByAuthor()
     {
-        $typeSenseClient       = new TypesenseClient(null);
+        $typeSenseClient       = new TypesenseClient("default", null);
         $collectionClient      = new CollectionClient($typeSenseClient);
         $book                  = new Book(1, 'test', new Author('John Doe', 'France'), new \DateTime());
         $em                    = $this->getMockedEntityManager([$book]);

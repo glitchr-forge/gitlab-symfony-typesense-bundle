@@ -11,35 +11,43 @@ use Symfony\UX\Typesense\Manager\CollectionManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\UX\Typesense\Manager\TypesenseManager;
 
 #[AsCommand(name:'typesense:create', aliases:[], description:'Create Typesenses indexes')]
 class CreateCommand extends Command
 {
-    private $collectionManager;
+    private $typesenseManager;
 
-    public function __construct(CollectionManager $collectionManager)
+    public function __construct(TypesenseManager $typesenseManager)
     {
         parent::__construct();
-        $this->collectionManager = $collectionManager;
+        $this->typesenseManager = $typesenseManager;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $defs = $this->collectionManager->getCollectionDefinitions();
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-        foreach ($defs as $name => $def) {
-            $name = $def['name'];
-            $typesenseName = $def['typesense_name'];
-            try {
-                $output->writeln(sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $typesenseName));
-                $this->collectionManager->deleteCollection($name);
-            } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
-                $output->writeln(sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $typesenseName));
+            $output->writeln(sprintf('<info>Connection Typesense: </info> <comment>%s</comment>', $connectionName));
+
+            $collectionManager = $this->typesenseManager->getCollectionManager($connectionName);
+            foreach($this->typesenseManager->getFinders($connectionName) as $name => $finder) {
+
+                $def = $finder->getDefinition();
+
+                $name = $def['name'];
+                $typesenseName = $def['typesense_name'];
+                try {
+                    $output->writeln("\t" . sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $typesenseName));
+                    $collectionManager->deleteCollection($name);
+                } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
+                    $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $typesenseName));
+                }
+
+                $output->writeln("\t" . sprintf('<info>Creating</info> <comment>%s</comment>', $name));
+                $collectionManager->createCollection($name);
+                $output->writeln("");
             }
-
-            $output->writeln(sprintf('<info>Creating</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $typesenseName));
-            $this->collectionManager->createCollection($name);
-            $output->writeln("");
         }
 
         return 0;
