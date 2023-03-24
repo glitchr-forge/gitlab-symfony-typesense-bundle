@@ -119,36 +119,39 @@ class TypesenseIndexer
 
     public function postFlush()
     {
-        $this->indexDocuments();
-        $this->updateDocuments();
-        $this->deleteDocuments();
+        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
+
+            $this->indexDocuments($connectionName);
+            $this->updateDocuments($connectionName);
+            $this->deleteDocuments($connectionName);
+        }
 
         $this->resetDocuments();
     }
 
-    private function indexDocuments()
+    private function indexDocuments(?string $connectionName = null)
     {
         foreach ($this->documentsToIndex as $documentToIndex) {
-            $this->documentManager->index(...$documentToIndex);
+            $this->typesenseManager->getDocumentManager($connectionName)->index(...$documentToIndex);
         }
     }
 
-    private function updateDocuments()
+    private function updateDocuments(?string $connectionName = null)
     {
         foreach ($this->documentsToUpdate as $documentToUpdate) {
             try {
-                $this->documentManager->delete($documentToUpdate[0], $documentToUpdate[1]);
+                $this->typesenseManager->getDocumentManager($connectionName)->delete($documentToUpdate[0], $documentToUpdate[1]);
             } catch(\Typesense\Exceptions\ObjectNotFound $e) {
             }
 
-            $this->documentManager->index($documentToUpdate[0], $documentToUpdate[2]);
+            $this->typesenseManager->getDocumentManager($connectionName)->index($documentToUpdate[0], $documentToUpdate[2]);
         }
     }
 
-    private function deleteDocuments()
+    private function deleteDocuments(?string $connectionName = null)
     {
         foreach ($this->documentsToDelete as $documentToDelete) {
-            $this->documentManager->delete(...$documentToDelete);
+            $this->typesenseManager->getDocumentManager($connectionName)->delete(...$documentToDelete);
         }
     }
 
@@ -168,7 +171,6 @@ class TypesenseIndexer
     private function getCollectionNames($entity, ?string $connectionName = null): array
     {
         $entityClassname = ClassUtils::getClass($entity);
-        $connectionName = $this->typesenseManager->getConnectionName($connectionName);
 
         $collectionNames = [];
         foreach ($this->typesenseManager->getManagedClassNames($connectionName) as $key => $managedClassName) {
