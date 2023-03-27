@@ -53,13 +53,13 @@ class TypesenseExtension extends Extension
 
         $this->setConfiguration($container, $config, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
 
-        $defaultConnection = $config["default_connection"];
-        foreach($config["connections"] as $connectionName => $configuration) {
+        $defaultConnection = $config["default_connection"] ?? "default";
+        foreach($config["connections"] ?? [] as $connectionName => $configuration) {
 
             $this
                 ->initialize($connectionName)
 
-                ->loadCollections($connectionName, $configuration['collections'], $container)
+                ->loadCollections($connectionName, $configuration['collections'] ?? [], $container)
                 ->loadCollectionsFinder($connectionName, $container)
                 ->loadClient($connectionName, $configuration, $container)
 
