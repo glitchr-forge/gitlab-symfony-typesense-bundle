@@ -51,7 +51,7 @@ class CollectionFinder implements CollectionFinderInterface
     {
         $ids             = [];
         $primaryKeyInfos = $this->getPrimaryKeyInfo();
-        foreach ($response->getResults() as $result) {
+        foreach ($response->getResults() ?? [] as $result) {
             $ids[] = $result['document'][$primaryKeyInfos['documentAttribute']];
         }
 
