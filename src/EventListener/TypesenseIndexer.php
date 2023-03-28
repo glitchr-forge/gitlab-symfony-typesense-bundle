@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\EventListener;
 
-use Typesense\Bundle\Manager\CollectionManager;
-use Typesense\Bundle\Manager\DocumentManager;
-use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\DBAL\CollectionManager;
+use Typesense\Bundle\DBAL\DocumentManager;
+use Typesense\Bundle\DBAL\TypesenseManager;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;

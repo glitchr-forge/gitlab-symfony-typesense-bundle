@@ -7,8 +7,8 @@ namespace Typesense\Bundle\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Typesense\Bundle\Client\TypesenseClient;
-use Typesense\Bundle\Manager\CollectionManager;
+use Typesense\Bundle\Client\Connection;
+use Typesense\Bundle\DBAL\CollectionManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,7 +18,7 @@ class ConnectionTestCommand extends Command
 {
     private $collectionManager;
 
-    public function __construct(TypesenseClient $typesenseClient)
+    public function __construct(Connection $typesenseClient)
     {
         parent::__construct();
         $this->typesenseClient = $typesenseClient;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Typesense\Bundle\Manager;
+namespace Typesense\Bundle\DBAL;
 use Doctrine\ORM\ObjectManagerInterface;
 use DoctrineExtensions\Query\Mysql\Field;
 
@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Typesense\Bundle\Client\TypesenseClient;
+use Typesense\Bundle\Client\Connection;
 use Typesense\Bundle\ORM\CollectionFinder;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 
@@ -26,7 +26,7 @@ class TypesenseManager
         $this->parameterBag = $parameterBag;
     }
 
-    public function addClient(TypesenseClient $client)
+    public function addClient(Connection $client)
     {
         $this->clients[$client->getConnectionName()] = $client;
     }
@@ -56,12 +56,12 @@ class TypesenseManager
     }
 
     public function getDefaultConnectionName() { return $this->parameterBag->get("typesense.default_connection"); }
-    public function getDefaultConnection(): ?TypesenseClient { return $this->getConnection(); }
+    public function getDefaultConnection(): ?Connection { return $this->getConnection(); }
     public function getConnections(?string $connectionName = null): array
     {
         return $this->clients;
     }
-    public function getConnection(?string $connectionName = null): ?TypesenseClient
+    public function getConnection(?string $connectionName = null): ?Connection
     {
         $connectionName ??= $this->getDefaultConnectionName();
         return $this->clients[$connectionName];

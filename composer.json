@@ -1,5 +1,5 @@
 {
-    "name": "glitchr/typesense-bundle",
+    "name": "typesense/typesense-bundle",
     "description": "This bundle provides integration with Typesense in Symfony",
     "type": "symfony-bundle",
     "license": "MIT",

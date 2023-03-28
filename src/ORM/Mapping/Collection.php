@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Typesense\Bundle\Client;
 
 use Typesense\Bundle\ORM\TypesenseQuery;
-use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\DBAL\TypesenseManager;
 
 class Collection
 {
     protected $client;
     protected $definition;
 
-    public function __construct(TypesenseClient $client, array $definition)
+    public function __construct(Connection $client, array $definition)
     {
         $this->client = $client;
 

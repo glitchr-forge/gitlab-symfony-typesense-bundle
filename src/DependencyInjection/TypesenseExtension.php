@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Typesense\Bundle\Client\TypesenseClient;
+use Typesense\Bundle\Client\Connection;
 
 class TypesenseExtension extends Extension
 {

@@ -8,7 +8,7 @@ use App\Entity\Marketplace\Sales\Fee;
 use Typesense\Bundle\Client\CollectionClient;
 use Doctrine\ORM\ObjectManagerInterface;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
-use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\DBAL\TypesenseManager;
 
 class TypesenseFinder implements CollectionFinderInterface
 {
@@ -20,8 +20,8 @@ class TypesenseFinder implements CollectionFinderInterface
     public function __construct(CollectionClient $collection, ObjectManagerInterface $objectManager, array $collectionDefinition)
     {
         $this->collectionDefinition = $collectionDefinition;
-        $this->collectionClient = $collectionClient;
-        $this->objectManager               = $objectManager;
+        $this->collectionClient     = $collectionClient;
+        $this->objectManager        = $objectManager;
     }
 
     public function getDefinition(): array { return $this->collectionDefinition; }

@@ -7,11 +7,11 @@ namespace Typesense\Bundle\Command;
 use Doctrine\ORM\ObjectManager;
 use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Typesense\Bundle\Manager\CollectionManager;
+use Typesense\Bundle\DBAL\CollectionManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\DBAL\TypesenseManager;
 
 #[AsCommand(name:'typesense:create', aliases:[], description:'Create Typesenses indexes')]
 class CreateCommand extends Command

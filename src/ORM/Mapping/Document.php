@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Typesense\Bundle\Manager;
+namespace Typesense\Bundle\DBAL;
 
-use Typesense\Bundle\Client\TypesenseClient;
+use Typesense\Bundle\Client\Connection;
 
 class Document
 {
     private $client;
 
-    public function __construct(TypesenseClient $client)
+    public function __construct(Connection $client)
     {
         $this->client = $client;
     }

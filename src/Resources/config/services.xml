@@ -7,14 +7,14 @@
         <defaults public="true"/>
 
         <!-- @todo: Structure for multiserver configuration.. There will be multiple clients..  -->
-        <service id="typesense_manager" alias="Typesense\Bundle\Manager\TypesenseManager" />
-        <service id="Typesense\Bundle\Manager\TypesenseManager" public="true">
+        <service id="typesense_manager" alias="Typesense\Bundle\DBAL\TypesenseManager" />
+        <service id="Typesense\Bundle\DBAL\TypesenseManager" public="true">
             <argument type="service" id="parameter_bag"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
 
         <!-- Abstract definition for client. -->
-        <service id="typesense.client" class="Typesense\Bundle\Client\TypesenseClient" public="true"
+        <service id="typesense.client" class="Typesense\Bundle\Client\Connection" public="true"
                   abstract="true">
              <argument/> <!-- connection name -->
              <argument/> <!-- collection definition -->

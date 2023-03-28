@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Typesense\Bundle\DependencyInjection\Compiler\ClientPass;
 use Typesense\Bundle\DependencyInjection\Compiler\FinderPass;
-use Typesense\Bundle\DependencyInjection\Compiler\TypesenseClientPass;
+use Typesense\Bundle\DependencyInjection\Compiler\ConnectionPass;
 
 class TypesenseBundle extends Bundle
 {

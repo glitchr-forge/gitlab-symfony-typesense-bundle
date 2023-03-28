@@ -7,8 +7,8 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Workflow\Registry;
-use Typesense\Bundle\Client\TypesenseClient;
-use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\Client\Connection;
+use Typesense\Bundle\DBAL\TypesenseManager;
 use Typesense\Bundle\Typesense;
 
 class FinderPass implements CompilerPassInterface
