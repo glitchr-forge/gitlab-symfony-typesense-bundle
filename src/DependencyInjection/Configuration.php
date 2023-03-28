@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\DependencyInjection;
+namespace Typesense\Bundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;

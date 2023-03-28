@@ -1,5 +1,5 @@
 {
-    "name": "glitchr/ux-typesense",
+    "name": "glitchr/typesense-bundle",
     "description": "This bundle provides integration with Typesense in Symfony",
     "type": "symfony-bundle",
     "license": "MIT",
@@ -28,11 +28,11 @@
         "symfony/yaml": "^3.4 || ^4.4 || ^5.4 || ^6.0"
     },
     "autoload": {
-        "psr-4": { "Symfony\\UX\\Typesense\\": "src/" }
+        "psr-4": { "Typesense\\Bundle\\": "src/" }
     },
     "autoload-dev": {
         "psr-4": {
-            "Symfony\\UX\\Typesense\\Tests\\": "tests/"
+            "Typesense\\Bundle\\Tests\\": "tests/"
         }
     },
     "scripts": {

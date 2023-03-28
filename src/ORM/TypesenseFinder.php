@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Finder;
+namespace Typesense\Bundle\ORM;
 
 use App\Entity\Marketplace\Sales\Fee;
-use Symfony\UX\Typesense\Client\CollectionClient;
-use Doctrine\ORM\EntityManagerInterface;
+use Typesense\Bundle\Client\CollectionClient;
+use Doctrine\ORM\ObjectManagerInterface;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
-use Symfony\UX\Typesense\Manager\TypesenseManager;
+use Typesense\Bundle\Manager\TypesenseManager;
 
-class CollectionFinder implements CollectionFinderInterface
+class TypesenseFinder implements CollectionFinderInterface
 {
     private $collectionDefinition;
     private $collectionClient;
-    private $em;
+    private $objectManager;
 
     public function getName():string { return $this->collectionDefinition["name"]; }
-    public function __construct(TypesenseManager $typesenseManager, EntityManagerInterface $em, array $collectionDefinition)
+    public function __construct(CollectionClient $collection, ObjectManagerInterface $objectManager, array $collectionDefinition)
     {
         $this->collectionDefinition = $collectionDefinition;
-        $this->collectionClient = $typesenseManager->getCollectionManager()->getCollectionClient();
-        $this->em               = $em;
+        $this->collectionClient = $collectionClient;
+        $this->objectManager               = $objectManager;
     }
 
     public function getDefinition(): array { return $this->collectionDefinition; }
@@ -47,7 +47,7 @@ class CollectionFinder implements CollectionFinderInterface
         return $this->search($query)->getFacetCounts();
     }
 
-    private function hydrate($response, bool $cacheable = false)
+    private function hydrate(Response $response, bool $cacheable = false): self
     {
         $ids             = [];
         $primaryKeyInfos = $this->getPrimaryKeyInfo();
@@ -57,27 +57,15 @@ class CollectionFinder implements CollectionFinderInterface
 
         if (!count($ids)) return $response;
 
-        $classMetadata = $this->em->getClassMetadata($this->collectionDefinition['entity']);
-        $response->setHydratedHits($this->em
-            ->createQueryBuilder()
-                ->select('e')
-                ->from($this->collectionDefinition['entity'], "e")
-                ->where("e.".$primaryKeyInfos["entityAttribute"] ." IN (:ids)")
-                ->orderBy("FIELD(e.".$primaryKeyInfos["entityAttribute"].", ".implode(', ', $ids).")")
-                ->setParameter("ids", $ids)
-                ->setCacheable($cacheable)
-            ->getQuery()
-                ->useQueryCache($cacheable)
-                ->setCacheRegion($classMetadata->cache["region"] ?? null)
-            ->getResult()
-        );
+        $classMetadata = $this->objectManager->getClassMetadata($this->collectionDefinition['entity']);
+        $response->setHydratedHits();
 
         return $response->setHydrated(true);
     }
 
     private function search(TypesenseQuery $query)
     {
-        $classMetadata = $this->em->getClassMetadata($this->collectionDefinition['entity']);
+        $classMetadata = $this->objectManager->getClassMetadata($this->collectionDefinition['entity']);
         if(!$classMetadata->discriminatorColumn && $query->getParameter("discriminate_by"))
             throw new \LogicException("Class \"".$this->collectionDefinition['entity']."\" doesn't have discriminator values");
 
@@ -89,12 +77,12 @@ class CollectionFinder implements CollectionFinderInterface
         foreach($classNames as $className) {
 
             $relation = str_starts_with(trim($className), "^") ? ":!=" : ":=";
-            $classMetadata = $this->em->getClassMetadata(trim($className," ^"));
+            $classMetadata = $this->objectManager->getClassMetadata(trim($className," ^"));
 
             $query->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
         }
 
-        $result = $this->collectionClient->search($this->collectionDefinition['typesense_name'], $query);
+        $result = $this->collectionClient->search($this->collectionDefinition['name'], $query);
         return new TypesenseResponse($result);
     }
 
@@ -106,6 +94,6 @@ class CollectionFinder implements CollectionFinderInterface
             }
         }
 
-        throw new \Exception(sprintf('Primary key info have not been found for Typesense collection %s', $this->collectionDefinition['typesense_name']));
+        throw new \Exception(sprintf('Primary key info have not been found for Typesense collection %s', $this->collectionDefinition['name']));
     }
 }

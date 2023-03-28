@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Finder;
+namespace Typesense\Bundle\ORM;
 
 use Symfony\Component\ErrorHandler\Error\ClassNotFoundError;
 
-class TypesenseQuery
+class Query extends Request
 {
     public const INFIX_OFF = "off";
     public const INFIX_ALWAYS = "always";
@@ -18,34 +18,29 @@ class TypesenseQuery
         self::INFIX_FALLBACK,
     ];
 
-    private $searchParameters;
+    public const MAX_HITS = "max_hits";
+    public const SORT_BY = "sort_by";
+    public const FACET_BY = "facet_by";
+    public const INSTANCE_OF = "instance_of";
+    public const FILTER_BY = "filter_by";
+    public const PREFIX = "prefix";
 
-    public function __construct(string $q = "", string $queryBy = null)
-    {
-        $this->searchParameters = [];
-        $this->addParameter('q', $q);
-
-        if ($queryBy !== null) {
-            $this->addParameter('query_by', $queryBy);
-        }
-
-        return $this;
-    }
-
-    public function getParameters(): array
-    {
-        return $this->searchParameters;
-    }
-
-    public function getParameter(string $key): ?string
-    {
-        return $this->searchParameters[$key] ?? null;
-    }
-
-    public function hasParameter(string $key): bool
-    {
-        return isset($this->searchParameters[$key]);
-    }
+    public const FACET_QUERY = "facet_query";
+    public const NUM_TYPOS = "num_typos";
+    public const PAGE = "page";
+    public const PER_PAGE = "per_page";
+    public const GROUP_BY = "group_by";
+    public const GROUP_LIMIT = "group_limit";
+    public const INCLUDE_FIELDS = "include_fields";
+    public const EXCLUDE_FIELDS = "exclude_fields";
+    public const HIGHLIGHT_FULL_FIELDS = "highlight_full_fields";
+    public const SNIPPET_THRESHOLD = "snippet_threshold";
+    public const DROP_TOKENS_THRESHOLD = "drop_tokens_threshold";
+    public const TYPE_TOKENS_THRESHOLD = "typo_tokens_threshold";
+    public const PINNED_HITS = "pinned_hits";
+    public const HIDDEN_HITS = "hidden_hits";
+    public const INFIX = "infix";
+    public const MAX_FACET_VALUES = "max_facet_values";
 
     /**
      * Maximum number of hits returned. Increasing this value might increase search latency. Use all to return all hits found.
@@ -54,7 +49,7 @@ class TypesenseQuery
      */
     public function maxHits($maxHits): self
     {
-        return $this->addParameter('max_hits', $maxHits);
+        return $this->addHeader(self::MAX_HITS, $maxHits);
     }
 
     /**
@@ -62,7 +57,7 @@ class TypesenseQuery
      */
     public function prefix(bool $prefix): self
     {
-        return $this->addParameter('prefix', $prefix);
+        return $this->addHeader(self::PREFIX, $prefix);
     }
 
     /**
@@ -71,33 +66,15 @@ class TypesenseQuery
 
     public function filterBy(string $filterBy): self
     {
-        return $this->addParameter('filter_by', $filterBy);
+        return $this->addHeader(self::FILTER_BY, $filterBy);
     }
 
     public function addFilterBy(string $filterBy): self
     {
-        $_filterBy = $this->getParameter("filter_by");
+        $_filterBy = $this->getHeader(self::FILTER_BY);
         $filterBy = $_filterBy ? trim($_filterBy . " && " . $filterBy, " &") : $filterBy;
 
-        return $this->addParameter('filter_by', $filterBy);
-    }
-
-    public function q(string $q): self
-    {
-        return $this->addParameter('q', $q);
-    }
-
-    public function queryBy(string $filterBy): self
-    {
-        return $this->addParameter('query_by', $filterBy);
-    }
-
-    public function addQueryBy(string $filterBy): self
-    {
-        $_filterBy = $this->getParameter("query_by");
-        $filterBy = $_filterBy ? trim($_filterBy . ", " . $filterBy) : $filterBy;
-
-        return $this->addParameter('query_by', $filterBy);
+        return $this->addHeader(self::FILTER_BY, $filterBy);
     }
 
     public function notInstanceOf(string $class): self
@@ -105,10 +82,10 @@ class TypesenseQuery
         if(!class_exists($class))
             throw new ClassNotFoundError("Class \"".$class."\" is doesn't exists");
 
-        $_discriminateBy = $this->getParameter("discriminate_by");
+        $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
         $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", ^" . $class, " ,") : "^" . $class;
 
-        return $this->addParameter('discriminate_by', $discriminateBy);
+        return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }
 
     public function instanceOf(string $class): self
@@ -116,10 +93,10 @@ class TypesenseQuery
         if(!class_exists($class))
             throw new ClassNotFoundError("Class \"".$class."\" is doesn't exists");
 
-        $_discriminateBy = $this->getParameter("discriminate_by");
+        $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
         $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", " . $class, " ,") : $class;
 
-        return $this->addParameter('discriminate_by', $discriminateBy);
+        return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }
 
     /**
@@ -127,7 +104,7 @@ class TypesenseQuery
      */
     public function sortBy(string $sortBy): self
     {
-        return $this->addParameter('sort_by', $sortBy);
+        return $this->addHeader(self::SORT_BY, $sortBy);
     }
 
     /**
@@ -135,7 +112,7 @@ class TypesenseQuery
      */
     public function facetBy(string $facetBy): self
     {
-        return $this->addParameter('facet_by', $facetBy);
+        return $this->addHeader(self::FACET_BY, $facetBy);
     }
 
     /**
@@ -143,7 +120,7 @@ class TypesenseQuery
      */
     public function maxFacetValues(int $maxFacetValues): self
     {
-        return $this->addParameter('max_facet_values', $maxFacetValues);
+        return $this->addHeader(self::MAX_FACET_VALUES, $maxFacetValues);
     }
 
     /**
@@ -151,7 +128,7 @@ class TypesenseQuery
      */
     public function facetQuery(string $facetQuery): self
     {
-        return $this->addParameter('facet_query', $facetQuery);
+        return $this->addHeader(self::FACET_QUERY, $facetQuery);
     }
 
     /**
@@ -159,7 +136,7 @@ class TypesenseQuery
      */
     public function numTypos(int $numTypos): self
     {
-        return $this->addParameter('num_typos', $numTypos);
+        return $this->addHeader(self::NUM_TYPOS, $numTypos);
     }
 
     /**
@@ -167,7 +144,7 @@ class TypesenseQuery
      */
     public function page(int $page): self
     {
-        return $this->addParameter('page', $page);
+        return $this->addHeader(self::PAGE, $page);
     }
 
     /**
@@ -175,7 +152,7 @@ class TypesenseQuery
      */
     public function perPage(int $perPage): self
     {
-        return $this->addParameter('per_page', $perPage);
+        return $this->addHeader(self::PER_PAGE, $perPage);
     }
 
     /**
@@ -183,7 +160,7 @@ class TypesenseQuery
      */
     public function groupBy(string $groupBy): self
     {
-        return $this->addParameter('group_by', $groupBy);
+        return $this->addHeader(self::GROUP_BY, $groupBy);
     }
 
     /**
@@ -191,7 +168,7 @@ class TypesenseQuery
      */
     public function groupLimit(int $groupLimit): self
     {
-        return $this->addParameter('group_limit', $groupLimit);
+        return $this->addHeader(self::GROUP_LIMIT, $groupLimit);
     }
 
     /**
@@ -199,7 +176,7 @@ class TypesenseQuery
      */
     public function includeFields(string $includeFields): self
     {
-        return $this->addParameter('include_fields', $includeFields);
+        return $this->addHeader(self::INCLUDE_FIELDS, $includeFields);
     }
 
     /**
@@ -207,7 +184,7 @@ class TypesenseQuery
      */
     public function excludeFields(string $excludeFields): self
     {
-        return $this->addParameter('exclude_fields', $excludeFields);
+        return $this->addHeader(self::EXCLUDE_FIELDS, $excludeFields);
     }
 
     /**
@@ -215,7 +192,7 @@ class TypesenseQuery
      */
     public function highlightFullFields(string $highlightFullFields): self
     {
-        return $this->addParameter('highlight_full_fields', $highlightFullFields);
+        return $this->addHeader(self::HIGHLIGHT_FULL_FIELDS, $highlightFullFields);
     }
 
     /**
@@ -223,7 +200,7 @@ class TypesenseQuery
      */
     public function snippetThreshold(int $snippetThreshold): self
     {
-        return $this->addParameter('snippet_threshold', $snippetThreshold);
+        return $this->addHeader(self::SNIPPET_THRESHOLD, $snippetThreshold);
     }
 
     /**
@@ -231,7 +208,7 @@ class TypesenseQuery
      */
     public function dropTokensThreshold(int $dropTokensThreshold): self
     {
-        return $this->addParameter('drop_tokens_threshold', $dropTokensThreshold);
+        return $this->addHeader(self::DROP_TOKENS_THRESHOLD, $dropTokensThreshold);
     }
 
     /**
@@ -239,7 +216,7 @@ class TypesenseQuery
      */
     public function typoTokensThreshold(int $typoTokensThreshold): self
     {
-        return $this->addParameter('typo_tokens_threshold', $typoTokensThreshold);
+        return $this->addHeader(self::TYPE_TOKENS_THRESHOLD, $typoTokensThreshold);
     }
 
     /**
@@ -250,7 +227,7 @@ class TypesenseQuery
      */
     public function pinnedHits(string $pinnedHits): self
     {
-        return $this->addParameter('pinned_hits', $pinnedHits);
+        return $this->addHeader(self::PINNED_HITS, $pinnedHits);
     }
 
     /**
@@ -260,7 +237,7 @@ class TypesenseQuery
      */
     public function hiddenHits(string $hiddenHits): self
     {
-        return $this->addParameter('hidden_hits', $hiddenHits);
+        return $this->addHeader(self::HIDDEN_HITS, $hiddenHits);
     }
 
     /**
@@ -279,16 +256,6 @@ class TypesenseQuery
             return $this;
         }
 
-        return $this->addParameter('infix', $infix);
-    }
-
-    /**
-     * Generic method that allows to add any parameter to the TypesenseQuery.
-     */
-    public function addParameter($key, $value): self
-    {
-        $this->searchParameters[$key] = $value;
-
-        return $this;
+        return $this->addHeader(self::INFIX, $infix);
     }
 }

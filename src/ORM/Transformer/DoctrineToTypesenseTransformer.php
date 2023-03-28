@@ -2,30 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Transformer;
+namespace Typesense\Bundle\Transformer;
 
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Doctrine\Common\Util\ClassUtils;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
-use Symfony\UX\Typesense\TypesenseInterface;
+use Typesense\Bundle\TypesenseInterface;
 
 class DoctrineToTypesenseTransformer extends AbstractTransformer
 {
-    use DiscriminatorTrait;
-
     private $collectionDefinitions;
     private $entityToCollectionMapping;
     private $accessor;
-    protected $entityManager;
+    protected $objectManager;
 
-    public function __construct(EntityManagerInterface $entityManager, array $collectionDefinitions)
+    public function __construct(ObjectManagerInterface $objectManager, array $collectionDefinitions)
     {
-        $this->entityManager = $entityManager;
+        $this->objectManager = $objectManager;
         $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
-        $this->accessor              = PropertyAccess::createPropertyAccessor();
+
+        $this->accessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->getPropertyAccessor();
 
         $this->entityToCollectionMapping = [];
         foreach ($this->collectionDefinitions as $collection => $collectionDefinition) {
@@ -51,7 +49,7 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
         foreach ($fields as $key => $field) {
             try {
                 if (array_key_exists("discriminator", $field)) {
-                    $value = $this->entityManager->getClassMetadata(get_class($entity))->discriminatorValue;
+                    $value = $this->objectManager->getClassMetadata(get_class($entity))->discriminatorValue;
                 } else {
                     $value = $entity->__typesenseGetter($field['entity_attribute'] ?? $field["name"]?? $key, $field);
                 }

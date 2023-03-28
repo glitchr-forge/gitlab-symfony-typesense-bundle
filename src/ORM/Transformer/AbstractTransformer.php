@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Transformer;
+namespace Typesense\Bundle\Transformer;
 
 abstract class AbstractTransformer
 {

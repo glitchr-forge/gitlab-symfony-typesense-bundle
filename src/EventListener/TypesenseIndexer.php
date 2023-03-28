@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\EventListener;
+namespace Typesense\Bundle\EventListener;
 
-use Symfony\UX\Typesense\Manager\CollectionManager;
-use Symfony\UX\Typesense\Manager\DocumentManager;
-use Symfony\UX\Typesense\Manager\TypesenseManager;
-use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
+use Typesense\Bundle\Manager\CollectionManager;
+use Typesense\Bundle\Manager\DocumentManager;
+use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
@@ -16,7 +16,7 @@ class TypesenseIndexer
     private $managedClassNames;
     private $objetsIdThatCanBeDeletedByObjectHash = [];
 
-    private $documentsToIndex                     = [];
+    private $documentsToPersist                     = [];
     private $documentsToUpdate                    = [];
     private $documentsToDelete                    = [];
 
@@ -38,7 +38,7 @@ class TypesenseIndexer
             $data = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
 
             foreach ($collections as $collection) {
-                $this->documentsToIndex[] = [$collection, $data];
+                $this->documentsToPersist[] = [$collection, $data];
             }
         }
     }
@@ -79,7 +79,7 @@ class TypesenseIndexer
             }
         }
 
-        throw new \Exception(sprintf('Primary key info have not been found for Typesense collection %s', $collectionConfig['typesense_name']));
+        throw new \Exception(sprintf('Primary key info have not been found for Typesense collection %s', $collectionConfig['name']));
     }
 
     public function preRemove(LifecycleEventArgs $args)
@@ -121,7 +121,7 @@ class TypesenseIndexer
     {
         foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-            $this->indexDocuments($connectionName);
+            $this->persistDocuments($connectionName);
             $this->updateDocuments($connectionName);
             $this->deleteDocuments($connectionName);
         }
@@ -129,9 +129,9 @@ class TypesenseIndexer
         $this->resetDocuments();
     }
 
-    private function indexDocuments(?string $connectionName = null)
+    private function persistDocuments(?string $connectionName = null)
     {
-        foreach ($this->documentsToIndex as $documentToIndex) {
+        foreach ($this->documentsToPersist as $documentToIndex) {
             $this->typesenseManager->getDocumentManager($connectionName)->index(...$documentToIndex);
         }
     }
@@ -157,9 +157,9 @@ class TypesenseIndexer
 
     private function resetDocuments()
     {
-        $this->documentsToIndex  = [];
-        $this->documentsToUpdate = [];
-        $this->documentsToDelete = [];
+        $this->documentsToPersist = [];
+        $this->documentsToUpdate  = [];
+        $this->documentsToDelete  = [];
     }
 
     private function entityIsNotManaged($entity, ?string $connectionName = null)

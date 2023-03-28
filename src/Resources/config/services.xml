@@ -7,14 +7,14 @@
         <defaults public="true"/>
 
         <!-- @todo: Structure for multiserver configuration.. There will be multiple clients..  -->
-        <service id="typesense_manager" alias="Symfony\UX\Typesense\Manager\TypesenseManager" />
-        <service id="Symfony\UX\Typesense\Manager\TypesenseManager" public="true">
+        <service id="typesense_manager" alias="Typesense\Bundle\Manager\TypesenseManager" />
+        <service id="Typesense\Bundle\Manager\TypesenseManager" public="true">
             <argument type="service" id="parameter_bag"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
 
         <!-- Abstract definition for client. -->
-        <service id="typesense.client" class="Symfony\UX\Typesense\Client\TypesenseClient" public="true"
+        <service id="typesense.client" class="Typesense\Bundle\Client\TypesenseClient" public="true"
                   abstract="true">
              <argument/> <!-- connection name -->
              <argument/> <!-- collection definition -->
@@ -23,7 +23,7 @@
         </service>
 
         <!-- Abstract definition for all generic finders. -->
-        <service id="typesense.finder" class="Symfony\UX\Typesense\Finder\CollectionFinder" public="true"
+        <service id="typesense.finder" class="Typesense\Bundle\ORM\CollectionFinder" public="true"
                  abstract="true">
             <argument type="service" id="typesense_manager"/>
             <argument type="service" id="doctrine.orm.entity_manager"/>
@@ -31,19 +31,19 @@
         </service>
 
         <!-- Abstract definition for all specific finders. -->
-        <service id="typesense.specific_finder" class="Symfony\UX\Typesense\Finder\SpecificCollectionFinder"
+        <service id="typesense.specific_finder" class="Typesense\Bundle\ORM\SpecificCollectionFinder"
                  public="true" abstract="true">
             <argument/> <!-- generic finder class -->
             <argument/> <!-- finder arguments -->
         </service>
 
         <service id="typesense.autocomplete_controller"
-                 class="Symfony\UX\Typesense\Controller\TypesenseAutocompleteController">
+                 class="Typesense\Bundle\Controller\TypesenseAutocompleteController">
             <argument/> <!-- routes -->
         </service>
 
         <!-- doctrine -->
-        <service id="typesense.listener.doctrine_indexer" class="Symfony\UX\Typesense\EventListener\TypesenseIndexer">
+        <service id="typesense.listener.doctrine_indexer" class="Typesense\Bundle\EventListener\TypesenseIndexer">
             <argument type="service" id="typesense_manager"/>
             <tag name="doctrine.event_listener" event="postPersist" priority="500" connection="default"/>
             <tag name="doctrine.event_listener" event="postUpdate" priority="500" connection="default"/>
@@ -53,17 +53,17 @@
         </service>
 
         <!-- commands -->
-        <service id="typesense.command.create" class="Symfony\UX\Typesense\Command\CreateCommand" public="true">
+        <service id="typesense.command.create" class="Typesense\Bundle\Command\CreateCommand" public="true">
             <tag name="console.command"/>
             <argument type="service" id="typesense_manager"/>
         </service>
 
-        <service id="typesense.command.connection.test" class="Symfony\UX\Typesense\Command\ConnectionTestCommand" public="true">
+        <service id="typesense.command.connection.test" class="Typesense\Bundle\Command\ConnectionTestCommand" public="true">
             <tag name="console.command"/>
             <argument type="service" id="typesense_manager"/>
         </service>
 
-        <service id="typesense.command.import" class="Symfony\UX\Typesense\Command\ImportCommand" public="true">
+        <service id="typesense.command.import" class="Typesense\Bundle\Command\ImportCommand" public="true">
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
         </service>

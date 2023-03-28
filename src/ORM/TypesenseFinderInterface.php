@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Finder;
+namespace Typesense\Bundle\ORM;
 
 interface CollectionFinderInterface
 {

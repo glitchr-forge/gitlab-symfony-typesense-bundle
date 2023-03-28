@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Manager;
+namespace Typesense\Bundle\Manager;
 
-use Symfony\UX\Typesense\Client\TypesenseClient;
+use Typesense\Bundle\Client\TypesenseClient;
 
-class DocumentManager
+class Document
 {
     private $client;
 

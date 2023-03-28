@@ -1,14 +1,14 @@
 <?php
 
-namespace Symfony\UX\Typesense\DependencyInjection\Compiler;
+namespace Typesense\Bundle\DependencyInjection\Compiler;
 
 use Base\Annotations\AnnotationReader;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Workflow\Registry;
-use Symfony\UX\Typesense\Manager\TypesenseManager;
-use Symfony\UX\Typesense\Typesense;
+use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\Typesense;
 
 class ClientPass implements CompilerPassInterface
 {

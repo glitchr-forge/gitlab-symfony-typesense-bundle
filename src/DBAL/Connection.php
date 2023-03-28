@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Client;
+namespace Typesense\Bundle\Client;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\UX\Typesense\Exception\TypesenseException;
-use Symfony\UX\Typesense\Finder\CollectionFinder;
-use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
+use Typesense\Bundle\Exception\TypesenseException;
+use Typesense\Bundle\ORM\CollectionFinder;
+use Typesense\Bundle\Manager\CollectionManager;
+use Typesense\Bundle\Manager\DocumentManager;
+use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Typesense\Aliases;
 use Typesense\Client;
 use Typesense\Collections;
@@ -19,55 +21,65 @@ use Typesense\Metrics;
 use Typesense\MultiSearch;
 use Typesense\Operations;
 
-class TypesenseClient
+class Connection
 {
-    use DiscriminatorTrait;
-
     /**
      * @var string $connectionName
      */
     protected $connectionName;
+
     /**
      * @var ParameterBagInterface $parameterBag
      */
     protected $parameterBag;
 
-    protected $collectionDefinitions;
-    protected $collectionClient;
+    /**
+     * @var ObjectManagerInterface $objectManager
+     */
+    protected $objectManager;
+    protected $transformer;
 
-    protected $entityManager;
-
-    protected array $finders = [];
-
-    public function __construct(string $connectionName, array $collectionDefinitions, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
+    public function getDoctrineTransformer(?string $connectionName = null) :?DoctrineToTypesenseTransformer
     {
-        $this->entityManager = $entityManager;
+        $connectionName ??= $this->getDefaultConnectionName();
+        return $this->doctrineTransformers[$connectionName] ?? null;
+    }
+    protected array $finders = []; // Create on-demand during compilation pass
+    protected array $collectionClients = []; // For a given connection, this array contains the list of collection
 
+    public function __construct(string $connectionName, array $collectionDefinitions, ParameterBagInterface $parameterBag, ObjectManagerInterface $objectManager)
+    {
         $this->connectionName = $connectionName;
-        $this->collectionDefinitions = $this->extendsSubclasses($collectionDefinitions);
-
-        $this->collectionClient = new CollectionClient($this);
+        $this->objectManager = $objectManager;
         $this->parameterBag = $parameterBag;
+
+        // Create collection clients
+        $this->collectionClients = [];
+        foreach($collectionDefinitions as $collectionDefinition) {
+            $this->collectionClients[] = new CollectionClient($this, $collectionDefinition);
+        }
+
+        // Prepare transformer and managers
+        $this->transformer = new DoctrineToTypesenseTransformer($this);
+        $this->documentManager = new DocumentManager($this);
+        $this->collectionManager = new CollectionManager($this);
     }
 
-    public function getCollectionDefinitions() { return $this->collectionDefinitions; }
-    public function getCollectionClient() { return $this->collectionClient; }
+    public function getCollection() { return $this->collectionClients; }
+    public function getCollectionDefinitions() { return array_map(fn($c) => $c->getDefinition(), $this->collectionClients); }
 
-    public function getConnectionName()
+    public function getConnectionName() { return $this->connectionName; }
+
+    public function getFinders(): array { return $this->finders; }
+    public function getFinder(string $collectionName): ?CollectionFinder
     {
-        return $this->connectionName;
+        return $this->finders[$collectionName] ?? null;
     }
 
     public function addFinder(CollectionFinder $collectionFinder)
     {
         $this->finders[$collectionFinder->getName()] = $collectionFinder;
         return $this;
-    }
-
-    public function getFinders(): array { return $this->finders; }
-    public function getFinder(string $collectionName): ?CollectionFinder
-    {
-        return $this->finders[$collectionName] ?? null;
     }
 
     public function prepare(): array
@@ -95,26 +107,6 @@ class TypesenseClient
         return [$apiKey, $node, $options];
     }
 
-    private ?Client $client = null;
-    public function getClient(): ?Client
-    {
-        if (!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->client;
-    }
-
-    protected ?string $clientUrl = null;
-    public function getClientUrl(): ?string
-    {
-        if (!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->clientUrl;
-    }
-
     public function connect(): ?Client
     {
         if (!$this->client) {
@@ -130,29 +122,36 @@ class TypesenseClient
         return $this->client;
     }
 
-    /**
-     * This allow to be use to use new Typesense\Client functions
-     * before we update this client.
-     */
-    public function __call($name, $arguments)
+    private ?Client $client = null;
+    public function client(): ?Client
+    {
+        if(!$this->client) {
+            $this->client = $this->connect();
+        }
+
+        return $this->client;
+    }
+
+    protected ?string $clientUrl = null;
+    public function clientUrl(): ?string
+    {
+        if(!$this->client) {
+            $this->client = $this->connect();
+        }
+
+        return $this->clientUrl;
+    }
+
+    public function collection($name): ?CollectionClient
     {
         if (!$this->client) {
             $this->client = $this->connect();
         }
 
-        return $this->client?->{$name}(...$arguments);
+        return $this->client?->collectionClients[$name] ?? null;
     }
 
-    public function __get($name)
-    {
-        if (!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->client?->{$name};
-    }
-
-    public function isOperationnal(): bool
+    public function isConnected(): bool
     {
         if (!$this->client) {
             $this->client = $this->connect();

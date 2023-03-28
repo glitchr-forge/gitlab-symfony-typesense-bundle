@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Command;
+namespace Typesense\Bundle\Command;
 
-use Symfony\UX\Typesense\Manager\CollectionManager;
-use Symfony\UX\Typesense\Manager\DocumentManager;
-use Symfony\UX\Typesense\Manager\TypesenseManager;
-use Symfony\UX\Typesense\Transformer\DoctrineToTypesenseTransformer;
-use Doctrine\ORM\EntityManagerInterface;
+use Typesense\Bundle\Manager\CollectionManager;
+use Typesense\Bundle\Manager\DocumentManager;
+use Typesense\Bundle\Manager\TypesenseManager;
+use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
+use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -51,14 +51,13 @@ class ImportCommand extends Command
 
         $action = $input->getOption('action');
 
-        $this->typesenseManager->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
+        $this->typesenseManager->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
 
         $execStart = microtime(true);
         $populated = 0;
 
         $io->newLine();
 
-        
         foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
             $output->writeln(sprintf('<info>Connection Typesense: </info> <comment>%s</comment>', $connectionName));
@@ -66,13 +65,13 @@ class ImportCommand extends Command
             $collectionDefinitions = $this->typesenseManager->getCollectionManager($connectionName)->getCollectionDefinitions();
             foreach ($collectionDefinitions as $collectionDefinition) {
 
-                $collectionName = $collectionDefinition['typesense_name'];
+                $collectionName = $collectionDefinition['name'];
                 $class = $collectionDefinition['entity'];
 
-                $q = $this->typesenseManager->getEntityManager()->createQuery('select e from ' . $class . ' e');
+                $q = $this->typesenseManager->getObjectManager()->createQuery('select e from ' . $class . ' e');
                 $entities = $q->toIterable();
 
-                $nbEntities = (int) $this->typesenseManager->getEntityManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
+                $nbEntities = (int) $this->typesenseManager->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
                 $populated += $nbEntities;
 
                 $data = [];
