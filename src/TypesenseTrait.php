@@ -1,6 +1,6 @@
 <?php
 
-namespace Symfony\UX\Typesense;
+namespace Typesense\Bundle;
 
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -9,7 +9,7 @@ trait TypesenseTrait
 {
     public function __typesenseGetter(string $propertyName, array $propertyInfo): mixed
     {
-        $accessor = PropertyAccess::createPropertyAccessor();
+        $accessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->getPropertyAccessor();
 
         // Look for property value based on property path
         $value = $this;

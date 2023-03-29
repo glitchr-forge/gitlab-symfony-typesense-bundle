@@ -1,6 +1,6 @@
 <?php
 
-namespace Symfony\UX\Typesense;
+namespace Typesense\Bundle;
 
 interface TypesenseInterface
 {

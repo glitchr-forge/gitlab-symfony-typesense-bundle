@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Finder;
+namespace Typesense\Bundle\ORM\Query;
 
-class TypesenseResponse
+class Response
 {
     private $facetCounts;
     private $found;

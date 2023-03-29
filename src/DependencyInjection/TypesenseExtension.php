@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\DependencyInjection;
+namespace Typesense\Bundle\DependencyInjection;
 
 use Base\Service\Model\IconProvider\AbstractIconAdapter;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -13,10 +13,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\UX\Typesense\Client\TypesenseClient;
+use Typesense\Bundle\Client\Connection;
 
 class TypesenseExtension extends Extension
 {
+
     /**
      * An array of collections as configured by the extension.
      *
@@ -60,8 +61,8 @@ class TypesenseExtension extends Extension
                 ->initialize($connectionName)
 
                 ->loadCollections($connectionName, $configuration['collections'] ?? [], $container)
-                ->loadCollectionsFinder($connectionName, $container)
-                ->loadClient($connectionName, $configuration, $container)
+                ->loadFinders($connectionName, $container)
+                ->loadConnection($connectionName, $configuration, $container)
 
                 ->loadFinderServices($connectionName, $container)
 
@@ -129,30 +130,8 @@ class TypesenseExtension extends Extension
 
             $collectionName = $this->parameters[$connectionName]['collection_prefix'] . ($config['collection_name'] ?? $name);
 
-            $primaryKeyExists = false;
-
-            foreach ($config['fields'] as $key => $fieldConfig) {
-                $fieldConfig["name"] = $key;
-                if (!isset($fieldConfig['type'])) {
-                    throw new \Exception('typesense.collections.'.$name.'.'.$key.'.type must be set');
-                }
-
-                if ($fieldConfig['type'] === 'primary') {
-                    $primaryKeyExists = true;
-                }
-                if (!isset($fieldConfig['entity_attribute'])) {
-                    $config['fields'][$key]['entity_attribute'] = $key;
-                }
-            }
-
-            if (!$primaryKeyExists) {
-                $config['fields']['id'] = [
-                    'name' => 'id',
-                    'entity_attribute' => 'id',
-                    'type' => 'primary'
-                ];
-            }
-
+            //
+            // Declare finders for autowiring..
             if (isset($config['finders'])) {
 
                 foreach ($config['finders'] as $finderName => $finderConfig) {
@@ -170,11 +149,9 @@ class TypesenseExtension extends Extension
             }
 
             $this->collectionDefinitions[$connectionName][$name] = [
-                'typesense_name'        => $collectionName,
-                'entity'                => $config['entity'],
-                'name'                  => $name,
+                'class'                => $config['entity'],
+                'name'                  => $collectionName,
                 'fields'                => $config['fields'],
-                'default_sorting_field' => $config['default_sorting_field'],
                 'token_separators'      => $config['token_separators'],
                 'symbols_to_index'      => $config['symbols_to_index'],
             ];
@@ -186,7 +163,7 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured index finders.
      */
-    private function loadCollectionsFinder(string $connectionName, ContainerBuilder $container)
+    private function loadFinders(string $connectionName, ContainerBuilder $container)
     {
         foreach ($this->collectionDefinitions[$connectionName] as $name => $config) {
 
@@ -238,7 +215,7 @@ class TypesenseExtension extends Extension
             $finderServices[$finderName] = new Reference($finderId);
         }
 
-        $controllerDef = $container->getDefinition('typesense.autocomplete_controller');
+        $controllerDef = $container->getDefinition()('typesense.autocomplete_controller');
         $controllerDef->replaceArgument(0, $finderServices);
 
         return $this;

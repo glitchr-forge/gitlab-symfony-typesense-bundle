@@ -2,32 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Manager;
+namespace Typesense\Bundle\DBAL;
 
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\UX\Typesense\Client\CollectionClient;
-use Symfony\UX\Typesense\Client\TypesenseClient;
-use Symfony\UX\Typesense\Traits\DiscriminatorTrait;
-use Symfony\UX\Typesense\Transformer\AbstractTransformer;
+use Doctrine\ORM\ObjectManager;
+use Doctrine\ORM\ObjectManagerInterface;
+use Typesense\Bundle\Client\CollectionClient;
+use Typesense\Bundle\Client\Connection;
+use Typesense\Bundle\Transformer\AbstractTransformer;
 
-class CollectionManager
+class Transaction
 {
     protected $collectionDefinitions;
-    protected $collectionClient;
+    protected $collection;
     protected $doctrineTransformer;
 
     protected $client;
     protected $typesenseManager;
     /**
-     * @var EntityManagerInterface
+     * @var ObjectManagerInterface
      */
 
-    public function __construct(TypesenseManager $typesenseManager, ?string $connectionName = null)
+    public function __construct(Documents $document)
     {
-        $this->client = $typesenseManager->getConnection($connectionName);
-        $this->collectionDefinitions = $this->client->getCollectionDefinitions();
-        $this->collectionClient      = $this->client->getCollectionClient();
+        $this->client                = $client;
+        $this->collection      = $this->client->getCollectionClient();
 
         $this->typesenseManager = $typesenseManager;
     }
@@ -39,23 +37,30 @@ class CollectionManager
 
     public function getCollectionClient(): CollectionClient
     {
-        return $this->collectionClient;
+        return $this->collection;
     }
 
-    public function getManagedClassNames()
+    public function getClassNames()
     {
         $managedClassNames = [];
         foreach ($this->collectionDefinitions as $name => $collectionDefinition) {
-            $collectionName = $collectionDefinition['typesense_name'] ?? $name;
+            $collectionName = $collectionDefinition['name'] ?? $name;
             $managedClassNames[$collectionName] = $collectionDefinition['entity'];
         }
 
         return $managedClassNames;
     }
 
+    public function getCollection($collectionDefinitionName)
+    {
+        $list = $this->getAllCollections();
+        dump($list, $collectionDefinitionName);
+        exit(1);
+    }
+
     public function getAllCollections()
     {
-        return $this->collectionClient->list();
+        return $this->collection->list();
     }
 
     public function createAllCollections()
@@ -69,7 +74,7 @@ class CollectionManager
     {
         $definition = $this->collectionDefinitions[$collectionDefinitionName];
 
-        $this->collectionClient->delete($definition['typesense_name']);
+        $this->collection->delete($definition['name']);
     }
 
     public function createCollection($collectionDefinitionName)
@@ -85,16 +90,17 @@ class CollectionManager
             $fieldDefinition['type'] = $this->typesenseManager->getDoctrineTransformer($this->client->getConnectionName())->castType($fieldDefinition['type']);
             $fieldDefinition["name"] ??= $key;
             $fields[]                = $fieldDefinition;
+
         }
 
         //to pass the tests
         $tokenSeparators = array_key_exists('token_separators', $definition) ? $definition['token_separators'] : [];
         $symbolsToIndex  = array_key_exists('symbols_to_index', $definition) ? $definition['symbols_to_index'] : [];
 
-        $this->collectionClient->create(
-            $definition['typesense_name'],
+        $this->collection->create(
+            $definition['name'],
             $fields,
-            $definition['default_sorting_field'],
+            $definition['default_sorting_field'] ?? null,
             $tokenSeparators,
             $symbolsToIndex
         );

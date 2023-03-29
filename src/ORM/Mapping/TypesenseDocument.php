@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Symfony\UX\Typesense\Manager;
+namespace Typesense\Bundle\ORM\Mapping;
 
-use Symfony\UX\Typesense\Client\TypesenseClient;
+use Typesense\Bundle\Client\Connection;
 
-class DocumentManager
+class TypesenseDocument
 {
     private $client;
 
-    public function __construct(TypesenseClient $client)
+    public function __construct(Connection $client)
     {
         $this->client = $client;
     }
@@ -21,7 +21,7 @@ class DocumentManager
             return null;
         }
 
-        return $this->client->collections[$collection]->documents[$id]->delete();
+        return $this->client->getCollection($collection)->documents[$id]->delete();
     }
 
     public function index($collection, $data)
@@ -30,7 +30,7 @@ class DocumentManager
             return null;
         }
 
-        return $this->client->collections[$collection]->documents->create($data);
+        return $this->client->getCollection($collection)->documents->create($data);
     }
 
     public function update($collection, $data)
@@ -39,7 +39,7 @@ class DocumentManager
             return null;
         }
 
-        return $this->client->collections[$collection]->documents->update($data);
+        return $this->client->getCollection($collection)->documents->update($data);
     }
 
     public function import(string $collection, array $data, string $action = 'create')
@@ -48,6 +48,6 @@ class DocumentManager
             return [];
         }
 
-        return $this->client->collections[$collection]->documents->import($data, ['action' => $action]);
+        return $this->client->getCollection($collection)->documents->import($data, ['action' => $action]);
     }
 }
