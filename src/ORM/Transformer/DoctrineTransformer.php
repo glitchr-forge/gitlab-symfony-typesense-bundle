@@ -69,7 +69,7 @@ class DoctrineTransformer extends AbstractTransformer
         return $data;
     }
 
-    public function castValue(string $entityClass, string $propertyName, $value)
+    public function get(string $entityClass, string $propertyName, $value)
     {
         $collection = $this->entityToCollectionMapping[$entityClass];
         $this->collectionDefinitions[$collection]['fields'][$propertyName]["name"] ??= $propertyName;
@@ -85,7 +85,7 @@ class DoctrineTransformer extends AbstractTransformer
 
         $collectionFieldsDefinitions = array_values($this->collectionDefinitions[$collection]['fields']);
         $originalType                = $collectionFieldsDefinitions[$key]['type'];
-        $castedType                  = $this->castType($originalType);
+        $castedType                  = $this->cast($originalType);
 
         switch ($originalType.":".$castedType) {
 
@@ -104,9 +104,11 @@ class DoctrineTransformer extends AbstractTransformer
                         return $v->__toString();
                     })->toArray()
                 )) ?? [];
+
             case self::TYPE_STRING .":".self::TYPE_STRING:
             case self::TYPE_PRIMARY.":".self::TYPE_STRING:
                 return (string) $value;
+
             default:
                 return is_array($value) ? array_values(array_filter($value)) : $value;
         }
