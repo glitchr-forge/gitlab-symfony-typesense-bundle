@@ -2,16 +2,14 @@
 
 namespace Typesense\Bundle\DependencyInjection\Compiler;
 
-use Base\Annotations\AnnotationReader;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\Workflow\Registry;
-use Typesense\Bundle\Client\Connection;
+
 use Typesense\Bundle\DBAL\TypesenseManager;
 use Typesense\Bundle\Typesense;
 
-class FinderPass implements CompilerPassInterface
+class ConnectionPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
@@ -20,13 +18,11 @@ class FinderPass implements CompilerPassInterface
         }
 
         $definition     = $container->findDefinition(TypesenseManager::class);
-        $taggedServices = $container->findTaggedServiceIds("typesense.finder");
-        foreach ($taggedServices as $serviceName => $tags) {
+        $taggedServices = $container->findTaggedServiceIds("typesense.connection");
+        foreach ($taggedServices as $className => $tags) {
 
-            $reference = new Reference($serviceName);
-            $connectionName = explode(".", $serviceName)[2] ?? null;
-
-            $definition->addMethodCall("addFinder", [$connectionName, $reference]);
+            $reference = new Reference($className);
+            $definition->addMethodCall("addConnection", [$reference]);
         }
     }
 }

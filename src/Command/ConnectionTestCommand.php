@@ -8,7 +8,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Typesense\Bundle\Client\Connection;
-use Typesense\Bundle\DBAL\CollectionManager;
+use Typesense\Bundle\DBAL\Collections;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name:'typesense:connection:test', aliases:[], description:'Test connections to Typesense servers')]
 class ConnectionTestCommand extends Command
 {
-    private $collectionManager;
+    private $collections;
 
     public function __construct(Connection $typesenseClient)
     {

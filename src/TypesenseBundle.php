@@ -12,17 +12,21 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Typesense\Bundle\DependencyInjection\Compiler\ClientPass;
 use Typesense\Bundle\DependencyInjection\Compiler\FinderPass;
 use Typesense\Bundle\DependencyInjection\Compiler\ConnectionPass;
+use Typesense\Bundle\DependencyInjection\Compiler\MetadataPass;
 
 class TypesenseBundle extends Bundle
 {
     public function boot() {
 
-        $objectManager = $this->container->get('doctrine.orm.entity_manager');
-        $objectManagerConfig  = $objectManager->getConfiguration();
+        if($this->container->has('doctrine.orm.entity_manager')) {
 
-        if (class_exists(Field::class)) {
-            $objectManagerConfig
-                ->addCustomNumericFunction("FIELD", Field::class);
+            $objectManager = $this->container->get('doctrine.orm.entity_manager');
+            $objectManagerConfig  = $objectManager->getConfiguration();
+
+            if (class_exists(Field::class)) {
+                $objectManagerConfig
+                    ->addCustomNumericFunction("FIELD", Field::class);
+            }
         }
     }
 
@@ -31,7 +35,8 @@ class TypesenseBundle extends Bundle
         parent::build($container);
         $this->container = $container;
 
-        $container->addCompilerPass(new ClientPass());
+        $container->addCompilerPass(new ConnectionPass());
+        $container->addCompilerPass(new MetadataPass());
         $container->addCompilerPass(new FinderPass());
     }
 }

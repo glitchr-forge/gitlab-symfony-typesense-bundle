@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM;
 
-interface CollectionFinderInterface
+use Typesense\Bundle\ORM\Mapping\Collection;
+use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
+
+interface TypesenseManagerInterface
 {
-    public function facet(string $facetBy, ?TypesenseQuery $query = null): mixed;
+    public function getCollection(string $collectionName, ?string $connectionName = null): Collection;
+    public function getFinder (string $collectionName, ?string $connectionName = null): ?TypesenseFinder;
+    public function getMetadata(string $className, ?string $connectionName = null): ?TypesenseMetadata;
 
-    public function query(TypesenseQuery $query, bool $cacheable = false): TypesenseResponse;
-
-    public function rawQuery(TypesenseQuery $query): TypesenseResponse;
 }

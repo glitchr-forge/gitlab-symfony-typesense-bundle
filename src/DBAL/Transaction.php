@@ -13,7 +13,7 @@ use Typesense\Bundle\Transformer\AbstractTransformer;
 class Transaction
 {
     protected $collectionDefinitions;
-    protected $collectionClient;
+    protected $collection;
     protected $doctrineTransformer;
 
     protected $client;
@@ -22,10 +22,10 @@ class Transaction
      * @var ObjectManagerInterface
      */
 
-    public function __construct(DocumentManager $document)
+    public function __construct(Documents $document)
     {
         $this->client                = $client;
-        $this->collectionClient      = $this->client->getCollectionClient();
+        $this->collection      = $this->client->getCollectionClient();
 
         $this->typesenseManager = $typesenseManager;
     }
@@ -37,10 +37,10 @@ class Transaction
 
     public function getCollectionClient(): CollectionClient
     {
-        return $this->collectionClient;
+        return $this->collection;
     }
 
-    public function getManagedClassNames()
+    public function getClassNames()
     {
         $managedClassNames = [];
         foreach ($this->collectionDefinitions as $name => $collectionDefinition) {
@@ -60,7 +60,7 @@ class Transaction
 
     public function getAllCollections()
     {
-        return $this->collectionClient->list();
+        return $this->collection->list();
     }
 
     public function createAllCollections()
@@ -74,7 +74,7 @@ class Transaction
     {
         $definition = $this->collectionDefinitions[$collectionDefinitionName];
 
-        $this->collectionClient->delete($definition['name']);
+        $this->collection->delete($definition['name']);
     }
 
     public function createCollection($collectionDefinitionName)
@@ -97,7 +97,7 @@ class Transaction
         $tokenSeparators = array_key_exists('token_separators', $definition) ? $definition['token_separators'] : [];
         $symbolsToIndex  = array_key_exists('symbols_to_index', $definition) ? $definition['symbols_to_index'] : [];
 
-        $this->collectionClient->create(
+        $this->collection->create(
             $definition['name'],
             $fields,
             $definition['default_sorting_field'] ?? null,

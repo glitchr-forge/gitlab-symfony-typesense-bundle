@@ -11,7 +11,7 @@ use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Typesense\Bundle\TypesenseInterface;
 
-class DoctrineToTypesenseTransformer extends AbstractTransformer
+class DoctrineTransformer extends AbstractTransformer
 {
     private $collectionDefinitions;
     private $entityToCollectionMapping;
@@ -87,22 +87,25 @@ class DoctrineToTypesenseTransformer extends AbstractTransformer
         $originalType                = $collectionFieldsDefinitions[$key]['type'];
         $castedType                  = $this->castType($originalType);
 
-        switch ($originalType.$castedType) {
-            case self::TYPE_DATETIME.self::TYPE_INT_64:
+        switch ($originalType.":".$castedType) {
+
+            case self::TYPE_DATETIME.":".self::TYPE_INT_64:
                 if ($value instanceof \DateTime) {
                     return $value->getTimestamp();
                 }
                 return null;
-            case self::TYPE_OBJECT.self::TYPE_STRING:
+
+            case self::TYPE_OBJECT.":".self::TYPE_STRING:
                 return $value->__toString();
-            case self::TYPE_COLLECTION.self::TYPE_ARRAY_STRING:
+
+            case self::TYPE_COLLECTION.":".self::TYPE_ARRAY_STRING:
                 return array_filter(array_values(
                     $value->map(function ($v) {
                         return $v->__toString();
                     })->toArray()
                 )) ?? [];
-            case self::TYPE_STRING.self::TYPE_STRING:
-            case self::TYPE_PRIMARY.self::TYPE_STRING:
+            case self::TYPE_STRING .":".self::TYPE_STRING:
+            case self::TYPE_PRIMARY.":".self::TYPE_STRING:
                 return (string) $value;
             default:
                 return is_array($value) ? array_values(array_filter($value)) : $value;

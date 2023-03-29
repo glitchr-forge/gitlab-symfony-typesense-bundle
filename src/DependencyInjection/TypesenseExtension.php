@@ -61,8 +61,8 @@ class TypesenseExtension extends Extension
                 ->initialize($connectionName)
 
                 ->loadCollections($connectionName, $configuration['collections'] ?? [], $container)
-                ->loadCollectionsFinder($connectionName, $container)
-                ->loadClient($connectionName, $configuration, $container)
+                ->loadFinders($connectionName, $container)
+                ->loadConnection($connectionName, $configuration, $container)
 
                 ->loadFinderServices($connectionName, $container)
 
@@ -149,9 +149,8 @@ class TypesenseExtension extends Extension
             }
 
             $this->collectionDefinitions[$connectionName][$name] = [
-                'name'        => $collectionName,
-                'entity'                => $config['entity'],
-                'name'                  => $name,
+                'class'                => $config['entity'],
+                'name'                  => $collectionName,
                 'fields'                => $config['fields'],
                 'token_separators'      => $config['token_separators'],
                 'symbols_to_index'      => $config['symbols_to_index'],
@@ -164,7 +163,7 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured index finders.
      */
-    private function loadCollectionsFinder(string $connectionName, ContainerBuilder $container)
+    private function loadFinders(string $connectionName, ContainerBuilder $container)
     {
         foreach ($this->collectionDefinitions[$connectionName] as $name => $config) {
 
@@ -216,7 +215,7 @@ class TypesenseExtension extends Extension
             $finderServices[$finderName] = new Reference($finderId);
         }
 
-        $controllerDef = $container->getDefinition('typesense.autocomplete_controller');
+        $controllerDef = $container->getDefinition()('typesense.autocomplete_controller');
         $controllerDef->replaceArgument(0, $finderServices);
 
         return $this;

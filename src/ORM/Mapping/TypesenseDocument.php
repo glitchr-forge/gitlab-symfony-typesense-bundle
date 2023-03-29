@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Typesense\Bundle\DBAL;
+namespace Typesense\Bundle\ORM\Mapping;
 
 use Typesense\Bundle\Client\Connection;
 
-class Document
+class TypesenseDocument
 {
     private $client;
 
@@ -21,7 +21,7 @@ class Document
             return null;
         }
 
-        return $this->client->collections[$collection]->documents[$id]->delete();
+        return $this->client->getCollection($collection)->documents[$id]->delete();
     }
 
     public function index($collection, $data)
@@ -30,7 +30,7 @@ class Document
             return null;
         }
 
-        return $this->client->collections[$collection]->documents->create($data);
+        return $this->client->getCollection($collection)->documents->create($data);
     }
 
     public function update($collection, $data)
@@ -39,7 +39,7 @@ class Document
             return null;
         }
 
-        return $this->client->collections[$collection]->documents->update($data);
+        return $this->client->getCollection($collection)->documents->update($data);
     }
 
     public function import(string $collection, array $data, string $action = 'create')
@@ -48,6 +48,6 @@ class Document
             return [];
         }
 
-        return $this->client->collections[$collection]->documents->import($data, ['action' => $action]);
+        return $this->client->getCollection($collection)->documents->import($data, ['action' => $action]);
     }
 }

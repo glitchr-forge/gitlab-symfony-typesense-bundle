@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\Client;
 
-use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Typesense\Bundle\DBAL\Configuration;
+use Typesense\Bundle\DBAL\Driver;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\CollectionFinder;
-use Typesense\Bundle\DBAL\CollectionManager;
-use Typesense\Bundle\DBAL\DocumentManager;
+use Typesense\Bundle\DBAL\Documents;
+use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
+use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
+use Typesense\Bundle\ORM\TypesenseFinder;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Typesense\Aliases;
+use Typesense\Bundle\Transformer\DoctrineTransformer;
 use Typesense\Client;
 use Typesense\Collections;
 use Typesense\Debug;
@@ -24,139 +28,23 @@ use Typesense\Operations;
 class Connection
 {
     /**
-     * @var string $connectionName
+     * @var string $name
      */
-    protected $connectionName;
+    protected $name;
+    protected $driver;
 
-    /**
-     * @var ParameterBagInterface $parameterBag
-     */
-    protected $parameterBag;
-
-    /**
-     * @var ObjectManagerInterface $objectManager
-     */
-    protected $objectManager;
-    protected $transformer;
-
-    public function getDoctrineTransformer(?string $connectionName = null) :?DoctrineToTypesenseTransformer
+    public function __construct(string $name, array $configuration)
     {
-        $connectionName ??= $this->getDefaultConnectionName();
-        return $this->doctrineTransformers[$connectionName] ?? null;
-    }
-    protected array $finders = []; // Create on-demand during compilation pass
-    protected array $collectionClients = []; // For a given connection, this array contains the list of collection
-
-    public function __construct(string $connectionName, array $collectionDefinitions, ParameterBagInterface $parameterBag, ObjectManagerInterface $objectManager)
-    {
-        $this->connectionName = $connectionName;
-        $this->objectManager = $objectManager;
-        $this->parameterBag = $parameterBag;
-
-        // Create collection clients
-        $this->collectionClients = [];
-        foreach($collectionDefinitions as $collectionDefinition) {
-            $this->collectionClients[] = new CollectionClient($this, $collectionDefinition);
-        }
-
-        // Prepare transformer and managers
-        $this->transformer = new DoctrineToTypesenseTransformer($this);
-        $this->documentManager = new DocumentManager($this);
-        $this->collectionManager = new CollectionManager($this);
+        $this->name = $name;
+        $this->driver = new Driver($configuration);
     }
 
-    public function getCollection() { return $this->collectionClients; }
-    public function getCollectionDefinitions() { return array_map(fn($c) => $c->getDefinition(), $this->collectionClients); }
+    public function getClient(): ?Client { return $this->getDriver()->connect(); }
+    public function getDriver(): Driver { return $this->driver; }
 
-    public function getConnectionName() { return $this->connectionName; }
+    public function isConnected(): bool { return $this->getClient() !== null; }
 
-    public function getFinders(): array { return $this->finders; }
-    public function getFinder(string $collectionName): ?CollectionFinder
-    {
-        return $this->finders[$collectionName] ?? null;
-    }
-
-    public function addFinder(CollectionFinder $collectionFinder)
-    {
-        $this->finders[$collectionFinder->getName()] = $collectionFinder;
-        return $this;
-    }
-
-    public function prepare(): array
-    {
-        $connectionName = $this->connectionName;
-        $apiKey = $this->parameterBag->get("typesense.connections.".$connectionName.".secret");
-
-        if (!$apiKey) {
-            if (is_cli()) {
-                throw new TypesenseException("Typesense API Key missing");
-            }
-            return [null, [], []];
-        }
-
-        $host = $this->parameterBag->get("typesense.connections.".$connectionName.".host");
-        $urlParsed = parse_url($host);
-
-        $host     = $urlParsed["host"] ?? $host ?? "localhost";
-        $port     = $urlParsed["port"] ?? $this->parameterBag->get("typesense.connections.".$connectionName.".port") ?? 8108;
-        $protocol = $urlParsed["scheme"] ?? ($this->parameterBag->get("typesense.connections.".$connectionName.".use_https") ? "https" : "http");
-
-        $node = ['host' => $host, 'port' => $port, 'protocol' => $protocol];
-        $options = $this->parameterBag->get("typesense.connections.".$connectionName.".options") ?? [];
-
-        return [$apiKey, $node, $options];
-    }
-
-    public function connect(): ?Client
-    {
-        if (!$this->client) {
-            list($apiKey, $node, $options) = $this->prepare();
-            if($apiKey == null) return null;
-
-            $this->client = new Client(array_merge($options, ["nodes" => [$node], "api_key" => $apiKey]));
-            if ($this->client) {
-                $this->clientUrl = $node["protocol"]."://".$node["host"].":".$node["port"];
-            }
-        }
-
-        return $this->client;
-    }
-
-    private ?Client $client = null;
-    public function client(): ?Client
-    {
-        if(!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->client;
-    }
-
-    protected ?string $clientUrl = null;
-    public function clientUrl(): ?string
-    {
-        if(!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->clientUrl;
-    }
-
-    public function collection($name): ?CollectionClient
-    {
-        if (!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->client?->collectionClients[$name] ?? null;
-    }
-
-    public function isConnected(): bool
-    {
-        if (!$this->client) {
-            $this->client = $this->connect();
-        }
-
-        return $this->client !== null;
-    }
+    public function getCollections(): ?Collections { return $this->getClient()?->getCollections(); }
+    public function getHealth(): bool { return $this->getClient()?->getKeys(); }
+    public function getDebug(): bool { return $this->getClient()?->getDebug(); }
 }

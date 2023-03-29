@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\EventListener;
 
-use Typesense\Bundle\DBAL\CollectionManager;
-use Typesense\Bundle\DBAL\DocumentManager;
+use Typesense\Bundle\DBAL\Collections;
+use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\DBAL\TypesenseManager;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
@@ -56,7 +56,7 @@ class TypesenseIndexer
              $collections = $this->getCollectionNames($entity, $connectionName);
              foreach ($collections as $collection) {
 
-                 $collectionConfig = $this->typesenseManager->getCollectionManager($connectionName)->getCollectionDefinitions()[$collection];
+                 $collectionConfig = $this->typesenseManager->getCollections($connectionName)->getCollectionDefinitions()[$collection];
                  $this->checkPrimaryKeyExists($collectionConfig);
 
                  $data = $this->typesenseManager->getDoctrineTransformer($connectionName)->convert($entity);
@@ -132,7 +132,7 @@ class TypesenseIndexer
     private function persistDocuments(?string $connectionName = null)
     {
         foreach ($this->documentsToPersist as $documentToIndex) {
-            $this->typesenseManager->getDocumentManager($connectionName)->index(...$documentToIndex);
+            $this->typesenseManager->getDocuments($connectionName)->index(...$documentToIndex);
         }
     }
 
@@ -140,18 +140,18 @@ class TypesenseIndexer
     {
         foreach ($this->documentsToUpdate as $documentToUpdate) {
             try {
-                $this->typesenseManager->getDocumentManager($connectionName)->delete($documentToUpdate[0], $documentToUpdate[1]);
+                $this->typesenseManager->getDocuments($connectionName)->delete($documentToUpdate[0], $documentToUpdate[1]);
             } catch(\Typesense\Exceptions\ObjectNotFound $e) {
             }
 
-            $this->typesenseManager->getDocumentManager($connectionName)->index($documentToUpdate[0], $documentToUpdate[2]);
+            $this->typesenseManager->getDocuments($connectionName)->index($documentToUpdate[0], $documentToUpdate[2]);
         }
     }
 
     private function deleteDocuments(?string $connectionName = null)
     {
         foreach ($this->documentsToDelete as $documentToDelete) {
-            $this->typesenseManager->getDocumentManager($connectionName)->delete(...$documentToDelete);
+            $this->typesenseManager->getDocuments($connectionName)->delete(...$documentToDelete);
         }
     }
 

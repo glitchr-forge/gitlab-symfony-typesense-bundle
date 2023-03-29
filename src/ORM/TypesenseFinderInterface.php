@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM;
 
-interface CollectionFinderInterface
+interface TypesenseFinderInterface
 {
-    public function query(TypesenseQuery $query, bool $cacheable = false): TypesenseResponse;
-    public function rawQuery(TypesenseQuery $query): TypesenseResponse;
+    public function className():string;
 
-    public function facet(string $facetBy, ?TypesenseQuery $query = null): mixed;
+    public function query(Request $query, bool $cacheable = false): Response;
+    public function raw(Request $query): Response;
+
+    public function facet(string $facetBy, ?Request $query = null): mixed;
 }

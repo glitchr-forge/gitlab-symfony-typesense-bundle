@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\Command;
 
-use Typesense\Bundle\DBAL\CollectionManager;
-use Typesense\Bundle\DBAL\DocumentManager;
+use Typesense\Bundle\DBAL\Collections;
+use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\DBAL\TypesenseManager;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\ORM\ObjectManagerInterface;
@@ -62,7 +62,7 @@ class ImportCommand extends Command
 
             $output->writeln(sprintf('<info>Connection Typesense: </info> <comment>%s</comment>', $connectionName));
 
-            $collectionDefinitions = $this->typesenseManager->getCollectionManager($connectionName)->getCollectionDefinitions();
+            $collectionDefinitions = $this->typesenseManager->getCollections($connectionName)->getCollectionDefinitions();
             foreach ($collectionDefinitions as $collectionDefinition) {
 
                 $collectionName = $collectionDefinition['name'];
@@ -82,7 +82,7 @@ class ImportCommand extends Command
                 $output->writeln("\t" . 'Importing <info>[' . $collectionName . '] ' . $class . '</info> ');
                 try {
 
-                    $response = $this->typesenseManager->getDocumentManager($connectionName)->import($collectionName, $data, $action);
+                    $response = $this->typesenseManager->getDocuments($connectionName)->import($collectionName, $data, $action);
 
                 } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
 
