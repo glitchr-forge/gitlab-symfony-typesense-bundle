@@ -2,21 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Typesense\Bundle\Transformer\Abstract;
+namespace Typesense\Bundle\ORM\Transformer\Abstract;
 
-interface TransformerInteface
+use Doctrine\Persistence\ObjectManager;
+
+interface TransformerInterface
 {
     public const TYPE_COLLECTION   = 'collection';
     public const TYPE_DATETIME     = 'datetime';
-    public const TYPE_PRIMARY      = 'primary';
     public const TYPE_OBJECT       = 'object';
+    public const TYPE_INTEGER      = 'integer';
+    public const TYPE_TEXT         = 'text';
 
     public const TYPE_STRING         = 'string';     // String values
     public const TYPE_STRING_ARRAY   = 'string[]';   // Array of strings
-    public const TYPE_INT_32         = 'int32';      // Integer values up to 2,147,483,647
-    public const TYPE_INT_32_ARRAY   = 'int32[]';    // Array of int32
-    public const TYPE_INT_64         = 'int64';      // Integer values larger than 2,147,483,647
-    public const TYPE_INT_64_ARRAY   = 'int64[]';    // Array of int64
+    public const TYPE_INT32          = 'int32';      // Integer values up to 2,147,483,647
+    public const TYPE_INT32_ARRAY    = 'int32[]';    // Array of int32
+    public const TYPE_INT64          = 'int64';      // Integer values larger than 2,147,483,647
+    public const TYPE_INT64_ARRAY    = 'int64[]';    // Array of int64
     public const TYPE_FLOAT          = 'float';      // Floating point / decimal numbers
     public const TYPE_FLOAT_ARRAY    = 'float[]';    // Array of floating point / decimal numbers
     public const TYPE_BOOLEAN        = 'bool';       // true or false
@@ -48,4 +51,6 @@ interface TransformerInteface
      * map a type to a typesense type field.
      */
     public function cast(string $type): string;
+
+    public function getObjectManager(): ObjectManager;
 }

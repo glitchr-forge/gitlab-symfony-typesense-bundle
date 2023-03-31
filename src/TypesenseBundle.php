@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Typesense\Bundle\DependencyInjection\Compiler\ClientPass;
+use Typesense\Bundle\DependencyInjection\Compiler\CollectionPass;
 use Typesense\Bundle\DependencyInjection\Compiler\FinderPass;
 use Typesense\Bundle\DependencyInjection\Compiler\ConnectionPass;
 use Typesense\Bundle\DependencyInjection\Compiler\MetadataPass;
@@ -36,7 +37,9 @@ class TypesenseBundle extends Bundle
         $this->container = $container;
 
         $container->addCompilerPass(new ConnectionPass());
+
         $container->addCompilerPass(new MetadataPass());
         $container->addCompilerPass(new FinderPass());
+        $container->addCompilerPass(new CollectionPass());
     }
 }

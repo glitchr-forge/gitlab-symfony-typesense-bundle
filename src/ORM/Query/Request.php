@@ -13,6 +13,13 @@ class Request
     public const TERM = "q";
     public const QUERY_BY = "query_by";
 
+    public function __construct(string $queryBy, ?string $term = null)
+    {
+        $this->addHeader(self::QUERY_BY, $queryBy);
+        $this->addHeader(self::TERM, $term ?? "");
+    }
+
+
     public function q(string $q): self { return $this->addHeader(self::TERM, $q); }
     public function term(string $q): self
     {
@@ -26,12 +33,6 @@ class Request
         $filterBy = $_filterBy ? trim($_filterBy . ", " . $filterBy) : $filterBy;
 
         return $this->addHeader('query_by', $filterBy);
-    }
-
-    public function __construct(string $queryBy, string $term = "")
-    {
-        $this->addHeader(self::QUERY_BY, $queryBy);
-        $this->addHeader(self::TERM, $term);
     }
 
     public function getHeaders(): array

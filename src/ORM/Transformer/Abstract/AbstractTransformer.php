@@ -2,10 +2,36 @@
 
 declare(strict_types=1);
 
-namespace Typesense\Bundle\Transformer\Abstract;
+namespace Typesense\Bundle\ORM\Transformer\Abstract;
 
-abstract class AbstractTransformer implements TransformerInteface
+use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
+use Typesense\Bundle\ORM\TypesenseManager;
+
+abstract class AbstractTransformer implements TransformerInterface
 {
+    protected $accessor;
+    protected $objectManager;
+
+    protected $mapping;
+
+    public function __construct(ObjectManager $objectManager)
+    {
+        $this->objectManager = $objectManager;
+        $this->mapping = [];
+
+        $this->accessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->getPropertyAccessor();
+    }
+
+    public function getObjectManager(): ObjectManager { return $this->objectManager; }
+    public function getMapping($className): ?TypesenseMetadata { return $this->mapping[$className] ?? null; }
+    public function addMapping(TypesenseMetadata $metadata) {
+        
+        $this->mapping[$metadata->class] = $metadata;
+        return $this;
+    }
+
     /**
      * Convert an object to a array of data indexable by typesense.
      *
@@ -33,12 +59,15 @@ abstract class AbstractTransformer implements TransformerInteface
             return self::TYPE_ARRAY_STRING;
         }
         if ($type === self::TYPE_DATETIME) {
-            return self::TYPE_INT_64;
+            return self::TYPE_INT64;
         }
-        if ($type === self::TYPE_PRIMARY) {
-            return self::TYPE_STRING;
+        if ($type === self::TYPE_INTEGER) {
+            return self::TYPE_INT32;
         }
         if ($type === self::TYPE_OBJECT) {
+            return self::TYPE_STRING;
+        }
+        if ($type === self::TYPE_TEXT) {
             return self::TYPE_STRING;
         }
 

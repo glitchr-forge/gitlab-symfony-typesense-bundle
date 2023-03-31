@@ -7,9 +7,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Workflow\Registry;
-use Typesense\Bundle\Client\Connection;
-use Typesense\Bundle\DBAL\TypesenseManager;
-use Typesense\Bundle\Typesense;
+use Typesense\Bundle\ORM\TypesenseManager;
 
 class FinderPass implements CompilerPassInterface
 {
@@ -24,9 +22,7 @@ class FinderPass implements CompilerPassInterface
         foreach ($taggedServices as $serviceName => $tags) {
 
             $reference = new Reference($serviceName);
-            $connectionName = explode(".", $serviceName)[2] ?? null;
-
-            $definition->addMethodCall("addFinder", [$connectionName, $reference]);
+            $definition->addMethodCall("addFinder", [$reference]);
         }
     }
 }

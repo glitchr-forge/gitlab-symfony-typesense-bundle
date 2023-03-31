@@ -4,27 +4,43 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\ObjectManager;
-use Typesense\Bundle\Client\Connection;
+use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\ORM\Query;
-use Typesense\Bundle\DBAL\TypesenseManager;
+use Typesense\Bundle\ORM\Query\Request;
+use Typesense\Bundle\ORM\Query\Response;
+use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
+use Typesense\Bundle\ORM\TypesenseManager;
+use Typesense\Client;
 
 class TypesenseCollection
 {
     protected $connection;
+
+    protected $metadata;
     protected $documents;
 
-    protected TypesenseManager $metadata;
-    public function __construct(string $name, Connection $connection, TypesenseManager $metadata)
+    public function __construct(TypesenseMetadata $metadata, Connection $connection)
     {
+        $this->metadata   = $metadata;
         $this->connection = $connection;
 
-        $this->documents  = new TypesenseDocument($connection);
+        $this->documents  = new TypesenseDocuments($metadata, $connection);
     }
 
-    //
-    // Metadata instances
-    public function setMetadata(string $collectionName): ?TypesenseMetadata { $this->getCollection($collectionName)?->getMetadata(); }
+    public function name(): string { return $this->metadata->getName(); }
+    public function metadata(): TypesenseMetadata { return $this->metadata; }
+    public function transformer(): TransformerInterface { return $this->metadata->getTransformer(); }
+    public function connection(): Connection { return $this->connection; }
+    public function client(): ?Client { return $this->connection->getClient(); }
+    public function documents(): TypesenseDocuments { return $this->documents; }
+
+    public function supports($entity):bool
+    {
+        $entityClassname = ClassUtils::getClass($entity);
+        return is_a($entity, $this->metadata->getClass(), true);
+    }
 
     public function search(Request $query)
     {
@@ -32,7 +48,7 @@ class TypesenseCollection
             return null;
         }
 
-        return $this->connection->getCollection($collectionName)->documents->search($query->getParameters());
+        return $this->documents->search($query->getHeaders());
     }
 
     public function multiSearch(array $searchRequests, ?Request $commonSearchParams)
@@ -49,14 +65,14 @@ class TypesenseCollection
             if (!$sr->hasParameter('collection')) {
                 throw new \Exception('Request must have the key : `collection` in order to perform multiSearch');
             }
-            $searches[] = $sr->getParameters();
+            $searches[] = $sr->getHeaders();
         }
 
-        return $this->connection->multiSearch->perform(
+        return $this->client()->multiSearch->perform(
             [
                 'searches' => $searches,
             ],
-            $commonSearchParams ? $commonSearchParams->getParameters() : []
+            $commonSearchParams ? $commonSearchParams->getHeaders() : []
         );
     }
 
@@ -66,38 +82,29 @@ class TypesenseCollection
             return null;
         }
 
-        return $this->connection->collections->retrieve();
+        return $this->client()->getCollections()->retrieve();
     }
 
-    public function create($name, $fields, $defaultSortingField, array $tokenSeparators, array $symbolsToIndex)
+    public function create()
     {
         if (!$this->connection->isConnected()) {
             return null;
         }
 
-        $collectionDefinition = [];
-        $collectionDefinition["name"]                  = $name;
-        $collectionDefinition["fields"]                = $fields;
+        $configuration = $this->metadata->getConfiguration();
+        $configuration["fields"] = array_values(array_map(fn($f) => $f->toArray(), $configuration["fields"]));
+        foreach($configuration["fields"] as &$field)
+            $field["type"] = $this->metadata->getTransformer()->cast($field["type"]);
 
-        if ($defaultSortingField)
-            $collectionDefinition["default_sorting_field"] = $defaultSortingField;
-
-        if ($tokenSeparators)
-            $collectionDefinition["token_separators"]      = $tokenSeparators;
-
-        if ($symbolsToIndex)
-            $collectionDefinition["symbols_to_index"]      = $symbolsToIndex;
-
-        if($fields)
-            $this->connection->collections->create($collectionDefinition);
+        $this->client()->getCollections()->create($configuration);
     }
 
-    public function delete(string $name)
+    public function delete()
     {
         if (!$this->connection->isConnected()) {
             return null;
         }
 
-        return $this->connection->collections[$name]->delete();
+        return $this->client()->getCollection($this->name())?->delete();
     }
 }

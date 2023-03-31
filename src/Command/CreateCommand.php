@@ -11,7 +11,7 @@ use Typesense\Bundle\DBAL\Collections;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Typesense\Bundle\DBAL\TypesenseManager;
+use Typesense\Bundle\ORM\TypesenseManager;
 
 #[AsCommand(name:'typesense:create', aliases:[], description:'Create Typesenses indexes')]
 class CreateCommand extends Command
@@ -26,34 +26,30 @@ class CreateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        foreach($this->typesenseManager->getConnections() as $connectionName => $client) {
 
-            $output->writeln(sprintf('<info>Connection Typesense: </info> <comment>%s</comment>', $connectionName));
+        foreach($this->typesenseManager->getConnections() as $connectionName => $connection) {
 
-            $collections = $this->typesenseManager->getCollections($connectionName);
-            $collectionDefinitions = $collections->getCollectionDefinitions();
-            foreach ($collectionDefinitions as $collectionDefinition) {
+            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
 
-                $name = $collectionDefinition['name'];
-                $typesenseName = $collectionDefinition['name'];
+            foreach($connection->getCollections()->retrieve() as $collection) {
+
                 try {
 
-                    $output->writeln("\t" . sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $typesenseName));
-                    $collections->deleteCollection($name);
+                    $name = $collection["name"];
+                    $output->writeln("\t" . sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $name));
+                    $connection->getCollection($name)->delete();
 
                 } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
-                    $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $typesenseName));
+
+                    $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
                 }
             }
+        }
 
-            foreach ($collectionDefinitions as $collectionDefinition) {
+        foreach ($this->typesenseManager->getCollections() as $name => $collection) {
 
-                $name = $collectionDefinition['name'];
-
-                $output->writeln("\t" . sprintf('<info>Creating</info> <comment>%s</comment>', $name));
-                $collections->createCollection($name);
-                $output->writeln("");
-            }
+            $output->writeln("\t" . sprintf('<info>Creating</info> <comment>%s</comment>', $name));
+            $collection->create();
         }
 
         return 0;

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM;
 
 use Doctrine\Persistence\ObjectManager;
-use Typesense\Bundle\Client\CollectionClient;
-use Typesense\Bundle\Client\Metadata;
-use Typesense\Bundle\DBAL\TypesenseManager;
+use Typesense\Bundle\ORM\Query\Query;
+use Typesense\Bundle\ORM\Query\Request;
+use Typesense\Bundle\ORM\Query\Response;
+use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
+use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
@@ -16,13 +18,15 @@ class TypesenseFinder implements TypesenseFinderInterface
     protected $collection;
     protected $objectManager;
 
-    public function __construct(TypesenseCollection $collection, ObjectManager $objectManager)
+    public function __construct(TypesenseCollection $collection)
     {
         $this->collection = $collection;
-        $this->objectManager = $objectManager;
+        $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
-    public function metadata():TypesenseMetadata { return $this->collection->getMetadata(); }
+    public function name(): string { Return $this->metadata()->name; }
+    public function metadata():TypesenseMetadata { return $this->collection->metadata(); }
+    public function collection():TypesenseCollection { return $this->collection; }
 
     public function raw(Request $request): Response
     {
@@ -39,37 +43,50 @@ class TypesenseFinder implements TypesenseFinderInterface
         if ($request)
             $request = clone $request;
 
-        $request ??= new Query();
-        $request->addQueryBy($facetBy);
+        $request ??= new Query($facetBy);
         $request->facetBy($facetBy);
 
-        return $this->search($request)->getFacetCounts();
+        $response = $this->search($request);
+        return $response->getFacetCounts();
     }
 
-    private function hydrate(Response $response, bool $cacheable = false): self
+    private function hydrate(Response $response, bool $cacheable = false): Response
     {
         $ids             = [];
-        $primaryKeyInfos = $this->getPrimaryKeyInfo();
+        $primaryKey = $this->identifier();
+        $primaryField = $this->metadata()->fields[$primaryKey];
         foreach ($response->getResults() ?? [] as $result) {
-            $ids[] = $result['document'][$primaryKeyInfos['documentAttribute']];
+            $ids[] = $result['document'][$primaryKey];
         }
 
         if (!count($ids)) return $response;
 
-        $classMetadata = $this->objectManager->getClassMetadata($this->collection->getMetadata()->entity);
-        $response->setHydratedHits();
+        $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
+        $response->setHydratedHits($this->objectManager
+            ->createQueryBuilder()
+                ->select('e')
+                ->from($this->metadata()->class, "e")
+                ->where("e.".$primaryField->property ." IN (:ids)")
+                ->orderBy("FIELD(e.".$primaryField->property.", ".implode(', ', $ids).")")
+                ->setParameter("ids", $ids)
+                ->setCacheable($cacheable)
+            ->getQuery()
+                ->useQueryCache($cacheable)
+                ->setCacheRegion($classMetadata->cache["region"] ?? null)
+            ->getResult()
+        );
 
         return $response->setHydrated(true);
     }
 
     private function search(Request $request)
     {
-        $classMetadata = $this->objectManager->getClassMetadata($this->collection->getMetadata()->entity);
-        if(!$classMetadata->discriminatorColumn && $request->getParameter(Query::INSTANCE_OF))
-            throw new \LogicException("Class \"".$this->collection->getMetadata()->entity."\" doesn't have discriminator values");
+        $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
+        if(!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF))
+            throw new \LogicException("Class \"".$this->collection->metadata()->class."\" doesn't have discriminator values");
 
         $classNames = array_filter(
-            explode(",", $request->getParameter(Query::INSTANCE_OF) ?? ""),
+            explode(",", $request->getHeader(Query::INSTANCE_OF) ?? ""),
             fn($c) => !empty(trim($c ?? ""))
         );
 
@@ -81,19 +98,19 @@ class TypesenseFinder implements TypesenseFinderInterface
             $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
         }
 
-        $result = $this->collection->search($this->collection->getMetadata()->name, $request);
+        $result = $this->collection->search($request);
         return new Response($result);
     }
 
-    private function primary(): string
+    private function identifier(): string
     {
-        foreach ($this->collection->getMetadata()->fields as $name => $field) {
+        foreach ($this->collection->metadata()->fields as $name => $field) {
 
-            if ($field['type'] === 'primary') {
+            if ($field->identifier ?? false) {
                 return $name;
             }
         }
 
-        throw new \Exception(sprintf('No primary key found in collection %s', $this->collection->getMetadata()->name));
+        throw new \Exception(sprintf('No identifier key found in collection %s', $this->collection->metadata()->name));
     }
 }

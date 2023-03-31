@@ -28,14 +28,19 @@ class TypesenseMetadataInfo
     public string $name;
 
     /**
+     * @var ?string
+     */
+    public ?string $class;
+
+    /**
      * @var string
      */
     public array $fields;
 
     /**
-     * @var string
+     * @var ?string
      */
-    public string $defaultSortingField;
+    public ?string $defaultSortingField = null;
 
     /**
      * @var array

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typesense\Bundle\ORM;
+namespace Typesense\Bundle\ORM\Query;
 
 use Symfony\Component\ErrorHandler\Error\ClassNotFoundError;
 

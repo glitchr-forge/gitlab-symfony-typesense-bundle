@@ -13,33 +13,26 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Typesense\Bundle\Client\Connection;
+use Typesense\Bundle\connection\Connection;
+use Typesense\Bundle\ORM\TypesenseManager;
 
 class TypesenseExtension extends Extension
 {
+    private string $defaultConnection;
 
     /**
-     * An array of collections as configured by the extension.
+     * An array of connections to use as configured by the extension.
      *
      * @var array
      */
-    private $collectionDefinitions = [];
-
-    /**
-     * An array of finder as configured by the extension.
-     *
-     * @var array
-     */
-    private $finderConfig = [];
-
-    /**
-     * An array of parameters to use as configured by the extension.
-     *
-     * @var array
-     */
-    private $parameters = [];
-
     private array $connections = [];
+
+    /**
+     * An array of connections to use as configured by the extension.
+     *
+     * @var array
+     */
+    private array $metadata = [];
 
     public function load(array $configs, ContainerBuilder $container)
     {
@@ -50,33 +43,24 @@ class TypesenseExtension extends Extension
         // Configuration file: ./config/package/base.yaml
         $processor = new Processor();
         $configuration = new Configuration();
-        $config = $processor->processConfiguration($configuration, $configs);
+        $typesense = $processor->processConfiguration($configuration, $configs);
 
-        $this->setConfiguration($container, $config, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
+        $this->setConfiguration($container, $typesense, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
 
-        $defaultConnection = $config["default_connection"] ?? "default";
-        foreach($config["connections"] ?? [] as $connectionName => $configuration) {
+        $this->defaultConnection = $config["default_connection"] ?? "default";
+        $this->initialize($container);
 
-            $this
-                ->initialize($connectionName)
-
-                ->loadCollections($connectionName, $configuration['collections'] ?? [], $container)
-                ->loadFinders($connectionName, $container)
-                ->loadConnection($connectionName, $configuration, $container)
-
-                ->loadFinderServices($connectionName, $container)
-
-                ->configureController($connectionName, $container);
+        foreach($typesense["connections"] ?? [] as $connectionName => $configuration)
+        {
+            $this->loadConnection($connectionName, $configuration, $container);
         }
-    }
 
-    public function initialize(string $connectionName)
-    {
-        $this->collectionDefinitions[$connectionName] = [];
-        $this->finderConfig[$connectionName] = [];
-        $this->parameters[$connectionName] = [];
-
-        return $this;
+        foreach($typesense["mappings"] ?? [] as $collectionName => $configuration)
+        {
+            $this->loadMetadata($collectionName, $configuration ?? [], $container);
+            $this->loadCollections($collectionName, $configuration ?? [], $container);
+            $this->loadFinders($collectionName, $configuration ?? [], $container);
+        }
     }
 
     public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = "")
@@ -96,20 +80,51 @@ class TypesenseExtension extends Extension
         return $this;
     }
 
+    public function initialize(ContainerBuilder $container)
+    {
+        $definition = $container->getDefinition(TypesenseManager::class);
+        $definition->replaceArgument(0, $this->defaultConnection);
+
+        $container->setDefinition(TypesenseManager::class, $definition);
+
+        return $this;
+    }
+
     /**
-     * Loads the configured clients.
+     * Loads the configured connections.
      *
      * @param ContainerBuilder $container A ContainerBuilder instance
      */
-    private function loadClient(string $connectionName, array $config, ContainerBuilder $container)
+    private function loadConnection(string $connectionName, array $connection, ContainerBuilder $container)
     {
-        $clientId  = sprintf('typesense.client.%s', $connectionName);
-        $clientDef = new ChildDefinition('typesense.client');
-        $clientDef->replaceArgument(0, $connectionName);
-        $clientDef->replaceArgument(1, $this->collectionDefinitions[$connectionName]);
+        $id  = sprintf('typesense.connection.%s', $connectionName);
+        $definition = new ChildDefinition('typesense.connection');
+        $definition->replaceArgument(0, $connectionName);
 
-        $container->setDefinition($clientId, $clientDef);
-        $clientDef->addTag("typesense.client");
+        $container->setDefinition($id, $definition);
+        $definition->addTag("typesense.connection");
+
+        $this->connections[$connectionName] = $connection;
+        return $this;
+    }
+
+    /**
+     * Loads the configured collection.
+     *
+     * @param array            $mappings An array of collection configurations
+     * @param ContainerBuilder $container   A ContainerBuilder instance
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function loadMetadata(string $name, array $collection, ContainerBuilder $container)
+    {
+        $id  = sprintf('typesense.metadata.%s', $name);
+        $definition = new ChildDefinition('typesense.metadata');
+        $definition->replaceArgument(0, $name);
+        $definition->replaceArgument(1, $collection);
+
+        $container->setDefinition($id, $definition);
+        $definition->addTag("typesense.metadata");
 
         return $this;
     }
@@ -117,45 +132,22 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured collection.
      *
-     * @param array            $collections An array of collection configurations
+     * @param array            $mappings An array of collection configurations
      * @param ContainerBuilder $container   A ContainerBuilder instance
      *
      * @throws \InvalidArgumentException
      */
-    private function loadCollections(string $connectionName, array $collections, ContainerBuilder $container)
+    private function loadCollections(string $name, array $collection, ContainerBuilder $container)
     {
-        $this->parameters[$connectionName]['collection_prefix'] = $config['collection_prefix'] ?? '';
+        $connectionName = $collection["connection"] ?? $this->defaultConnection;
 
-        foreach ($collections as $name => $config) {
+        $id  = sprintf('typesense.collection.%s', $name);
+        $definition = new ChildDefinition('typesense.collection');
+        $definition->replaceArgument(0, new Reference(sprintf('typesense.metadata.%s', $name)));
+        $definition->replaceArgument(1, new Reference(sprintf('typesense.connection.%s', $connectionName)));
 
-            $collectionName = $this->parameters[$connectionName]['collection_prefix'] . ($config['collection_name'] ?? $name);
-
-            //
-            // Declare finders for autowiring..
-            if (isset($config['finders'])) {
-
-                foreach ($config['finders'] as $finderName => $finderConfig) {
-                    $finderName                      = $name.'.'.$finderName;
-                    $finderConfig['collection_name'] = $collectionName;
-                    $finderConfig['name']            = $name;
-                    $finderConfig['finder_name']     = $finderName;
-
-                    if (!isset($finderConfig['finder_parameters']['query_by'])) {
-                        throw new \Exception('typesense.collections.'.$finderName.'.finder_parameters.query_by must be set');
-                    }
-
-                    $this->finderConfig[$connectionName][$finderName] = $finderConfig;
-                }
-            }
-
-            $this->collectionDefinitions[$connectionName][$name] = [
-                'class'                => $config['entity'],
-                'name'                  => $collectionName,
-                'fields'                => $config['fields'],
-                'token_separators'      => $config['token_separators'],
-                'symbols_to_index'      => $config['symbols_to_index'],
-            ];
-        }
+        $container->setDefinition($id, $definition);
+        $definition->addTag("typesense.collection");
 
         return $this;
     }
@@ -163,60 +155,15 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured index finders.
      */
-    private function loadFinders(string $connectionName, ContainerBuilder $container)
+    private function loadFinders(string $name, array $collection, ContainerBuilder $container)
     {
-        foreach ($this->collectionDefinitions[$connectionName] as $name => $config) {
+        $id  = sprintf('typesense.finder.%s', $name);
+        $definition = new ChildDefinition('typesense.finder');
+        $definition->replaceArgument(0, new Reference(sprintf('typesense.collection.%s', $name)));
 
-            $collectionName = $config['name'];
-
-            $finderId  = sprintf('typesense.finder.%s.%s', $connectionName, $collectionName);
-            $finderDef = new ChildDefinition('typesense.finder');
-            $finderDef->replaceArgument(2, $config);
-
-            $finderDef->addTag("typesense.finder");
-
-            $container->setDefinition($finderId, $finderDef);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Loads the configured Finder services.
-     */
-    private function loadFinderServices(string $connectionName, ContainerBuilder $container)
-    {
-        foreach ($this->finderConfig[$connectionName] as $name => $config) {
-            $finderName     = $config['finder_name'];
-            $collectionName = $config['name'];
-            $finderId       = sprintf('typesense.finder.%s.%s', $connectionName, $collectionName);
-
-            if (isset($config['finder_service'])) {
-                $finderId = $config['finder_service'];
-            }
-
-            $specificFinderId  = sprintf('typesense.specific_finder.%s.%s', $connectionName, $finderName);
-            $specificFinderDef = new ChildDefinition('typesense.specific_finder');
-            $specificFinderDef->replaceArgument(0, new Reference($finderId));
-            $specificFinderDef->replaceArgument(1, $config['finder_parameters']);
-
-            $container->setDefinition($specificFinderId, $specificFinderDef);
-        }
-
-        return $this;
-    }
-
-    private function configureController(string $connectionName, ContainerBuilder $container)
-    {
-        $finderServices = [];
-        foreach ($this->finderConfig[$connectionName] as $name => $config) {
-            $finderName                  = $config['finder_name'];
-            $finderId                    = sprintf('typesense.specific_finder.%s.%s', $connectionName, $finderName);
-            $finderServices[$finderName] = new Reference($finderId);
-        }
-
-        $controllerDef = $container->getDefinition()('typesense.autocomplete_controller');
-        $controllerDef->replaceArgument(0, $finderServices);
+        new Reference($id);
+        $definition->addTag("typesense.finder");
+        $container->setDefinition($id, $definition);
 
         return $this;
     }

@@ -6,7 +6,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-use Typesense\Bundle\DBAL\TypesenseManager;
+use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\Typesense;
 
 class ConnectionPass implements CompilerPassInterface

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
-use Doctrine\ORM\ObjectManagerInterface;
+use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\CollectionFinder;
 use Typesense\Bundle\DBAL\Collections;
 use Typesense\Bundle\DBAL\Documents;
-use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
+use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Aliases;
 use Typesense\Client;
 use Typesense\Debug;
@@ -20,103 +20,172 @@ use Typesense\Metrics;
 use Typesense\MultiSearch;
 use Typesense\Operations;
 
-class TypesenseMetadata
+class TypesenseMetadata extends TypesenseMetadataInfo
 {
-    public function getName(): string { return $this->name; }
-    public function getClassNames(?string $connectionName = null) :array
+    protected TransformerInterface $transformer;
+    protected ObjectManager $objectManager;
+
+    public function __construct(string $name, array $configuration, TransformerInterface $transformer)
     {
-        $classNames = [];
-        foreach ($this->getConnection($connectionName)->getCollections() as $name => $collection)
-        {
-            $collectionName = $collection->getMetadata()->getName();
-            $classNames[$collectionName] = $collection->getMetadata()->getClassName();
+        $this->name                = $name;
+        $this->class               = $configuration["class"] ?? null;
+        $this->transformer         = $transformer;
+        $this->objectManager       = $transformer->getObjectManager();
+
+        $this->fields              = [];
+        foreach($configuration["fields"] ?? [] as $fieldName => $field) {
+
+            if($fieldName == "id") {
+                throw new TypesenseException("Field 'id' cannot be used. It is a reserved string field.");
+            }
+
+            if($field instanceof TypesenseMetadataField) {
+                $this->fields[$fieldName] = $field;
+            }
+
+            if (!array_key_exists($fieldName, $this->fields)) {
+
+                $this->fields[$fieldName] = new TypesenseMetadataField();
+                $this->fields[$fieldName]->name ??= $fieldName;
+                $this->fields[$fieldName]->type ??= $field["type"] ?? "string";
+                $this->fields[$fieldName]->property ??= $field["property"] ?? null;
+                $this->fields[$fieldName]->facet = $field["facet"] ?? false;
+                $this->fields[$fieldName]->discriminator = false;
+                $this->fields[$fieldName]->identifier = false;
+            }
         }
 
-        return $classNames;
+        $this->addIdentifierColumns();
+        $this->addDiscriminatorColumn();
+
+        $id = first($this->fields)->name;
+        foreach($this->fields as $name => $field) {
+
+           if ($field->identifier && $field->name != "id") {
+               $id = $field->name;
+               break;
+           }
+        }
+
+        $this->defaultSortingField = $configuration["default_sorting_field"] ?? $id;
+        $this->symbolsToIndex      = $configuration["symbols_to_index"] ?? [];
+        $this->tokenSeparators     = $configuration["token_separators"] ?? [];
     }
 
-    protected function addFieldIdentifiers(array $metadata)
+    public function getName(): string { return $this->name; }
+    public function getConfiguration(): array {
+
+        $configuration = [];
+        $configuration["name"]                  = $this->name;
+        $configuration["fields"]                = $this->fields;
+        $configuration["default_sorting_field"] = $this->defaultSortingField;
+        $configuration["token_separators"]      = $this->tokenSeparators;
+        $configuration["symbols_to_index"]      = $this->symbolsToIndex;
+
+        return $configuration;
+    }
+
+    public function getObjectManager(): ObjectManager { return $this->objectManager; }
+
+    public function getClass(): string { return $this->class; }
+    public function getTransformer(): TransformerInterface { return $this->transformer; }
+
+    protected function addIdentifierColumns()
     {
-         foreach ($metadata as $name => $collectionDefinition) {
+         $className = $this->class ?? null;
+         if ($className && class_exists($className)) {
 
-             //
-             // Add primary keys
-             foreach ($collectionDefinition['fields'] as $key => $_) {
+             $classMetadata = $this->objectManager->getClassMetadata($className);
 
-                 $entityName = $collectionDefinition["entity"] ?? null;
-                 if ($entityName && class_exists($entityName)) {
+             // identifier key identifier
+             foreach ($classMetadata->identifier as $id => $identifier) {
 
-                     $classMetadata = $this->objectManager->getClassMetadata($entityName);
-
-                     // Primary key identifier
-                     foreach ($classMetadata->identifier as $identifier) {
-
-                         $metadata[$name]["fields"][$key] ??= [];
-                         if(empty($metadata[$name]["fields"][$key])) {
-                             $metadata[$name]["fields"][$key]["name"] = $key;
-                             $metadata[$name]["fields"][$key]["type"] = $classMetadata->getTypeOfField($key);
-                             if ($classMetadata->hasField($key))
-                                 $metadata[$name]["fields"][$key]["entity_attribute"] = $key;
-                         }
-
-                         $metadata[$name]["fields"][$key]["identifier"] = true;
-                     }
+                 if(array_key_exists($identifier, $this->fields)) {
+                     $this->fields[$identifier]->identifier = true;
+                     continue;
                  }
+
+                 if($id == 0) {
+
+                     $name = "id";
+                     $this->fields[$name] = new TypesenseMetadataField();
+                     $this->fields[$name]->name = "id";
+                     $this->fields[$name]->type = "string";
+                     $this->fields[$name]->identifier = true;
+
+                     if ($classMetadata->hasField($identifier))
+                         $this->fields[$name]->property = $identifier;
+                 }
+
+                 $name = ($id == 0) ? "primary" : "identifier[".$id."]";
+                 $this->defaultSortingField ??= $name;
+
+                 $this->fields[$name] = new TypesenseMetadataField();
+                 $this->fields[$name]->name ??= $name;
+                 $this->fields[$name]->type ??= $classMetadata->getTypeOfField($identifier);
+                 $this->fields[$name]->identifier = true;
+
+                 if ($classMetadata->hasField($identifier))
+                     $this->fields[$name]->property = $identifier;
              }
          }
 
-         return $metadata;
+         return $this;
     }
 
     protected function addDiscriminatorColumn()
     {
-         $entityName = $collectionDefinition["entity"] ?? null;
-        if ($entityName) {
+         $className = $this->class ?? null;
+         if ($className && class_exists($className)) {
 
-            $classMetadata = $this->objectManager->getClassMetadata($entityName);
-            $discriminatorColumn = $classMetadata->discriminatorColumn["name"];
-            $discriminatorType   = $classMetadata->discriminatorColumn["type"] ?? "string";
-            $discriminatorValue  = $classMetadata->discriminatorValue;
+             $classMetadata = $this->objectManager->getClassMetadata($className);
 
-            // Discriminator
-            if (!array_key_exists($discriminatorColumn, $metadata[$name]["fields"])) {
+             $discriminatorColumn = $classMetadata->discriminatorColumn["name"];
+             $discriminatorType = $classMetadata->discriminatorColumn["type"] ?? "string";
+             $discriminatorValue = $classMetadata->discriminatorValue;
 
-                 $metadata[$name]["fields"][$discriminatorColumn] = [];
-                 if(empty($metadata[$name]["fields"][$discriminatorColumn])) {
+             if (!array_key_exists($discriminatorColumn, $this->fields))
+                 $this->fields[$discriminatorColumn] = new TypesenseMetadataField();
 
-                     $metadata[$name]["fields"][$discriminatorColumn]["name"] = $discriminatorColumn;
-                     $metadata[$name]["fields"][$discriminatorColumn]["type"] = $discriminatorType;
-                     $metadata[$name]["fields"][$discriminatorColumn]["facet"] ??= true;
-                     $metadata[$name]["fields"][$discriminatorColumn]["entity_attribute"] = $discriminatorColumn;
+             $this->fields[$discriminatorColumn]->name ??= $discriminatorColumn;
+             $this->fields[$discriminatorColumn]->type ??= $discriminatorType;
+             $this->fields[$discriminatorColumn]->property ??= $discriminatorColumn;
+             $this->fields[$discriminatorColumn]->discriminator = true;
+             $this->fields[$discriminatorColumn]->facet = true;
+         }
+
+        return $this;
+    }
+
+    public function getSubMetadata(): array
+    {
+         $metadata = [];
+         $className = $this->class ?? null;
+         if ($className) {
+
+             $classMetadata = $this->objectManager->getClassMetadata($className);
+             foreach ($classMetadata->subClasses as $subclass) {
+
+                 $isDeclared = count(array_keys(array_column($metadata, 'class'), $subclass)) > 0;
+                 if (!$isDeclared) {
+
+                     $basename = explode("\\", $subclass);
+                     $basename = strtolower($basename[count($basename) - 1]);
+
+                     $subname = array_flip($classMetadata->discriminatorMap)[$subclass];
+
+                     $configuration = [];
+                     $configuration["name"] = $this->name."%".$subname;
+                     $configuration["class"] = $subclass;
+                     $configuration["fields"] = array_filter($this->fields, fn($k) => $k != "id", ARRAY_FILTER_USE_KEY);
+                     $configuration["default_sorting_field"] = $this->defaultSortingField;
+                     $configuration["token_separators"] = $this->tokenSeparators;
+                     $configuration["symbols_to_index"] = $this->symbolsToIndex;
+
+                     $metadata[] = new TypesenseMetadata($this->name."%".$subname, $configuration, $this->transformer);
                  }
-
-                 $metadata[$name]["fields"][$discriminatorColumn]["discriminator"] = true;
-            }
-
-            foreach ($classMetadata->subClasses as $subclass) {
-
-                $isDeclared = count(array_keys(array_column($metadata, 'entity'), $subclass)) > 0;
-                if (!$isDeclared) {
-
-                    $basename = explode("\\", $subclass);
-                    $basename = strtolower($basename[count($basename)-1]);
-
-                    $subname = array_flip($classMetadata->discriminatorMap)[$subclass];
-
-                    $metadata[$subname] = [];
-                    $metadata[$subname]["name"]   = $subname;
-                    $metadata[$subname]["entity"] = $subclass;
-                    $metadata[$subname]["fields"] = $metadata[$name]["fields"];
-
-                    if(array_key_exists("default_sorting_field", $metadata[$name]))
-                        $metadata[$subname]["default_sorting_field"] = $metadata[$name]["default_sorting_field"];
-                    if(array_key_exists("token_separators", $metadata[$name]))
-                        $metadata[$subname]["token_separators"] = $metadata[$name]["token_separators"];
-                    if(array_key_exists("symbols_to_index", $metadata[$name]))
-                        $metadata[$subname]["symbols_to_index"] = $metadata[$name]["symbols_to_index"];
-                }
-            }
-        }
+             }
+         }
 
         return $metadata;
     }
