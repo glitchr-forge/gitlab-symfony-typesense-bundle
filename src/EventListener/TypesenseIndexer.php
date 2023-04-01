@@ -21,6 +21,8 @@ class TypesenseIndexer
     private $documentsToUpdate                    = [];
     private $documentsToDelete                    = [];
 
+    protected $typesenseManager;
+
     public function __construct(TypesenseManager $typesenseManager) {
 
         $this->typesenseManager = $typesenseManager;

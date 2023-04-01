@@ -23,6 +23,8 @@ class TypesenseManager
     protected array $collections = [];
     protected array $finders = [];
 
+    protected $metadata;
+
     public function __construct(?string $defaultConnection)
     {
         $this->defaultConnection = $defaultConnection;

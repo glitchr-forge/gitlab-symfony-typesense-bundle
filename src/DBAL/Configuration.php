@@ -14,6 +14,8 @@ use Typesense\Client;
 
 class Configuration
 {
+    protected $parameterBag;
+
     protected ?string $secret;
     protected array $options;
 
