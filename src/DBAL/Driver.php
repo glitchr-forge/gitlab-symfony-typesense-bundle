@@ -54,7 +54,7 @@ class Driver
             // Options
             $options = $params["options"] ?? [];
 
-            $this->configuration = new Configuration($secret, $params, $options);
+            $this->configuration = new Configuration($secret, $params, $options);            
         }
 
         return $this->configuration;

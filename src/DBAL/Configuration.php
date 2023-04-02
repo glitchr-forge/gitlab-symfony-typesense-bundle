@@ -27,13 +27,13 @@ class Configuration
 
     public function __construct(#[SensitiveParameter] ?string $secret, #[SensitiveParameter] array $params, array $options = [])
     {
-        $this->scheme = $url["scheme"] ?? "http";
-        $this->host   = $url["host"] ?? "localhost";
+        $this->scheme = $params["scheme"] ?? "http";
+        $this->host   = $params["host"] ?? "localhost";
 
-        $this->port   = $url["port"] ?? 8108;
+        $this->port   = $params["port"] ?? 8108;
         $this->port   = is_string($this->port) ? intval($this->port) : $this->port;
 
-        $this->path = $url["path"] ?? "";
+        $this->path = $params["path"] ?? "";
 
         $this->secret = $secret;
         $this->options = $options;

@@ -26,7 +26,6 @@ class CreateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-
         foreach($this->typesenseManager->getConnections() as $connectionName => $connection) {
 
             $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
