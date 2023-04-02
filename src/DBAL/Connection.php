@@ -30,7 +30,7 @@ use Typesense\Operations;
 class Connection
 {
     protected $parameterBag;
-    
+
     /**
      * @var string $name
      */
