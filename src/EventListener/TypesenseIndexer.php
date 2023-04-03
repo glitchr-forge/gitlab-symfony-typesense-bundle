@@ -11,6 +11,7 @@ use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Http\Client\Exception\NetworkException;
 
 class TypesenseIndexer
 {
@@ -96,9 +97,13 @@ class TypesenseIndexer
 
     public function postFlush()
     {
-        $this->persistDocuments();
-        $this->updateDocuments();
-        $this->deleteDocuments();
+        try {
+
+            $this->persistDocuments();
+            $this->updateDocuments();
+            $this->deleteDocuments();
+
+        } catch(NetworkException $e) { }
 
         $this->resetDocuments();
     }
