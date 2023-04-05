@@ -42,11 +42,11 @@
         <!-- doctrine -->
         <service id="typesense.listener.doctrine_indexer" class="Typesense\Bundle\EventListener\TypesenseIndexer">
             <argument type="service" id="typesense_manager"/>
-            <tag name="doctrine.event_listener" event="postPersist" priority="500" connection="default"/>
-            <tag name="doctrine.event_listener" event="postUpdate" priority="500" connection="default"/>
-            <tag name="doctrine.event_listener" event="preRemove" priority="500" connection="default"/>
-            <tag name="doctrine.event_listener" event="postRemove" priority="500" connection="default"/>
-            <tag name="doctrine.event_listener" event="postFlush" priority="500" connection="default"/>
+            <tag name="doctrine.event_listener" event="postPersist" connection="default"/>
+            <tag name="doctrine.event_listener" event="postUpdate" connection="default"/>
+            <tag name="doctrine.event_listener" event="preRemove" connection="default"/>
+            <tag name="doctrine.event_listener" event="postRemove" connection="default"/>
+            <tag name="doctrine.event_listener" event="postFlush" connection="default"/>
         </service>
 
         <!-- commands -->

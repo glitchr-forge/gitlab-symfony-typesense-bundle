@@ -19,7 +19,7 @@ class TypesenseDocuments
     }
 
     public function connection() { return $this->connection->getClient(); }
-    public function delete(string $id): ?array
+    public function delete(string|int $id): ?array
     {
         if (!$this->connection?->isConnected()) {
             return null;

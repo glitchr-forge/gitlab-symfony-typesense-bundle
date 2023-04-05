@@ -12,11 +12,12 @@ use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Http\Client\Exception\NetworkException;
+use Typesense\Bundle\TypesenseInterface;
 
 class TypesenseIndexer
 {
     private $managedClassNames;
-    private $objetsIdThatCanBeDeletedByObjectHash = [];
+    private $objectIds = [];
 
     private $documentsToPersist                     = [];
     private $documentsToUpdate                    = [];
@@ -32,6 +33,8 @@ class TypesenseIndexer
     public function postPersist(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
+        if(!$entity instanceof TypesenseInterface) return;
+
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
             if (!$collection->supports($entity)) {
@@ -47,6 +50,8 @@ class TypesenseIndexer
     public function postUpdate(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
+        if(!$entity instanceof TypesenseInterface) return;
+
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
              if (!$collection->supports($entity)) {
@@ -68,30 +73,28 @@ class TypesenseIndexer
     public function preRemove(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
-        foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
+        if(!$entity instanceof TypesenseInterface) return;
 
-             if (!$collection->supports($entity)) {
-                continue;
-            }
-
-            $data = $collection->transformer()->convert($entity);
-
-            $this->objetsIdThatCanBeDeletedByObjectHash[spl_object_hash($entity)] = $data['id'];
-        }
+        $this->objectIds[spl_object_hash($entity)] = (string) $entity->getId();
     }
 
     public function postRemove(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
+        if(!$entity instanceof TypesenseInterface) return;
+
         $entityHash = spl_object_hash($entity);
+        if (!isset($this->objectIds[$entityHash])) {
+            return;
+        }
 
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
-            if (!isset($this->objetsIdThatCanBeDeletedByObjectHash[$entityHash])) {
-                return;
-            }
+             if (!$collection->supports($entity)) {
+                continue;
+             }
 
-            $this->documentsToDelete[] = [$collection, $this->objetsIdThatCanBeDeletedByObjectHash[$entityHash]];
+            $this->documentsToDelete[] = [$collection, $this->objectIds[$entityHash]];
         }
     }
 
@@ -130,7 +133,6 @@ class TypesenseIndexer
     private function deleteDocuments()
     {
         foreach ($this->documentsToDelete as [$collection, $entityId]) {
-
             $collection->documents()->delete($entityId);
         }
     }
