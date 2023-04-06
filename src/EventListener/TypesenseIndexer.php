@@ -6,6 +6,7 @@ namespace Typesense\Bundle\EventListener;
 
 use Typesense\Bundle\DBAL\Collections;
 use Typesense\Bundle\DBAL\Documents;
+use Typesense\Bundle\DBAL\Transaction;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
@@ -13,145 +14,85 @@ use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Http\Client\Exception\NetworkException;
 use Typesense\Bundle\TypesenseInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class TypesenseIndexer
 {
-    private $managedClassNames;
-    private $objectIds = [];
-
-    private $documentsToPersist                     = [];
-    private $documentsToUpdate                    = [];
-    private $documentsToDelete                    = [];
+    protected array $transactions = [];
 
     protected $typesenseManager;
-
+    protected $propertyAccessor;
+    
     public function __construct(TypesenseManager $typesenseManager) {
 
         $this->typesenseManager = $typesenseManager;
+        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
     }
 
     public function postPersist(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
-        if(!$entity instanceof TypesenseInterface) return;
+        $object = $args->getObject();
+        if(!$object instanceof TypesenseInterface) return;
 
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
-            if (!$collection->supports($entity)) {
+            if (!$collection->supports($object)) {
                 continue;
             }
 
-            $data = $collection->transformer()->convert($entity);
-            $this->documentsToPersist[] = [$collection, $data];
+            $this->transactions[] = new Transaction($collection, Transaction::PERSIST, $object);
         }
-
     }
 
     public function postUpdate(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
-        if(!$entity instanceof TypesenseInterface) return;
+        $object = $args->getObject();
+        if(!$object instanceof TypesenseInterface) return;
 
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
-             if (!$collection->supports($entity)) {
+             if (!$collection->supports($object)) {
                 continue;
              }
 
-            $this->checkPrimaryKeyExists($collection->metadata());
-            $data = $collection->transformer()->convert($entity);
-
-            $primaryField = array_search_by($collection->metadata()->fields, "identifier", true);
-            $entityId = $data[$primaryField["name"] ?? "id"] ?? null;
-            if ($entityId) {
-
-                $this->documentsToUpdate[] = [$collection, $entityId, $data];
-            }
+            $this->transactions[] = (new Transaction($collection, Transaction::UPDATE, $object));
         }
     }
 
     public function preRemove(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
-        if(!$entity instanceof TypesenseInterface) return;
+        $object = $args->getObject();
+        if(!$object instanceof TypesenseInterface) return;
 
-        $this->objectIds[spl_object_hash($entity)] = (string) $entity->getId();
+        $this->objectIds[spl_object_hash($object)] = (string) $object->getId();
     }
 
     public function postRemove(LifecycleEventArgs $args)
     {
-        $entity = $args->getObject();
-        if(!$entity instanceof TypesenseInterface) return;
+        $object = $args->getObject();
+        if(!$object instanceof TypesenseInterface) return;
 
-        $entityHash = spl_object_hash($entity);
-        if (!isset($this->objectIds[$entityHash])) {
+        $objectHash = spl_object_hash($object);
+        if (!isset($this->objectIds[$objectHash])) {
             return;
         }
 
         foreach($this->typesenseManager->getCollections() as $collectionName => $collection) {
 
-             if (!$collection->supports($entity)) {
+            if (!$collection->supports($object)) {
                 continue;
-             }
+            }
 
-            $this->documentsToDelete[] = [$collection, $this->objectIds[$entityHash]];
+            if(array_key_exists($objectHash, $this->objectIds))
+                $this->transactions[] = new Transaction($collection, Transaction::REMOVE, $this->objectIds[$objectHash]);
         }
     }
 
     public function postFlush()
     {
-        try {
-
-            $this->persistDocuments();
-            $this->updateDocuments();
-            $this->deleteDocuments();
-
-        } catch(NetworkException $e) { }
-
-        $this->resetDocuments();
-    }
-
-    private function persistDocuments()
-    {
-        foreach ($this->documentsToPersist as [$collection, $data]) {
-
-            $collection->documents()->create($data);
+        foreach($this->transactions as $transaction) {
+         
+            try { $transaction->commit(); }
+            catch(NetworkException $e) { }
         }
-    }
-
-    private function updateDocuments()
-    {
-        foreach ($this->documentsToUpdate as [$collection, $entityId, $data]) {
-
-            try { $collection->documents()->delete($entityId); }
-            catch(\Typesense\Exceptions\ObjectNotFound $e) { }
-
-            $collection->documents()->create($data);
-        }
-    }
-
-    private function deleteDocuments()
-    {
-        foreach ($this->documentsToDelete as [$collection, $entityId]) {
-            $collection->documents()->delete($entityId);
-        }
-    }
-
-    private function resetDocuments()
-    {
-        $this->documentsToPersist = [];
-        $this->documentsToUpdate = [];
-        $this->documentsToDelete = [];
-    }
-
-    private function checkPrimaryKeyExists(TypesenseMetadata $metadata)
-    {
-        foreach ($metadata->fields as $field) {
-            if ($field->identifier) {
-                return;
-            }
-        }
-
-        throw new \Exception(sprintf('Primary key info have not been found for Typesense collection %s', $collectionConfig['name']));
-    }
-}
+    }}

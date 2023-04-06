@@ -29,7 +29,7 @@ class TypesenseDocuments
         return $documents[$id]?->delete();
     }
 
-    public function create($data): ?array
+    public function create(array $data, array $options): ?array
     {
         if (!$this->connection?->isConnected()) {
             return null;
@@ -39,10 +39,10 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->create($data);
+        return $documents?->create($data, $options);
     }
 
-    public function update($data): ?array
+    public function update(array $data, array $options): ?array
     {
         if (!$this->connection?->isConnected()) {
             return null;
@@ -52,7 +52,7 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->update($data);
+        return $documents?->update($data, $options);
     }
 
     public function search(array $searchParams): ?array
