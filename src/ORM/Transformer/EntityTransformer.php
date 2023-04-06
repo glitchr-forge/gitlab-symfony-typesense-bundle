@@ -17,7 +17,7 @@ use Typesense\Bundle\TypesenseInterface;
 
 class EntityTransformer extends AbstractTransformer
 {
-    public function convert($entity): array
+    public function convert(object $entity): array
     {
         $entityClass = ClassUtils::getClass($entity);
         if (!$entity instanceof TypesenseInterface) {
