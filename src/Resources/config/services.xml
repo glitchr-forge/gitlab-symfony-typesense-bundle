@@ -36,7 +36,6 @@
         <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" public="true"
                  abstract="true">
             <argument/> <!-- collection -->
-            <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
 
         <!-- doctrine -->

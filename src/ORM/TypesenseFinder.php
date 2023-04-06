@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM;
 
 use Doctrine\Persistence\ObjectManager;
+use Psr\cache\CacheInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
@@ -15,12 +18,15 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
 class TypesenseFinder implements TypesenseFinderInterface
 {
+    protected $cache;
     protected $collection;
     protected $objectManager;
 
     public function __construct(TypesenseCollection $collection)
     {
         $this->collection = $collection;
+        $this->cache = new Psr16Cache(new FilesystemAdapter("typesense"));
+
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
@@ -28,14 +34,20 @@ class TypesenseFinder implements TypesenseFinderInterface
     public function metadata():TypesenseMetadata { return $this->collection->metadata(); }
     public function collection():TypesenseCollection { return $this->collection; }
 
-    public function raw(Request $request): Response
+    public function raw(Request $request, bool $cacheable = false): Response
     {
-        return $this->search($request);
+        $key = str_replace("\\", "__", static::class)."_".sha1(serialize($request));
+        if($cacheable && $this->cache->has($key)) return $this->cache->get($key);
+
+        $search = $this->search($request);
+        if($cacheable) $this->cache->set($key, $search);
+
+        return $search;
     }
 
     public function query(Request $request, bool $cacheable = false): Response
     {
-        return $this->hydrate($this->raw($request), $cacheable);
+        return $this->hydrate($this->raw($request, $cacheable), $cacheable);
     }
 
     public function facet(string $facetBy, ?Request $request = null): mixed
