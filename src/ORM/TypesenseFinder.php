@@ -22,10 +22,10 @@ class TypesenseFinder implements TypesenseFinderInterface
     protected $collection;
     protected $objectManager;
 
-    public function __construct(TypesenseCollection $collection)
+    public function __construct(TypesenseCollection $collection, ?CacheInterface $cache = null)
     {
         $this->collection = $collection;
-        $this->cache = new Psr16Cache(new FilesystemAdapter("typesense"));
+        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense"));
 
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
@@ -105,9 +105,15 @@ class TypesenseFinder implements TypesenseFinderInterface
         foreach($classNames as $className) {
 
             $relation = str_starts_with(trim($className), "^") ? ":!=" : ":=";
-            $classMetadata = $this->objectManager->getClassMetadata(trim($className," ^"));
 
+            $classMetadata = $this->objectManager->getClassMetadata(trim($className," ^"));
             $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
+
+            foreach($classMetadata->subClasses as $subClassName) {
+
+                $classMetadata = $this->objectManager->getClassMetadata($subClassName);
+                $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
+            }
         }
 
         $result = $this->collection->search($request);
