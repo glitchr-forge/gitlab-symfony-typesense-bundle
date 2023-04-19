@@ -38,7 +38,7 @@ class Configuration implements ConfigurationInterface
                                 ->scalarNode('path')->defaultValue(null)->end()
 
                                 ->arrayNode('options')
-                                    ->defaultValue([])
+                                    ->defaultValue(["connection_timeout_seconds" => 5])
                                     ->scalarPrototype()->end()
                                 ->end()
 

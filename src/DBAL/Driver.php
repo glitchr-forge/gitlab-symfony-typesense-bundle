@@ -46,13 +46,13 @@ class Driver
             }
 
             // Parsing URL: return array
-            $params = parse_url($params["url"] ?? "");
-            $params["scheme"] ??= "http";
-            $params["host"]   ??= "localhost";
-            $params["port"]   ??= 8108;
+            $parsedUrl = parse_url($params["url"] ?? "");
+            $parsedUrl["scheme"] ??= "http";
+            $parsedUrl["host"]   ??= "localhost";
+            $parsedUrl["port"]   ??= 8108;
 
             // Options
-            $options = $params["options"] ?? [];
+            $options = $params["options"] ?? [self::CONNECTION_TIMOUT_SECONDS => 5];
 
             $this->configuration = new Configuration($secret, $params, $options);            
         }
