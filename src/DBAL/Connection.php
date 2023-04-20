@@ -44,12 +44,44 @@ class Connection
         $this->driver = new Driver($name);
     }
 
+    private function inflate($array, $divider_char = ".")
+    {
+        if( !is_array($array) )
+            return false;
+
+        $split = '/' . preg_quote($divider_char, '/') . '/';
+
+        $ret = array();
+        foreach ($array as $key => $val)
+        {
+            $parts = preg_split($split, $key, -1, PREG_SPLIT_NO_EMPTY);
+            $leafpart = array_pop($parts);
+            $parent = &$ret;
+            foreach ($parts as $part)
+            {
+                if (!isset($parent[$part]))
+                    $parent[$part] = array();
+                else if (!is_array($parent[$part]))
+                    $parent[$part] = array();
+
+                $parent = &$parent[$part];
+            }
+
+            if (empty($parent[$leafpart]))
+                $parent[$leafpart] = $val;
+        }
+        return $ret;
+    }
+
     public function getName(): string { return $this->name; }
     public function getClient(): ?Client
     {
-        $params = $this->parameterBag->get("typesense.connections.".$this->name);
+        $params = array_filter($this->parameterBag->all(), fn($k) => str_starts_with($k, "typesense.connections.".$this->name), ARRAY_FILTER_USE_KEY);
+        $params = $this->inflate($params)["typesense"]["connections"][$this->name] ?? [];
+
         return $this->getDriver()->connect($params);
     }
+
     public function getDriver(): Driver { return $this->driver; }
 
     public function isConnected(): bool { return $this->getClient() !== null; }

@@ -20,18 +20,6 @@ class TypesenseExtension extends Extension
 {
     private string $defaultConnection;
 
-    /**
-     * An array of connections to use as configured by the extension.
-     *
-     * @var array
-     */
-    private array $connections = [];
-
-    /**
-     * An array of connections to use as configured by the extension.
-     *
-     * @var array
-     */
     private array $metadata = [];
 
     public function load(array $configs, ContainerBuilder $container)
@@ -104,7 +92,6 @@ class TypesenseExtension extends Extension
         $container->setDefinition($id, $definition);
         $definition->addTag("typesense.connection");
 
-        $this->connections[$connectionName] = $connection;
         return $this;
     }
 

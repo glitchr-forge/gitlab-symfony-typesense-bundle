@@ -52,8 +52,10 @@ class Driver
             $parsedUrl["port"]   ??= 8108;
 
             // Options
-            $options = $params["options"] ?? [self::CONNECTION_TIMOUT_SECONDS => 5];
+            $options = $params["options"] ?? [];
 
+            dump($options);
+            exit(1);
             $this->configuration = new Configuration($secret, $params, $options);            
         }
 
