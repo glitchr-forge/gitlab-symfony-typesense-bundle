@@ -18,7 +18,6 @@
              <argument type="service" id="parameter_bag"/>
         </service>
 
-        <!-- Abstract definition for all generic finders. -->
         <service id="typesense.metadata" class="Typesense\Bundle\ORM\Mapping\TypesenseMetadata" public="true"
                  abstract="true">
             <argument/>
@@ -26,26 +25,27 @@
             <argument type="service" id="typesense.transformer.entity"/>
         </service>
 
-        <!-- Abstract definition for all generic finders. -->
         <service id="typesense.collection" class="Typesense\Bundle\ORM\Mapping\TypesenseCollection" public="true" abstract="true">
             <argument/> <!-- metadata -->
             <argument/> <!-- collection -->
         </service>
 
-        <!-- Abstract definition for all generic finders. -->
         <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" public="true"
                  abstract="true">
             <argument/> <!-- collection -->
+            <bind key="$cacheDir">%kernel.cache_dir%</bind>
         </service>
 
         <!-- doctrine -->
         <service id="typesense.listener.doctrine_indexer" class="Typesense\Bundle\EventListener\TypesenseIndexer">
-            <argument type="service" id="typesense_manager"/>
             <tag name="doctrine.event_listener" event="postPersist" priority="-1" connection="default"/>
             <tag name="doctrine.event_listener" event="postUpdate"  priority="-1" connection="default"/>
             <tag name="doctrine.event_listener" event="preRemove"   priority="-1" connection="default"/>
             <tag name="doctrine.event_listener" event="postRemove"  priority="-1" connection="default"/>
             <tag name="doctrine.event_listener" event="postFlush"   priority="-1" connection="default"/>
+
+            <argument type="service" id="typesense_manager"/>
+            <bind key="$cacheDir">%kernel.cache_dir%</bind>
         </service>
 
         <!-- commands -->

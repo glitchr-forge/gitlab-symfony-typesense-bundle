@@ -14,6 +14,8 @@ class Response
     private $page;
     private $searchTimeMs;
 
+    private $status;
+
     public function __construct(?array $result)
     {
         $this->facetCounts  = $result['facet_counts']   ?? null;
@@ -23,6 +25,12 @@ class Response
         $this->searchTimeMs = $result['search_time_ms'] ?? null;
         $this->isHydrated   = false;
         $this->hydratedHits = null;
+        $this->status = array_filter($result["status"] ?? [], fn($f) => $f !== null);
+    }
+
+    public function getStatus(): array
+    {
+        return $this->status;
     }
 
     /**

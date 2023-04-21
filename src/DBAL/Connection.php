@@ -83,6 +83,9 @@ class Connection
     }
 
     public function getDriver(): Driver { return $this->driver; }
+    public function getStatus(): array { return ["code" => $this->getStatusCode(), "message" => $this->getStatusMessage()]; }
+    public function getStatusCode(): ?int { return $this->driver->getConfigError()?->getCode() ?? null; }
+    public function getStatusMessage(): ?string { return $this->driver->getConfigError()?->getMessage() ?? null; }
 
     public function isConnected(): bool { return $this->getClient() !== null; }
 

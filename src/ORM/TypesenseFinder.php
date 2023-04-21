@@ -22,11 +22,10 @@ class TypesenseFinder implements TypesenseFinderInterface
     protected $collection;
     protected $objectManager;
 
-    public function __construct(TypesenseCollection $collection, ?CacheInterface $cache = null)
+    public function __construct(TypesenseCollection $collection, string $cacheDir, ?CacheInterface $cache = null)
     {
         $this->collection = $collection;
-        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense"));
-
+        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $cacheDir));
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
@@ -34,13 +33,22 @@ class TypesenseFinder implements TypesenseFinderInterface
     public function metadata():TypesenseMetadata { return $this->collection->metadata(); }
     public function collection():TypesenseCollection { return $this->collection; }
 
+    protected ?int $cacheTTL = null;
+    public function cacheTTL(?int $ttl)
+    {
+        $this->cacheTTL = $ttl;
+        return $this;
+    }
+
+
+
     public function raw(Request $request, bool $cacheable = false): Response
     {
-        $key = str_replace("\\", "__", static::class)."_".sha1(serialize($request));
+        $key = str_replace("\\", "__", static::class)."_".$this->collection->name()."_".sha1(serialize($request));
         if($cacheable && $this->cache->has($key)) return $this->cache->get($key);
 
         $search = $this->search($request);
-        if($cacheable) $this->cache->set($key, $search);
+        if($cacheable) $this->cache->set($key, $search, $this->cacheTTL);
 
         return $search;
     }

@@ -45,7 +45,7 @@ class TypesenseCollection
     public function search(Request $query)
     {
         if (!$this->connection->isConnected()) {
-            return null;
+            return ["status" => $this->connection->getStatus()];
         }
 
         return $this->documents->search($query->getHeaders());
@@ -54,7 +54,7 @@ class TypesenseCollection
     public function multiSearch(array $searchRequests, ?Request $commonSearchParams)
     {
         if (!$this->connection->isConnected()) {
-            return null;
+            return ["status" => $this->connection->getStatus()];
         }
 
         $searches = [];
@@ -79,7 +79,7 @@ class TypesenseCollection
     public function list()
     {
         if (!$this->connection->isConnected()) {
-            return null;
+            return ["status" => $this->connection->getStatus()];
         }
 
         return $this->client()->getCollections()->retrieve();
@@ -88,7 +88,7 @@ class TypesenseCollection
     public function create()
     {
         if (!$this->connection->isConnected()) {
-            return null;
+            return ["status" => $this->connection->getStatus()];
         }
 
         $configuration = $this->metadata->getConfiguration();
@@ -102,7 +102,7 @@ class TypesenseCollection
     public function delete()
     {
         if (!$this->connection->isConnected()) {
-            return null;
+            return ["status" => $this->connection->getStatus()];
         }
 
         return $this->client()->getCollection($this->name())?->delete();

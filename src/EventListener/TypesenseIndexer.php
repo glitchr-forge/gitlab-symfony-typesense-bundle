@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\EventListener;
 
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 use Typesense\Bundle\DBAL\Collections;
 use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\DBAL\Transaction;
@@ -15,6 +17,7 @@ use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Http\Client\Exception\NetworkException;
 use Typesense\Bundle\TypesenseInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Psr\cache\CacheInterface;
 
 class TypesenseIndexer
 {
@@ -22,11 +25,13 @@ class TypesenseIndexer
 
     protected $typesenseManager;
     protected $propertyAccessor;
-    
-    public function __construct(TypesenseManager $typesenseManager) {
+    protected $cache;
+
+    public function __construct(TypesenseManager $typesenseManager, string $cacheDir, ?CacheInterface $cache = null) {
 
         $this->typesenseManager = $typesenseManager;
         $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
+        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $cacheDir));
     }
 
     public function postPersist(LifecycleEventArgs $args)
@@ -95,4 +100,6 @@ class TypesenseIndexer
             try { $transaction->commit(); }
             catch(NetworkException $e) { }
         }
+
+        if($this->transactions) $this->cache->clear();
     }}

@@ -24,7 +24,7 @@ class Driver
     public string $name;
     private ?Client $client = null;
     private ?Configuration $configuration = null;
-
+    private ?ConfigError $configError = null;
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -36,6 +36,7 @@ class Driver
 
             // API Key extraction
             $secret = $params["secret"];
+
             if (!$secret) {
 
                 if (is_cli()) {
@@ -46,17 +47,12 @@ class Driver
             }
 
             // Parsing URL: return array
-            $parsedUrl = parse_url($params["url"] ?? "");
-            $parsedUrl["scheme"] ??= "http";
-            $parsedUrl["host"]   ??= "localhost";
-            $parsedUrl["port"]   ??= 8108;
+            $parsedUrl = parse_url( $params["url"] ??"");
+            if($parsedUrl) $params = array_merge($params, array_filter($parsedUrl));
 
             // Options
             $options = $params["options"] ?? [];
-
-            dump($options);
-            exit(1);
-            $this->configuration = new Configuration($secret, $params, $options);            
+            $this->configuration = new Configuration($secret, $params, $options);
         }
 
         return $this->configuration;
@@ -67,16 +63,23 @@ class Driver
         if (!$this->client) {
 
             $this->configuration = $this->prepare($params);
-            if($this->configuration->getSecret() == null) return null;
 
             $options = $this->configuration->getOptions();
             $options[self::NODES]   = [$this->configuration->getNode()];
             $options[self::API_KEY] = $this->configuration->getSecret();
 
+            $this->configError = null;
             try { $this->client = new Client($options); }
-            catch (ConfigError $e) { return null; }
+            catch (ConfigError $configError) {
+                $this->configError = $configError;
+                return null;
+            }
         }
 
         return $this->client;
+    }
+
+    public function getConfigError(): ?ConfigError {
+        return $this->configError;
     }
 }
