@@ -30,8 +30,7 @@
             <argument/> <!-- collection -->
         </service>
 
-        <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" public="true"
-                 abstract="true">
+        <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" public="true" abstract="true">
             <argument/> <!-- collection -->
             <bind key="$cacheDir">%kernel.cache_dir%</bind>
         </service>

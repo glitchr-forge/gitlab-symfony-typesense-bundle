@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DependencyInjection;
 
-use Base\Service\Model\IconProvider\AbstractIconAdapter;
-use Doctrine\ORM\ObjectManagerInterface;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -13,14 +11,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Typesense\Bundle\connection\Connection;
 use Typesense\Bundle\ORM\TypesenseManager;
 
 class TypesenseExtension extends Extension
 {
     private string $defaultConnection;
-
-    private array $metadata = [];
 
     public function load(array $configs, ContainerBuilder $container)
     {
@@ -47,7 +42,7 @@ class TypesenseExtension extends Extension
         {
             $this->loadMetadata($collectionName, $configuration ?? [], $container);
             $this->loadCollections($collectionName, $configuration ?? [], $container);
-            $this->loadFinders($collectionName, $configuration ?? [], $container);
+            $this->loadFinders($collectionName, $container);
         }
     }
 
@@ -142,13 +137,12 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured index finders.
      */
-    private function loadFinders(string $name, array $collection, ContainerBuilder $container)
+    private function loadFinders(string $name, ContainerBuilder $container)
     {
         $id  = sprintf('typesense.finder.%s', $name);
         $definition = new ChildDefinition('typesense.finder');
         $definition->replaceArgument(0, new Reference(sprintf('typesense.collection.%s', $name)));
 
-        new Reference($id);
         $definition->addTag("typesense.finder");
         $container->setDefinition($id, $definition);
 
