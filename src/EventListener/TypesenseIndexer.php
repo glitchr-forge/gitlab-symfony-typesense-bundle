@@ -6,18 +6,14 @@ namespace Typesense\Bundle\EventListener;
 
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
-use Typesense\Bundle\DBAL\Collections;
-use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\DBAL\Transaction;
-use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\TypesenseManager;
-use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Http\Client\Exception\NetworkException;
+use Psr\SimpleCache\CacheInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Typesense\Bundle\TypesenseInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Psr\cache\CacheInterface;
 
 class TypesenseIndexer
 {
@@ -27,11 +23,11 @@ class TypesenseIndexer
     protected $propertyAccessor;
     protected $cache;
 
-    public function __construct(TypesenseManager $typesenseManager, string $cacheDir, ?CacheInterface $cache = null) {
+    public function __construct(TypesenseManager $typesenseManager, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null) {
 
         $this->typesenseManager = $typesenseManager;
         $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
-        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $cacheDir));
+        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $parameterBag->get("kernel.cache_dir")));
     }
 
     public function postPersist(LifecycleEventArgs $args)

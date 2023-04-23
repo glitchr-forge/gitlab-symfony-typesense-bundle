@@ -30,9 +30,9 @@
             <argument/> <!-- collection -->
         </service>
 
-        <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" public="true" abstract="true">
+        <service id="typesense.finder" class="Typesense\Bundle\ORM\TypesenseFinder" abstract="true">
             <argument/> <!-- collection -->
-            <bind key="$cacheDir">%kernel.cache_dir%</bind>
+            <argument type="service" id="parameter_bag"/>
         </service>
 
         <!-- doctrine -->
@@ -44,7 +44,7 @@
             <tag name="doctrine.event_listener" event="postFlush"   priority="-1" connection="default"/>
 
             <argument type="service" id="typesense_manager"/>
-            <bind key="$cacheDir">%kernel.cache_dir%</bind>
+            <argument type="service" id="parameter_bag"/>
         </service>
 
         <!-- commands -->

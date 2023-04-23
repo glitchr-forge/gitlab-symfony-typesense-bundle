@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM;
 
-use Doctrine\Persistence\ObjectManager;
-use Psr\cache\CacheInterface;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
-use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
-use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
@@ -22,10 +20,11 @@ class TypesenseFinder implements TypesenseFinderInterface
     protected $collection;
     protected $objectManager;
 
-    public function __construct(TypesenseCollection $collection, string $cacheDir, ?CacheInterface $cache = null)
+    protected $cacheDir;
+    public function __construct(TypesenseCollection $collection, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null)
     {
         $this->collection = $collection;
-        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $cacheDir));
+        $this->cache = new Psr16Cache(new FilesystemAdapter("typesense", 0, $parameterBag->get("kernel.cache_dir")));
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
@@ -39,8 +38,6 @@ class TypesenseFinder implements TypesenseFinderInterface
         $this->cacheTTL = $ttl;
         return $this;
     }
-
-
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
