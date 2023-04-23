@@ -148,7 +148,6 @@ class TypesenseExtension extends Extension
         $definition = new ChildDefinition('typesense.finder');
         $definition->replaceArgument(0, new Reference(sprintf('typesense.collection.%s', $name)));
 
-        new Reference($id);
         $definition->addTag("typesense.finder");
         $container->setDefinition($id, $definition);
 
