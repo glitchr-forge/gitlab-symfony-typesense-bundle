@@ -14,8 +14,8 @@ class Response
     protected $page;
     protected $searchTimeMs;
 
-    private $headers = [];
-    protected $statusCode;
+    protected $headers;
+    protected $status;
 
     public function __construct(?array $result, int $status = 200, array $headers = [])
     {
