@@ -7,12 +7,14 @@ namespace Typesense\Bundle\ORM\Mapping;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Persistence\ObjectManager;
 use Typesense\Bundle\DBAL\Connection;
+use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Client;
+use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseCollection
 {
@@ -45,50 +47,55 @@ class TypesenseCollection
     public function search(Request $query)
     {
         if (!$this->connection->isConnected()) {
-            return ["status" => $this->connection->getStatus()];
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        return $this->documents->search($query->getHeaders());
+        try { return $this->documents->search($query->getHeaders()); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function multiSearch(array $searchRequests, ?Request $commonSearchParams)
     {
         if (!$this->connection->isConnected()) {
-            return ["status" => $this->connection->getStatus()];
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $searches = [];
         foreach ($searchRequests as $sr) {
             if (!$sr instanceof Query) {
-                throw new \Exception('searchRequests must be an array  of Request objects');
+                throw new TypesenseException('searchRequests must be an array  of Request objects', 500);
             }
             if (!$sr->hasParameter('collection')) {
-                throw new \Exception('Request must have the key : `collection` in order to perform multiSearch');
+                throw new TypesenseException('Request must have the key : `collection` in order to perform multiSearch', 500);
             }
             $searches[] = $sr->getHeaders();
         }
 
-        return $this->client()->multiSearch->perform(
-            [
-                'searches' => $searches,
-            ],
-            $commonSearchParams ? $commonSearchParams->getHeaders() : []
-        );
+        try {
+
+            return $this->client()->multiSearch->perform(
+                ['searches' => $searches,],
+                $commonSearchParams ? $commonSearchParams->getHeaders() : []
+            );
+
+        } catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function list()
     {
         if (!$this->connection->isConnected()) {
-            return ["status" => $this->connection->getStatus()];
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        return $this->client()->getCollections()->retrieve();
+
+        try { return $this->client()->getCollections()->retrieve(); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function create()
     {
         if (!$this->connection->isConnected()) {
-            return ["status" => $this->connection->getStatus()];
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $configuration = $this->metadata->getConfiguration();
@@ -96,15 +103,18 @@ class TypesenseCollection
         foreach($configuration["fields"] as &$field)
             $field["type"] = $this->metadata->getTransformer()->cast($field["type"]);
 
-        $this->client()->getCollections()->create($configuration);
+
+        try { $this->client()->getCollections()->create($configuration); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function delete()
     {
         if (!$this->connection->isConnected()) {
-            return ["status" => $this->connection->getStatus()];
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        return $this->client()->getCollection($this->name())?->delete();
+        try { return $this->client()->getCollection($this->name())?->delete(); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 }

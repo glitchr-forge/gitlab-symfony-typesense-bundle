@@ -6,17 +6,18 @@ namespace Typesense\Bundle\ORM\Query;
 
 class Response
 {
-    private $facetCounts;
-    private $found;
-    private $hits;
-    private $hydratedHits;
-    private $isHydrated;
-    private $page;
-    private $searchTimeMs;
+    protected $facetCounts;
+    protected $found;
+    protected $hits;
+    protected $hydratedHits;
+    protected $isHydrated;
+    protected $page;
+    protected $searchTimeMs;
 
-    private $status;
+    private $headers = [];
+    protected $statusCode;
 
-    public function __construct(?array $result)
+    public function __construct(?array $result, int $status = 200, array $headers = [])
     {
         $this->facetCounts  = $result['facet_counts']   ?? null;
         $this->found        = $result['found']          ?? null;
@@ -25,12 +26,25 @@ class Response
         $this->searchTimeMs = $result['search_time_ms'] ?? null;
         $this->isHydrated   = false;
         $this->hydratedHits = null;
-        $this->status = array_filter($result["status"] ?? [], fn($f) => $f !== null);
+
+        $this->status = $status;
+        $this->headers = $headers;
     }
 
-    public function getStatus(): array
+    public function getStatus(): int
     {
+        if($this->status == 0) return 200;
         return $this->status;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    public function getContent(): string
+    {
+        return $this->headers["message"] ?? "";
     }
 
     /**

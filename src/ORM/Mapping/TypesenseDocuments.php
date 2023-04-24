@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
+use Http\Client\Exception as HttpClientException;
 use Typesense\Bundle\DBAL\Connection;
+use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Client;
+use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseDocuments
 {
@@ -22,55 +25,64 @@ class TypesenseDocuments
     public function delete(string|int $id): ?array
     {
         if (!$this->connection?->isConnected()) {
-            return null;
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $documents = $this->connection?->getCollections()[$this->metadata->getName()]->documents;
-        return $documents[$id]?->delete();
+
+        try { return $documents[$id]?->delete(); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function create(array $data, array $options): ?array
     {
         if (!$this->connection?->isConnected()) {
-            return null;
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $collectionName = $this->metadata->getName();
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->create($data, $options);
+        try { return $documents?->create($data, $options); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function update(array $data, array $options): ?array
     {
         if (!$this->connection?->isConnected()) {
-            return null;
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $collectionName = $this->metadata->getName();
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->update($data, $options);
+        try { return $documents?->update($data, $options); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function search(array $searchParams): ?array
     {
         if (!$this->connection?->isConnected()) {
-            return null;
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
         $collectionName = $this->metadata->getName();
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->search($searchParams);
+        try { return $documents?->search($searchParams); }
+        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 
     public function import(array $data, string $action = 'create'): null|array|string
     {
-        if (!$this->connection->isConnected() || empty($data)) {
+        if (!$this->connection->isConnected()) {
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
+        }
+
+        if(empty($data)) {
             return [];
         }
 
@@ -78,6 +90,7 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        return $documents?->import($data, ['action' => $action]);
+        try { return $documents?->import($data, ['action' => $action]); }
+        catch(\JsonException|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
     }
 }

@@ -8,11 +8,13 @@ use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
+use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseFinder implements TypesenseFinderInterface
 {
@@ -44,10 +46,10 @@ class TypesenseFinder implements TypesenseFinderInterface
         $key = str_replace("\\", "__", static::class)."_".$this->collection->name()."_".sha1(serialize($request));
         if($cacheable && $this->cache->has($key)) return $this->cache->get($key);
 
-        $search = $this->search($request);
-        if($cacheable) $this->cache->set($key, $search, $this->cacheTTL);
+        $response = $this->search($request);
+        if($cacheable) $this->cache->set($key, $response, $this->cacheTTL);
 
-        return $search;
+        return $response;
     }
 
     public function query(Request $request, bool $cacheable = false): Response
@@ -121,8 +123,15 @@ class TypesenseFinder implements TypesenseFinderInterface
             }
         }
 
-        $result = $this->collection->search($request);
-        return new Response($result);
+        try {
+
+            $result = $this->collection->search($request);
+            return new Response($result);
+
+        } catch(TypesenseException $e) {
+
+            return new Response([], $e->getCode(), ["message" => $e->getMessage()]);
+        }
     }
 
     private function identifier(): string
@@ -134,6 +143,6 @@ class TypesenseFinder implements TypesenseFinderInterface
             }
         }
 
-        throw new \Exception(sprintf('No identifier key found in collection %s', $this->collection->metadata()->name));
+        throw new TypesenseException(sprintf('No identifier key found in collection %s', $this->collection->metadata()->name), 500);
     }
 }
