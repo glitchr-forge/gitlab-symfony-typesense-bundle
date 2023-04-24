@@ -44,6 +44,7 @@
             <tag name="doctrine.event_listener" event="postFlush"   priority="-1" connection="default"/>
 
             <argument type="service" id="typesense_manager"/>
+            <argument type="service" id="request_stack"/>
             <argument type="service" id="parameter_bag"/>
         </service>
 

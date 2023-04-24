@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\EventListener;
 
+use Doctrine\ORM\Event\PostFlushEventArgs;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Typesense\Bundle\DBAL\Transaction;
+use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Http\Client\Exception\NetworkException;
@@ -19,13 +23,15 @@ class TypesenseIndexer
 {
     protected array $transactions = [];
 
+    protected $requestStack;
     protected $typesenseManager;
     protected $propertyAccessor;
     protected $cache;
 
-    public function __construct(TypesenseManager $typesenseManager, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null) {
+    public function __construct(TypesenseManager $typesenseManager, RequestStack $requestStack, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null) {
 
         $this->typesenseManager = $typesenseManager;
+        $this->requestStack = $requestStack;
         $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
         $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter("typesense", 0, $parameterBag->get("kernel.cache_dir")));
     }
@@ -89,12 +95,22 @@ class TypesenseIndexer
         }
     }
 
-    public function postFlush()
+    protected $first = true;
+    public function postFlush(PostFlushEventArgs $args)
     {
         foreach($this->transactions as $transaction) {
-         
-            try { $transaction->commit(); }
-            catch(NetworkException $e) { }
+
+            try {
+                $transaction->commit();
+            } catch (TypesenseException|NetworkException $e) {
+
+                if ($this->first) {
+
+                    $flashBag = $this->requestStack->getCurrentRequest()?->getSession()?->getFlashBag();
+                    $flashBag->add("warning", "Typesense ".$e->getCode().": ". $e->getMessage());
+                    $this->first = false;
+                }
+            }
         }
 
         if($this->transactions) $this->cache->clear();
