@@ -23,8 +23,11 @@ class TypesenseFinder implements TypesenseFinderInterface
     protected $objectManager;
 
     protected $cacheDir;
+    protected $isDebug;
+
     public function __construct(TypesenseCollection $collection, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null)
     {
+        $this->isDebug = $parameterBag->get("kernel.debug");
         $this->collection = $collection;
         $this->cache = new Psr16Cache(new FilesystemAdapter("typesense", 0, $parameterBag->get("kernel.cache_dir")));
         $this->objectManager = $collection->metadata()->getObjectManager();
@@ -43,6 +46,7 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
+
         $key = str_replace("\\", "__", static::class)."_".$this->collection->name()."_".sha1(serialize($request));
         if($cacheable && $this->cache->has($key)) return $this->cache->get($key);
 
@@ -130,7 +134,7 @@ class TypesenseFinder implements TypesenseFinderInterface
 
         } catch(TypesenseException $e) {
 
-            return new Response([], $e->getCode(), ["message" => $e->getMessage()]);
+            return new Response([], $e->getCode(), $this->isDebug() ? ["message" => $e->getMessage()] : []);
         }
     }
 

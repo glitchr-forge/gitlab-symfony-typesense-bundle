@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\Exception;
 
+use Http\Client\Exception\NetworkException;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Typesense\Exceptions\HTTPStatus0Error;
 use Typesense\Exceptions\ObjectAlreadyExists;
@@ -25,7 +26,6 @@ final class TypesenseException extends \RuntimeException
 
     public function __construct($message = "", $code = 0, $previous = null)
     {
-
         if ($message instanceof ResponseInterface) {
 
             $response = $message;
@@ -46,6 +46,7 @@ final class TypesenseException extends \RuntimeException
         if($e instanceof ObjectUnprocessable) return 422;
         if($e instanceof ServerError) return 500;
         if($e instanceof ServiceUnavailable) return 503;
+        if($e instanceof NetworkException) return 503;
 
         return 0;
     }
