@@ -46,12 +46,15 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
-
         $key = str_replace("\\", "__", static::class)."_".$this->collection->name()."_".sha1(serialize($request));
-        if($cacheable && $this->cache->has($key)) return $this->cache->get($key);
+        if($cacheable && $this->cache->has($key)) {
+            return $this->cache->get($key);
+        }
 
         $response = $this->search($request);
-        if($cacheable) $this->cache->set($key, $response, $this->cacheTTL);
+        if($cacheable && 200 == $response->getStatus()) {
+            $this->cache->set($key, $response, $this->cacheTTL);
+        }
 
         return $response;
     }
@@ -134,7 +137,7 @@ class TypesenseFinder implements TypesenseFinderInterface
 
         } catch(TypesenseException $e) {
 
-            return new Response([], $e->getCode(), $this->isDebug() ? ["message" => $e->getMessage()] : []);
+            return new Response([], $e->getCode(), $this->isDebug ? ["message" => $e->getMessage()] : []);
         }
     }
 
