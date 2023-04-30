@@ -78,7 +78,7 @@ class TypesenseExtension extends Extension
      *
      * @param ContainerBuilder $container A ContainerBuilder instance
      */
-    private function loadConnection(string $connectionName, array $connection, ContainerBuilder $container)
+    private function loadConnection(string $connectionName, array $connection, ContainerBuilder $container): void
     {
         $id  = sprintf('typesense.connection.%s', $connectionName);
         $definition = new ChildDefinition('typesense.connection');
@@ -87,7 +87,6 @@ class TypesenseExtension extends Extension
         $container->setDefinition($id, $definition);
         $definition->addTag("typesense.connection");
 
-        return $this;
     }
 
     /**
@@ -98,7 +97,7 @@ class TypesenseExtension extends Extension
      *
      * @throws \InvalidArgumentException
      */
-    private function loadMetadata(string $name, array $collection, ContainerBuilder $container)
+    private function loadMetadata(string $name, array $collection, ContainerBuilder $container): void
     {
         $id  = sprintf('typesense.metadata.%s', $name);
         $definition = new ChildDefinition('typesense.metadata');
@@ -108,7 +107,6 @@ class TypesenseExtension extends Extension
         $container->setDefinition($id, $definition);
         $definition->addTag("typesense.metadata");
 
-        return $this;
     }
 
     /**
@@ -119,7 +117,7 @@ class TypesenseExtension extends Extension
      *
      * @throws \InvalidArgumentException
      */
-    private function loadCollections(string $name, array $collection, ContainerBuilder $container)
+    private function loadCollections(string $name, array $collection, ContainerBuilder $container): void
     {
         $connectionName = $collection["connection"] ?? $this->defaultConnection;
 
@@ -131,13 +129,12 @@ class TypesenseExtension extends Extension
         $container->setDefinition($id, $definition);
         $definition->addTag("typesense.collection");
 
-        return $this;
     }
 
     /**
      * Loads the configured index finders.
      */
-    private function loadFinders(string $name, ContainerBuilder $container)
+    private function loadFinders(string $name, ContainerBuilder $container): void
     {
         $id  = sprintf('typesense.finder.%s', $name);
         $definition = new ChildDefinition('typesense.finder');
@@ -146,6 +143,5 @@ class TypesenseExtension extends Extension
         $definition->addTag("typesense.finder");
         $container->setDefinition($id, $definition);
 
-        return $this;
     }
 }
