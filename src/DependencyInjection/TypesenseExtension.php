@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DependencyInjection;
 
+use InvalidArgumentException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -95,7 +96,7 @@ class TypesenseExtension extends Extension
      * @param array            $mappings An array of collection configurations
      * @param ContainerBuilder $container   A ContainerBuilder instance
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     private function loadMetadata(string $name, array $collection, ContainerBuilder $container): void
     {
@@ -115,7 +116,7 @@ class TypesenseExtension extends Extension
      * @param array            $mappings An array of collection configurations
      * @param ContainerBuilder $container   A ContainerBuilder instance
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     private function loadCollections(string $name, array $collection, ContainerBuilder $container): void
     {

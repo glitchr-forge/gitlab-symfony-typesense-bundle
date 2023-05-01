@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM;
 
+use LogicException;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -14,7 +15,6 @@ use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
-use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseFinder implements TypesenseFinderInterface
 {
@@ -33,11 +33,23 @@ class TypesenseFinder implements TypesenseFinderInterface
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
-    public function name(): string { Return $this->metadata()->name; }
-    public function metadata():TypesenseMetadata { return $this->collection->metadata(); }
-    public function collection():TypesenseCollection { return $this->collection; }
+    public function name(): string
+    {
+        return $this->metadata()->name;
+    }
+
+    public function metadata(): TypesenseMetadata
+    {
+        return $this->collection->metadata();
+    }
+
+    public function collection(): TypesenseCollection
+    {
+        return $this->collection;
+    }
 
     protected ?int $cacheTTL = null;
+
     public function cacheTTL(?int $ttl)
     {
         $this->cacheTTL = $ttl;
@@ -46,13 +58,13 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
-        $key = str_replace("\\", "__", static::class)."_".$this->collection->name()."_".sha1(serialize($request));
-        if($cacheable && $this->cache->has($key)) {
+        $key = str_replace("\\", "__", static::class) . "_" . $this->collection->name() . "_" . sha1(serialize($request));
+        if ($cacheable && $this->cache->has($key)) {
             return $this->cache->get($key);
         }
 
         $response = $this->search($request);
-        if($cacheable && 200 == $response->getStatus()) {
+        if ($cacheable && 200 == $response->getStatus()) {
             $this->cache->set($key, $response, $this->cacheTTL);
         }
 
@@ -78,7 +90,7 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     private function hydrate(Response $response, bool $cacheable = false): Response
     {
-        $ids             = [];
+        $ids = [];
         $primaryKey = $this->identifier();
         $primaryField = $this->metadata()->fields[$primaryKey];
         foreach ($response->getResults() ?? [] as $result) {
@@ -90,15 +102,15 @@ class TypesenseFinder implements TypesenseFinderInterface
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
         $response->setHydratedHits($this->objectManager
             ->createQueryBuilder()
-                ->select('e')
-                ->from($this->metadata()->class, "e")
-                ->where("e.".$primaryField->property ." IN (:ids)")
-                ->orderBy("FIELD(e.".$primaryField->property.", ".implode(', ', $ids).")")
-                ->setParameter("ids", $ids)
-                ->setCacheable($cacheable)
+            ->select('e')
+            ->from($this->metadata()->class, "e")
+            ->where("e." . $primaryField->property . " IN (:ids)")
+            ->orderBy("FIELD(e." . $primaryField->property . ", " . implode(', ', $ids) . ")")
+            ->setParameter("ids", $ids)
+            ->setCacheable($cacheable)
             ->getQuery()
-                ->useQueryCache($cacheable)
-                ->setCacheRegion($classMetadata->cache["region"] ?? null)
+            ->useQueryCache($cacheable)
+            ->setCacheRegion($classMetadata->cache["region"] ?? null)
             ->getResult()
         );
 
@@ -108,22 +120,22 @@ class TypesenseFinder implements TypesenseFinderInterface
     private function search(Request $request)
     {
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
-        if(!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF))
-            throw new \LogicException("Class \"".$this->collection->metadata()->class."\" doesn't have discriminator values");
+        if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF))
+            throw new LogicException("Class \"" . $this->collection->metadata()->class . "\" doesn't have discriminator values");
 
         $classNames = array_filter(
             explode(",", $request->getHeader(Query::INSTANCE_OF) ?? ""),
             fn($c) => !empty(trim($c ?? ""))
         );
 
-        foreach($classNames as $className) {
+        foreach ($classNames as $className) {
 
             $relation = str_starts_with(trim($className), "^") ? ":!=" : ":=";
 
-            $classMetadata = $this->objectManager->getClassMetadata(trim($className," ^"));
+            $classMetadata = $this->objectManager->getClassMetadata(trim($className, " ^"));
             $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
 
-            foreach($classMetadata->subClasses as $subClassName) {
+            foreach ($classMetadata->subClasses as $subClassName) {
 
                 $classMetadata = $this->objectManager->getClassMetadata($subClassName);
                 $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
@@ -135,7 +147,7 @@ class TypesenseFinder implements TypesenseFinderInterface
             $result = $this->collection->search($request);
             return new Response($result);
 
-        } catch(TypesenseException $e) {
+        } catch (TypesenseException $e) {
 
             return new Response([], $e->getCode(), $this->isDebug ? ["message" => $e->getMessage()] : []);
         }

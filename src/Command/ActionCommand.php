@@ -15,21 +15,23 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Typesense\Exceptions\ObjectNotFound;
 
-#[AsCommand(name:'typesense:action', aliases:[], description:'Import collections from Database')]
+#[AsCommand(name: 'typesense:action', aliases: [], description: 'Import collections from Database')]
 class ActionCommand extends Command
 {
     private $em;
-    private $typesenseManager;
+    private TypesenseManager $typesenseManager;
     private const ACTIONS = [
         'create',
         'upsert',
         'update',
         'delete'
     ];
-    private $isError = false;
+    private bool $isError = false;
 
-    public function __construct(TypesenseManager $typesenseManager) {
+    public function __construct(TypesenseManager $typesenseManager)
+    {
 
         parent::__construct();
         $this->typesenseManager = $typesenseManager;
@@ -47,7 +49,7 @@ class ActionCommand extends Command
 
         $action = $input->getArgument('action');
         if (!in_array($action, self::ACTIONS, true)) {
-            $io->error('Action option only takes the values : "'.implode("\",\"", $action).'\"');
+            $io->error('Action option only takes the values : "' . implode("\",\"", $action) . '\"');
             return 1;
         }
 
@@ -67,22 +69,23 @@ class ActionCommand extends Command
             $q = $metadata->getObjectManager()->createQuery('select e from ' . $class . ' e');
             $entities = $q->toIterable();
 
-            $nbEntities = (int) $metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
+            $nbEntities = (int)$metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
             $populated += $nbEntities;
 
             $data = [];
             foreach ($entities as $entity) {
 
                 $entityData = $metadata->getTransformer()->convert($entity);
-                $entityData["id"] = (string) $entity->getId();
+                $entityData["id"] = (string)$entity->getId();
 
                 $data[] = $entityData;
             }
 
 
             $output->writeln("\t" . 'Importing <info>[' . $name . '] ' . $class . '</info> ');
-            try { $response = $collection->documents()->import($data, $action); }
-            catch (\Typesense\Exceptions\ObjectNotFound $exception) {
+            try {
+                $response = $collection->documents()->import($data, $action);
+            } catch (ObjectNotFound $exception) {
 
                 $this->isError = true;
                 $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));

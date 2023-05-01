@@ -6,26 +6,26 @@ namespace Typesense\Bundle\ORM\Query;
 
 class Response
 {
-    protected $facetCounts;
-    protected $found;
-    protected $hits;
-    protected $hydratedHits;
-    protected $isHydrated;
-    protected $page;
-    protected $searchTimeMs;
+    protected mixed $facetCounts;
+    protected mixed $found;
+    protected mixed $hits;
+    protected array $hydratedHits;
+    protected bool $isHydrated;
+    protected mixed $page;
+    protected mixed $searchTimeMs;
 
-    protected $headers;
-    protected $status;
+    protected array $headers;
+    protected int $status;
 
     public function __construct(?array $result, int $status = 200, array $headers = [])
     {
-        $this->facetCounts  = $result['facet_counts']   ?? null;
-        $this->found        = $result['found']          ?? null;
-        $this->hits         = $result['hits']           ?? null;
-        $this->page         = $result['page']           ?? null;
+        $this->facetCounts = $result['facet_counts'] ?? null;
+        $this->found = $result['found'] ?? null;
+        $this->hits = $result['hits'] ?? null;
+        $this->page = $result['page'] ?? null;
         $this->searchTimeMs = $result['search_time_ms'] ?? null;
-        $this->isHydrated   = false;
-        $this->hydratedHits = null;
+        $this->isHydrated = false;
+        $this->hydratedHits = [];
 
         $this->status = $status;
         $this->headers = $headers;
@@ -33,7 +33,7 @@ class Response
 
     public function getStatus(): int
     {
-        if($this->status == 0) return 200;
+        if ($this->status == 0) return 200;
         return $this->status;
     }
 

@@ -16,14 +16,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name:'typesense:list', aliases:[], description:'List collections from typesense database')]
+#[AsCommand(name: 'typesense:list', aliases: [], description: 'List collections from typesense database')]
 class ListCommand extends Command
 {
-    private $em;
-    private $typesenseManager;
+    private TypesenseManager $typesenseManager;
 
-    public function __construct(TypesenseManager $typesenseManager) {
-
+    public function __construct(TypesenseManager $typesenseManager)
+    {
         parent::__construct();
         $this->typesenseManager = $typesenseManager;
     }
@@ -43,26 +42,26 @@ class ListCommand extends Command
         $io->newLine();
         $collectionName = $input->getOption('collection');
 
-        foreach($this->typesenseManager->getConnections() as $connectionName => $connection) {
+        foreach ($this->typesenseManager->getConnections() as $connectionName => $connection) {
 
-            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
-            foreach($connection->getCollections()->retrieve() as $collection) {
+            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": ' . ($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
+            foreach ($connection->getCollections()->retrieve() as $collection) {
 
-                if($collectionName && $collection["name"] != $collectionName)
+                if ($collectionName && $collection["name"] != $collectionName)
                     continue;
 
                 $fields = $collection["fields"] ?? [];
-                $output->writeln('- Collection <info>[' . $collection["name"] . '] </info>; '.count($fields) .' field(s)');
+                $output->writeln('- Collection <info>[' . $collection["name"] . '] </info>; ' . count($fields) . ' field(s)');
 
                 foreach ($fields as $field) {
-                    $output->writeln("\t" . 'Field <info>[' . $field["name"] . ']</info> (' . $field["type"] . ')',  OutputInterface::VERBOSITY_VERBOSE);
+                    $output->writeln("\t" . 'Field <info>[' . $field["name"] . ']</info> (' . $field["type"] . ')', OutputInterface::VERBOSITY_VERBOSE);
                 }
 
-                if(count($fields) > 0) $output->writeln("", OutputInterface::VERBOSITY_VERBOSE);
+                if (count($fields) > 0) $output->writeln("", OutputInterface::VERBOSITY_VERBOSE);
             }
 
         }
-        
+
         return 0;
     }
 

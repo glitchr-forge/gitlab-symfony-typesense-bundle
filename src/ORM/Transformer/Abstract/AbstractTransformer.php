@@ -6,15 +6,16 @@ namespace Typesense\Bundle\ORM\Transformer\Abstract;
 
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\TypesenseManager;
 
 abstract class AbstractTransformer implements TransformerInterface
 {
-    protected $accessor;
-    protected $objectManager;
+    protected PropertyAccessorInterface $accessor;
+    protected ObjectManager $objectManager;
 
-    protected $mapping;
+    protected array $mapping;
 
     public function __construct(ObjectManager $objectManager)
     {
@@ -24,10 +25,19 @@ abstract class AbstractTransformer implements TransformerInterface
         $this->accessor = PropertyAccess::createPropertyAccessorBuilder()->enableMagicCall()->getPropertyAccessor();
     }
 
-    public function getObjectManager(): ObjectManager { return $this->objectManager; }
-    public function getMapping($className): ?TypesenseMetadata { return $this->mapping[$className] ?? null; }
-    public function addMapping(TypesenseMetadata $metadata) {
-        
+    public function getObjectManager(): ObjectManager
+    {
+        return $this->objectManager;
+    }
+
+    public function getMapping($className): ?TypesenseMetadata
+    {
+        return $this->mapping[$className] ?? null;
+    }
+
+    public function addMapping(TypesenseMetadata $metadata)
+    {
+
         $this->mapping[$metadata->class] = $metadata;
         return $this;
     }
@@ -45,10 +55,10 @@ abstract class AbstractTransformer implements TransformerInterface
      * Convert a value to an acceptable value for typesense.
      *
      * @param string $objectClass the object class name
-     * @param string $properyName the property of the object
+     * @param string $propertyName the property of the object
      * @param [type] $value the value to convert
      */
-    abstract public function get(string $objectClass, string $properyName, $value);
+    abstract public function get(string $objectClass, string $propertyName, $value);
 
     /**
      * map a type to a typesense type field.

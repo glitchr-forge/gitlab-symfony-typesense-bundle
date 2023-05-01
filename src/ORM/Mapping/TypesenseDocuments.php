@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Mapping;
 
 use Http\Client\Exception as HttpClientException;
+use JsonException;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Client;
@@ -21,7 +22,11 @@ class TypesenseDocuments
         $this->connection = $connection;
     }
 
-    public function connection() { return $this->connection->getClient(); }
+    public function connection()
+    {
+        return $this->connection->getClient();
+    }
+
     public function delete(string|int $id): ?array
     {
         if (!$this->connection?->isConnected()) {
@@ -30,8 +35,11 @@ class TypesenseDocuments
 
         $documents = $this->connection?->getCollections()[$this->metadata->getName()]->documents;
 
-        try { return $documents[$id]?->delete(); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $documents[$id]?->delete();
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function create(array $data, array $options): ?array
@@ -44,8 +52,11 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        try { return $documents?->create($data, $options); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $documents->create($data, $options);
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function update(array $data, array $options): ?array
@@ -58,8 +69,11 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        try { return $documents?->update($data, $options); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $documents->update($data, $options);
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function search(array $searchParams): ?array
@@ -72,8 +86,11 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        try { return $documents?->search($searchParams); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $documents->search($searchParams);
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function import(array $data, string $action = 'create'): null|array|string
@@ -82,7 +99,7 @@ class TypesenseDocuments
             throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        if(empty($data)) {
+        if (empty($data)) {
             return [];
         }
 
@@ -90,7 +107,10 @@ class TypesenseDocuments
         $collection = $this->connection?->getCollections()[$collectionName];
         $documents = $collection->documents;
 
-        try { return $documents?->import($data, ['action' => $action]); }
-        catch(\JsonException|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $documents->import($data, ['action' => $action]);
+        } catch (JsonException|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 }

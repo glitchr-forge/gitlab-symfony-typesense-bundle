@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\Exception;
 
 use Http\Client\Exception\NetworkException;
+use RuntimeException;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Typesense\Exceptions\HTTPStatus0Error;
 use Typesense\Exceptions\ObjectAlreadyExists;
@@ -15,7 +16,7 @@ use Typesense\Exceptions\RequestUnauthorized;
 use Typesense\Exceptions\ServerError;
 use Typesense\Exceptions\ServiceUnavailable;
 
-final class TypesenseException extends \RuntimeException
+final class TypesenseException extends RuntimeException
 {
     public $status;
 

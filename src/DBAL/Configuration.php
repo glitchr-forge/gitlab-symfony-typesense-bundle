@@ -23,16 +23,18 @@ class Configuration
 
     protected int $port;
 
-    public function __toString(): string { return $this->getEndpoint(); }
+    public function __toString(): string
+    {
+        return $this->getEndpoint();
+    }
 
     public function __construct(#[SensitiveParameter] ?string $secret, #[SensitiveParameter] array $params, array $options = [])
     {
         $this->scheme = $params["scheme"] ?? "http";
-        $this->host   = $params["host"] ?? "localhost";
+        $this->host = $params["host"] ?? "localhost";
 
-        $this->port   = $params["port"] ?? 8108;
-        $this->port   = is_string($this->port) ? intval($this->port) : $this->port;
-
+        $this->port = $params["port"] ?? 8108;
+      
         $this->path = $params["path"] ?? "";
 
         $this->secret = $secret;

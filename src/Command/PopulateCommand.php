@@ -15,15 +15,16 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Typesense\Exceptions\ObjectNotFound;
 
-#[AsCommand(name:'typesense:populate', aliases:[], description:'Import collections from Database')]
+#[AsCommand(name: 'typesense:populate', aliases: [], description: 'Import collections from Database')]
 class PopulateCommand extends Command
 {
-    private $em;
-    private $typesenseManager;
-    private $isError = false;
+    private TypesenseManager $typesenseManager;
+    private bool $isError = false;
 
-    public function __construct(TypesenseManager $typesenseManager) {
+    public function __construct(TypesenseManager $typesenseManager)
+    {
 
         parent::__construct();
         $this->typesenseManager = $typesenseManager;
@@ -49,7 +50,7 @@ class PopulateCommand extends Command
             $q = $metadata->getObjectManager()->createQuery('select e from ' . $class . ' e');
             $entities = $q->toIterable();
 
-            $nbEntities = (int) $metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
+            $nbEntities = (int)$metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
             $populated += $nbEntities;
 
             $data = [];
@@ -58,8 +59,9 @@ class PopulateCommand extends Command
             }
 
             $output->writeln("\t" . 'Importing <info>[' . $name . '] ' . $class . '</info> ');
-            try { $response = $collection->documents()->import($data, "upsert"); }
-            catch (\Typesense\Exceptions\ObjectNotFound $exception) {
+            try {
+                $response = $collection->documents()->import($data, "upsert");
+            } catch (ObjectNotFound $exception) {
 
                 $this->isError = true;
                 $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
@@ -86,7 +88,7 @@ class PopulateCommand extends Command
                 round(microtime(true) - $execStart, PHP_ROUND_HALF_DOWN)
             ));
         }
-        
+
         return 0;
     }
 

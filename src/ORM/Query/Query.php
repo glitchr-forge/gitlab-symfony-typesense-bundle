@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Query;
 
+use InvalidArgumentException;
+
 class Query extends Request
 {
     public const INFIX_OFF = "off";
@@ -78,7 +80,7 @@ class Query extends Request
     public function notInstanceOf(string $class): self
     {
         if(!class_exists($class))
-            throw new \InvalidArgumentException("Class \"".$class."\" is doesn't exists");
+            throw new InvalidArgumentException("Class \"".$class."\" is doesn't exists");
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
         $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", ^" . $class, " ,") : "^" . $class;
@@ -89,7 +91,7 @@ class Query extends Request
     public function instanceOf(string $class): self
     {
         if(!class_exists($class))
-            throw new \InvalidArgumentException("Class \"".$class."\" is doesn't exists");
+            throw new InvalidArgumentException("Class \"".$class."\" is doesn't exists");
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
         $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", " . $class, " ,") : $class;

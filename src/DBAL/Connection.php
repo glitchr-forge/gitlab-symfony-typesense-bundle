@@ -29,13 +29,14 @@ use Typesense\Operations;
 
 class Connection
 {
-    protected $parameterBag;
+    protected ParameterBagInterface $parameterBag;
 
     /**
      * @var string $name
      */
-    protected $name;
-    protected $driver;
+    protected string $name;
+
+    protected Driver $driver;
 
     public function __construct(string $name, ParameterBagInterface $parameterBag)
     {
@@ -46,19 +47,17 @@ class Connection
 
     private function inflate($array, $divider_char = ".")
     {
-        if( !is_array($array) )
+        if (!is_array($array))
             return false;
 
         $split = '/' . preg_quote($divider_char, '/') . '/';
 
         $ret = array();
-        foreach ($array as $key => $val)
-        {
+        foreach ($array as $key => $val) {
             $parts = preg_split($split, $key, -1, PREG_SPLIT_NO_EMPTY);
             $leafpart = array_pop($parts);
             $parent = &$ret;
-            foreach ($parts as $part)
-            {
+            foreach ($parts as $part) {
                 if (!isset($parent[$part]))
                     $parent[$part] = array();
                 else if (!is_array($parent[$part]))
@@ -73,26 +72,66 @@ class Connection
         return $ret;
     }
 
-    public function getName(): string { return $this->name; }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
     public function getClient(): ?Client
     {
-        $params = array_filter($this->parameterBag->all(), fn($k) => str_starts_with($k, "typesense.connections.".$this->name), ARRAY_FILTER_USE_KEY);
+        $params = array_filter($this->parameterBag->all(), fn($k) => str_starts_with($k, "typesense.connections." . $this->name), ARRAY_FILTER_USE_KEY);
         $params = $this->inflate($params)["typesense"]["connections"][$this->name] ?? [];
 
         return $this->getDriver()->connect($params);
     }
 
-    public function getDriver(): Driver { return $this->driver; }
-    public function getStatus(): ?string { return $this->driver->getConfigError()?->getMessage() ?? null; }
-    public function getStatusCode(): ?int { return $this->driver->getConfigError()?->getCode() ?? null; }
+    public function getDriver(): Driver
+    {
+        return $this->driver;
+    }
 
-    public function isConnected(): bool { return $this->getClient() !== null; }
+    public function getStatus(): ?string
+    {
+        return $this->driver->getConfigError()?->getMessage() ?? null;
+    }
 
-    public function getCollections(): ?Collections { return $this->getClient()?->getCollections(); }
-    public function getCollection(string $name): Collection { return $this->getCollections()[$name]; }
-    public function getDocuments(string $name): Documents { return $this->getCollection($name)->getDocuments(); }
-    public function getDocument(string $name, $id): Document { return $this->getCollection($name)->getDocuments()[$id]; }
+    public function getStatusCode(): ?int
+    {
+        return $this->driver->getConfigError()?->getCode() ?? null;
+    }
 
-    public function getHealth(): bool { return $this->getClient()?->getHealth()?->retrieve()["ok"] ?? false; }
-    public function getDebug(): ?array { return $this->getClient()?->getDebug()?->retrieve(); }
+    public function isConnected(): bool
+    {
+        return $this->getClient() !== null;
+    }
+
+    public function getCollections(): ?Collections
+    {
+        return $this->getClient()?->getCollections();
+    }
+
+    public function getCollection(string $name): Collection
+    {
+        return $this->getCollections()[$name];
+    }
+
+    public function getDocuments(string $name): Documents
+    {
+        return $this->getCollection($name)->getDocuments();
+    }
+
+    public function getDocument(string $name, $id): Document
+    {
+        return $this->getCollection($name)->getDocuments()[$id];
+    }
+
+    public function getHealth(): bool
+    {
+        return $this->getClient()?->getHealth()?->retrieve()["ok"] ?? false;
+    }
+
+    public function getDebug(): ?array
+    {
+        return $this->getClient()?->getDebug()?->retrieve();
+    }
 }

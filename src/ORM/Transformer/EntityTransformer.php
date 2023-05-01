@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Transformer;
 
+use DateTime;
 use Doctrine\Persistence\ObjectManager;
+use Exception;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\objectManagerInterface;
@@ -21,11 +23,11 @@ class EntityTransformer extends AbstractTransformer
     {
         $entityClass = ClassUtils::getClass($entity);
         if (!$entity instanceof TypesenseInterface) {
-            throw new \Exception("Class ".$entityClass." does not implement \"".TypesenseInterface::class."\"");
+            throw new Exception("Class " . $entityClass . " does not implement \"" . TypesenseInterface::class . "\"");
         }
 
         if (!$this->getMapping($entityClass) instanceof TypesenseMetadata) {
-            throw new \Exception(sprintf('Class %s is not supported for Doctrine To Typesense Transformation', $entityClass));
+            throw new Exception(sprintf('Class %s is not supported for Doctrine To Typesense Transformation', $entityClass));
         }
 
         $data = [];
@@ -53,12 +55,12 @@ class EntityTransformer extends AbstractTransformer
         return $data;
     }
 
-    public function get(string $entityClass, string $propertyName, $value)
+    public function get(string $objectClass, string $propertyName, $value)
     {
-        $metadata = $this->getMapping($entityClass);
+        $metadata = $this->getMapping($objectClass);
         $metadata->fields[$propertyName]->name ??= $propertyName;
 
-        $key        = array_search(
+        $key = array_search(
             $propertyName,
             array_column(
                 $metadata->fields,
@@ -67,33 +69,33 @@ class EntityTransformer extends AbstractTransformer
             true
         );
 
-        $fields       = array_values($metadata->fields);
+        $fields = array_values($metadata->fields);
         $originalType = $fields[$key]->type;
-        $castedType   = $this->cast($originalType);
+        $castedType = $this->cast($originalType);
 
-        switch ($originalType.":".$castedType) {
+        switch ($originalType . ":" . $castedType) {
 
-            case self::TYPE_DATETIME.":".self::TYPE_INT64:
-                
-                if ($value instanceof \DateTime) {
+            case self::TYPE_DATETIME . ":" . self::TYPE_INT64:
+
+                if ($value instanceof DateTime) {
                     return $value->getTimestamp();
                 }
 
                 return 0;
 
-            case self::TYPE_OBJECT.":".self::TYPE_STRING:
+            case self::TYPE_OBJECT . ":" . self::TYPE_STRING:
                 return $value->__toString();
 
-            case self::TYPE_COLLECTION.":".self::TYPE_STRING_ARRAY:
+            case self::TYPE_COLLECTION . ":" . self::TYPE_STRING_ARRAY:
                 return array_filter(array_values(
                     $value->map(function ($v) {
                         return $v->__toString();
                     })->toArray()
                 )) ?? [];
 
-            case self::TYPE_STRING .":".self::TYPE_STRING:
-            case self::TYPE_TEXT .":".self::TYPE_STRING:
-                return (string) $value;
+            case self::TYPE_STRING . ":" . self::TYPE_STRING:
+            case self::TYPE_TEXT . ":" . self::TYPE_STRING:
+                return (string)$value;
 
             default:
                 return is_array($value) ? array_values(array_filter($value)) : $value;

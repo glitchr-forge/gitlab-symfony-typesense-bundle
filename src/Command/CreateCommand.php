@@ -12,11 +12,12 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Typesense\Bundle\ORM\TypesenseManager;
+use Typesense\Exceptions\ObjectNotFound;
 
-#[AsCommand(name:'typesense:create', aliases:[], description:'Create Typesenses indexes')]
+#[AsCommand(name: 'typesense:create', aliases: [], description: 'Create Typesenses indexes')]
 class CreateCommand extends Command
 {
-    private $typesenseManager;
+    private TypesenseManager $typesenseManager;
 
     public function __construct(TypesenseManager $typesenseManager)
     {
@@ -26,11 +27,11 @@ class CreateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        foreach($this->typesenseManager->getConnections() as $connectionName => $connection) {
+        foreach ($this->typesenseManager->getConnections() as $connectionName => $connection) {
 
-            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
+            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": ' . ($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
 
-            foreach($connection->getCollections()->retrieve() as $collection) {
+            foreach ($connection->getCollections()->retrieve() as $collection) {
 
                 try {
 
@@ -38,7 +39,7 @@ class CreateCommand extends Command
                     $output->writeln("\t" . sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $name));
                     $connection->getCollection($name)->delete();
 
-                } catch (\Typesense\Exceptions\ObjectNotFound $exception) {
+                } catch (ObjectNotFound $exception) {
 
                     $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
                 }
