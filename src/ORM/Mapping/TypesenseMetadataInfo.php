@@ -10,6 +10,9 @@ use Typesense\Bundle\DBAL\Collections;
 use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 
+/**
+ *
+ */
 class TypesenseMetadataInfo
 {
     /**
@@ -23,7 +26,7 @@ class TypesenseMetadataInfo
     public ?string $class;
 
     /**
-     * @var string
+     * @var array
      */
     public array $fields;
 

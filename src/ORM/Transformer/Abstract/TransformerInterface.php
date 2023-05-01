@@ -6,6 +6,9 @@ namespace Typesense\Bundle\ORM\Transformer\Abstract;
 
 use Doctrine\Persistence\ObjectManager;
 
+/**
+ *
+ */
 interface TransformerInterface
 {
     public const TYPE_COLLECTION = 'collection';

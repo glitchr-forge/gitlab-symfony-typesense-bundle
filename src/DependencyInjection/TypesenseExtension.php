@@ -13,6 +13,9 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Typesense\Bundle\ORM\TypesenseManager;
 
+/**
+ *
+ */
 class TypesenseExtension extends Extension
 {
     private string $defaultConnection;
@@ -20,7 +23,7 @@ class TypesenseExtension extends Extension
     public function load(array $configs, ContainerBuilder $container)
     {
         // Format XML
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
 
         // Configuration file: ./config/package/base.yaml
@@ -44,11 +47,23 @@ class TypesenseExtension extends Extension
         }
     }
 
+    /**
+     * @param ContainerBuilder $container
+     * @param array $config
+     * @param $globalKey
+     * @return $this
+     */
+    /**
+     * @param ContainerBuilder $container
+     * @param array $config
+     * @param $globalKey
+     * @return $this
+     */
     public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = '')
     {
         foreach ($config as $key => $value) {
             if (!empty($globalKey)) {
-                $key = $globalKey.'.'.$key;
+                $key = $globalKey . '.' . $key;
             }
 
             if (is_array($value)) {
@@ -61,6 +76,14 @@ class TypesenseExtension extends Extension
         return $this;
     }
 
+    /**
+     * @param ContainerBuilder $container
+     * @return $this
+     */
+    /**
+     * @param ContainerBuilder $container
+     * @return $this
+     */
     public function initialize(ContainerBuilder $container)
     {
         $definition = $container->getDefinition(TypesenseManager::class);
@@ -89,10 +112,10 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured collection.
      *
-     * @param array            $mappings  An array of collection configurations
+     * @param string $name
+     * @param array $collection
      * @param ContainerBuilder $container A ContainerBuilder instance
      *
-     * @throws \InvalidArgumentException
      */
     private function loadMetadata(string $name, array $collection, ContainerBuilder $container): void
     {
@@ -108,10 +131,10 @@ class TypesenseExtension extends Extension
     /**
      * Loads the configured collection.
      *
-     * @param array            $mappings  An array of collection configurations
+     * @param string $name
+     * @param array $collection
      * @param ContainerBuilder $container A ContainerBuilder instance
      *
-     * @throws \InvalidArgumentException
      */
     private function loadCollections(string $name, array $collection, ContainerBuilder $container): void
     {

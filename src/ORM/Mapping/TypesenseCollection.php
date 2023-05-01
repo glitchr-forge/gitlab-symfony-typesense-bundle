@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Mapping;
 
 use Doctrine\Common\Util\ClassUtils;
+use Http\Client\Exception;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Query\Request;
@@ -12,6 +13,9 @@ use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Client;
 use Typesense\Exceptions\TypesenseClientError;
 
+/**
+ *
+ */
 class TypesenseCollection
 {
     protected $connection;
@@ -57,6 +61,10 @@ class TypesenseCollection
         return $this->documents;
     }
 
+    /**
+     * @param $entity
+     * @return bool
+     */
     public function supports($entity): bool
     {
         $entityClassname = ClassUtils::getClass($entity);
@@ -64,6 +72,10 @@ class TypesenseCollection
         return is_a($entity, $this->metadata->getClass(), true);
     }
 
+    /**
+     * @param Request $query
+     * @return array|null
+     */
     public function search(Request $query)
     {
         if (!$this->connection->isConnected()) {
@@ -77,6 +89,12 @@ class TypesenseCollection
         }
     }
 
+    /**
+     * @param array $searchRequests
+     * @param Request|null $commonSearchParams
+     * @return array
+     * @throws Exception
+     */
     public function multiSearch(array $searchRequests, ?Request $commonSearchParams)
     {
         if (!$this->connection->isConnected()) {
@@ -124,7 +142,7 @@ class TypesenseCollection
         }
 
         $configuration = $this->metadata->getConfiguration();
-        $configuration['fields'] = array_values(array_map(fn ($f) => $f->toArray(), $configuration['fields']));
+        $configuration['fields'] = array_values(array_map(fn($f) => $f->toArray(), $configuration['fields']));
         foreach ($configuration['fields'] as &$field) {
             $field['type'] = $this->metadata->getTransformer()->cast($field['type']);
         }
@@ -136,6 +154,9 @@ class TypesenseCollection
         }
     }
 
+    /**
+     * @return null
+     */
     public function delete()
     {
         if (!$this->connection->isConnected()) {

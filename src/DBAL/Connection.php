@@ -11,6 +11,9 @@ use Typesense\Collections;
 use Typesense\Document;
 use Typesense\Documents;
 
+/**
+ *
+ */
 class Connection
 {
     protected ParameterBagInterface $parameterBag;
@@ -26,6 +29,11 @@ class Connection
         $this->driver = new Driver($name);
     }
 
+    /**
+     * @param $array
+     * @param $divider_char
+     * @return array|false|mixed
+     */
     private function inflate($array, $divider_char = '.')
     {
         if (!is_array($array)) {
@@ -64,7 +72,7 @@ class Connection
 
     public function getClient(): ?Client
     {
-        $params = array_filter($this->parameterBag->all(), fn ($k) => str_starts_with($k, 'typesense.connections.' . $this->name), ARRAY_FILTER_USE_KEY);
+        $params = array_filter($this->parameterBag->all(), fn($k) => str_starts_with($k, 'typesense.connections.' . $this->name), ARRAY_FILTER_USE_KEY);
         $params = $this->inflate($params)['typesense']['connections'][$this->name] ?? [];
 
         return $this->getDriver()->connect($params);
@@ -105,6 +113,11 @@ class Connection
         return $this->getCollection($name)->getDocuments();
     }
 
+    /**
+     * @param string $name
+     * @param $id
+     * @return Document
+     */
     public function getDocument(string $name, $id): Document
     {
         return $this->getCollection($name)->getDocuments()[$id];

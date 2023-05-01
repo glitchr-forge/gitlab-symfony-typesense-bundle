@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Query;
 
+/**
+ *
+ */
 class Query extends Request
 {
     public const INFIX_OFF = 'off';

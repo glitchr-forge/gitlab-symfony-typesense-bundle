@@ -8,6 +8,9 @@ use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Exceptions\ObjectNotFound;
 
+/**
+ *
+ */
 class Transaction
 {
     protected TypesenseCollection $collection;
@@ -23,16 +26,23 @@ class Transaction
     protected array $options;
     protected bool $commited;
 
+    /**
+     * @param TypesenseCollection $collection
+     * @param $action
+     * @param string|object $objectOrId
+     * @param array $options
+     * @throws \Exception
+     */
     public function __construct(TypesenseCollection $collection, $action, string|object $objectOrId, array $options = [])
     {
         $this->mock = [];
         if (is_string($objectOrId)) {
-            $this->id = (string) $objectOrId;
+            $this->id = (string)$objectOrId;
         } else {
             $primaryField = $this->primaryKey($collection->metadata());
 
             $this->mock = $collection->transformer()->convert($objectOrId);
-            $this->id = (string) $this->mock[$primaryField->name];
+            $this->id = (string)$this->mock[$primaryField->name];
         }
 
         $this->collection = $collection;
@@ -42,6 +52,11 @@ class Transaction
         $this->commited = false;
     }
 
+    /**
+     * @param TypesenseMetadata $metadata
+     * @return mixed
+     * @throws \Exception
+     */
     private function primaryKey(TypesenseMetadata $metadata)
     {
         foreach ($metadata->fields as $field) {

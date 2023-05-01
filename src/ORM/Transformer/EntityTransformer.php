@@ -10,13 +10,16 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\Transformer\Abstract\AbstractTransformer;
 use Typesense\Bundle\TypesenseInterface;
 
+/**
+ *
+ */
 class EntityTransformer extends AbstractTransformer
 {
     public function convert(object $entity): array
     {
         $entityClass = ClassUtils::getClass($entity);
         if (!$entity instanceof TypesenseInterface) {
-            throw new \Exception('Class '.$entityClass.' does not implement "'.TypesenseInterface::class.'"');
+            throw new \Exception('Class ' . $entityClass . ' does not implement "' . TypesenseInterface::class . '"');
         }
 
         if (!$this->getMapping($entityClass) instanceof TypesenseMetadata) {
@@ -45,6 +48,12 @@ class EntityTransformer extends AbstractTransformer
         return $data;
     }
 
+    /**
+     * @param string $objectClass
+     * @param string $propertyName
+     * @param $value
+     * @return array|int|string
+     */
     public function get(string $objectClass, string $propertyName, $value)
     {
         $metadata = $this->getMapping($objectClass);
@@ -63,27 +72,27 @@ class EntityTransformer extends AbstractTransformer
         $originalType = $fields[$key]->type;
         $castedType = $this->cast($originalType);
 
-        switch ($originalType.':'.$castedType) {
-            case self::TYPE_DATETIME.':'.self::TYPE_INT64:
+        switch ($originalType . ':' . $castedType) {
+            case self::TYPE_DATETIME . ':' . self::TYPE_INT64:
                 if ($value instanceof \DateTime) {
                     return $value->getTimestamp();
                 }
 
                 return 0;
 
-            case self::TYPE_OBJECT.':'.self::TYPE_STRING:
+            case self::TYPE_OBJECT . ':' . self::TYPE_STRING:
                 return $value->__toString();
 
-            case self::TYPE_COLLECTION.':'.self::TYPE_STRING_ARRAY:
+            case self::TYPE_COLLECTION . ':' . self::TYPE_STRING_ARRAY:
                 return array_filter(array_values(
                     $value->map(function ($v) {
                         return $v->__toString();
                     })->toArray()
                 )) ?? [];
 
-            case self::TYPE_STRING.':'.self::TYPE_STRING:
-            case self::TYPE_TEXT.':'.self::TYPE_STRING:
-                return (string) $value;
+            case self::TYPE_STRING . ':' . self::TYPE_STRING:
+            case self::TYPE_TEXT . ':' . self::TYPE_STRING:
+                return (string)$value;
 
             default:
                 return is_array($value) ? array_values(array_filter($value)) : $value;

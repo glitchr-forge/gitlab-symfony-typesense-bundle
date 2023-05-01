@@ -18,6 +18,9 @@ use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\TypesenseInterface;
 
+/**
+ *
+ */
 class TypesenseIndexer
 {
     protected array $transactions = [];
@@ -74,7 +77,7 @@ class TypesenseIndexer
             return;
         }
 
-        $this->objectIds[spl_object_hash($object)] = (string) $object->getId();
+        $this->objectIds[spl_object_hash($object)] = (string)$object->getId();
     }
 
     public function postRemove(LifecycleEventArgs $args)
@@ -110,7 +113,7 @@ class TypesenseIndexer
             } catch (TypesenseException|NetworkException $e) {
                 if ($this->first) {
                     $flashBag = $this->requestStack->getCurrentRequest()?->getSession()?->getFlashBag();
-                    $flashBag->add('warning', 'Typesense '.$e->getCode().': '.$e->getMessage());
+                    $flashBag->add('warning', 'Typesense ' . $e->getCode() . ': ' . $e->getMessage());
                     $this->first = false;
                 }
             }

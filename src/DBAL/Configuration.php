@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
+/**
+ *
+ */
 class Configuration
 {
     protected ?string $secret;
@@ -33,11 +36,17 @@ class Configuration
         $this->options = $options;
     }
 
+    /**
+     * @return string|null
+     */
     public function getSecret()
     {
         return $this->secret;
     }
 
+    /**
+     * @return array
+     */
     public function getOptions()
     {
         return $this->options;
@@ -48,11 +57,18 @@ class Configuration
         return $this->path;
     }
 
+    /**
+     * @return array
+     */
     public function getNode()
     {
         return ['host' => $this->host, 'port' => $this->port, 'protocol' => $this->scheme];
     }
 
+    /**
+     * @param string $path
+     * @return string
+     */
     public function getEndpoint(string $path = '')
     {
         return sprintf('%s://%s:%d%s%s', $this->scheme, $this->host, $this->port, $this->collectionPrefix, $path);

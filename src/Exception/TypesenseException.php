@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Typesense\Bundle\Exception;
 
 use Http\Client\Exception\NetworkException;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Typesense\Exceptions\ObjectAlreadyExists;
 use Typesense\Exceptions\ObjectNotFound;
@@ -14,6 +18,9 @@ use Typesense\Exceptions\RequestUnauthorized;
 use Typesense\Exceptions\ServerError;
 use Typesense\Exceptions\ServiceUnavailable;
 
+/**
+ *
+ */
 final class TypesenseException extends \RuntimeException
 {
     public $status;
@@ -23,6 +30,15 @@ final class TypesenseException extends \RuntimeException
      */
     public $message;
 
+    /**
+     * @param $message
+     * @param $code
+     * @param $previous
+     * @throws ClientExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
     public function __construct($message = '', $code = 0, $previous = null)
     {
         if ($message instanceof ResponseInterface) {
@@ -37,6 +53,10 @@ final class TypesenseException extends \RuntimeException
         parent::__construct($message, $code, $previous);
     }
 
+    /**
+     * @param $e
+     * @return int
+     */
     private function transformExceptionToStatusCode($e)
     {
         if ($e instanceof RequestMalformed) {

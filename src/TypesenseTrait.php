@@ -5,6 +5,9 @@ namespace Typesense\Bundle;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
+/**
+ *
+ */
 trait TypesenseTrait
 {
     public function __typesenseGetter(string $propertyName, array $propertyInfo): mixed
@@ -16,7 +19,7 @@ trait TypesenseTrait
         $propertyPath = explode('.', $propertyName);
         foreach ($propertyPath as $propertyName) {
             $value = $value instanceof Collection
-                ? $value->Map(fn ($v) => $accessor->getValue($v, $propertyName))
+                ? $value->Map(fn($v) => $accessor->getValue($v, $propertyName))
                 : $accessor->getValue($value, $propertyName);
         }
 

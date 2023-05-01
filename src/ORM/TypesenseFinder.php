@@ -15,6 +15,9 @@ use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 
+/**
+ *
+ */
 class TypesenseFinder implements TypesenseFinderInterface
 {
     protected $cache;
@@ -49,6 +52,14 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     protected ?int $cacheTTL = null;
 
+    /**
+     * @param int|null $ttl
+     * @return $this
+     */
+    /**
+     * @param int|null $ttl
+     * @return $this
+     */
     public function cacheTTL(?int $ttl)
     {
         $this->cacheTTL = $ttl;
@@ -58,7 +69,7 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
-        $key = str_replace('\\', '__', static::class).'_'.$this->collection->name().'_'.sha1(serialize($request));
+        $key = str_replace('\\', '__', static::class) . '_' . $this->collection->name() . '_' . sha1(serialize($request));
         if ($cacheable && $this->cache->has($key)) {
             return $this->cache->get($key);
         }
@@ -108,8 +119,8 @@ class TypesenseFinder implements TypesenseFinderInterface
             ->createQueryBuilder()
             ->select('e')
             ->from($this->metadata()->class, 'e')
-            ->where('e.'.$primaryField->property.' IN (:ids)')
-            ->orderBy('FIELD(e.'.$primaryField->property.', '.implode(', ', $ids).')')
+            ->where('e.' . $primaryField->property . ' IN (:ids)')
+            ->orderBy('FIELD(e.' . $primaryField->property . ', ' . implode(', ', $ids) . ')')
             ->setParameter('ids', $ids)
             ->setCacheable($cacheable)
             ->getQuery()
@@ -120,27 +131,31 @@ class TypesenseFinder implements TypesenseFinderInterface
         return $response->setHydrated(true);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     private function search(Request $request)
     {
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
         if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF)) {
-            throw new \LogicException('Class "'.$this->collection->metadata()->class."\" doesn't have discriminator values");
+            throw new \LogicException('Class "' . $this->collection->metadata()->class . "\" doesn't have discriminator values");
         }
 
         $classNames = array_filter(
             explode(',', $request->getHeader(Query::INSTANCE_OF) ?? ''),
-            fn ($c) => !empty(trim($c ?? ''))
+            fn($c) => !empty(trim($c ?? ''))
         );
 
         foreach ($classNames as $className) {
             $relation = str_starts_with(trim($className), '^') ? ':!=' : ':=';
 
             $classMetadata = $this->objectManager->getClassMetadata(trim($className, ' ^'));
-            $request->addFilterBy($classMetadata->discriminatorColumn['name'].$relation.$classMetadata->discriminatorValue);
+            $request->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
 
             foreach ($classMetadata->subClasses as $subClassName) {
                 $classMetadata = $this->objectManager->getClassMetadata($subClassName);
-                $request->addFilterBy($classMetadata->discriminatorColumn['name'].$relation.$classMetadata->discriminatorValue);
+                $request->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
             }
         }
 

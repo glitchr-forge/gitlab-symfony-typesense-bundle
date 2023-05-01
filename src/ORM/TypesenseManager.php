@@ -6,6 +6,9 @@ use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
+/**
+ *
+ */
 class TypesenseManager
 {
     protected string $defaultConnection;
@@ -45,6 +48,14 @@ class TypesenseManager
         return $this->connections[$connectionName ?? $this->getDefaultConnectionName()];
     }
 
+    /**
+     * @param Connection $connection
+     * @return $this
+     */
+    /**
+     * @param Connection $connection
+     * @return $this
+     */
     public function addConnection(Connection $connection)
     {
         $this->connections[$connection->getName()] = $connection;
@@ -59,11 +70,19 @@ class TypesenseManager
         return $this->getCollection($collectionName)?->metadata();
     }
 
+    /**
+     * @param TypesenseMetadata $metadata
+     * @return $this
+     */
+    /**
+     * @param TypesenseMetadata $metadata
+     * @return $this
+     */
     public function addMetadata(TypesenseMetadata $metadata)
     {
         $this->metadata[$metadata->getName()] = $metadata;
         foreach ($metadata->getSubMetadata() as $submetadata) {
-            $this->metadata[$metadata->getName().'_'.$submetadata->getName()] = $submetadata;
+            $this->metadata[$metadata->getName() . '_' . $submetadata->getName()] = $submetadata;
         }
 
         return $this;
@@ -81,6 +100,14 @@ class TypesenseManager
         return $this->collections[$collectionName];
     }
 
+    /**
+     * @param TypesenseCollection $collection
+     * @return $this
+     */
+    /**
+     * @param TypesenseCollection $collection
+     * @return $this
+     */
     public function addCollection(TypesenseCollection $collection)
     {
         $this->collections[$collection->name()] = $collection;

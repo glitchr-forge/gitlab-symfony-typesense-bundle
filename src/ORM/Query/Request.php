@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Query;
 
+/**
+ *
+ */
 class Request
 {
     private array $headers = [];
@@ -55,6 +58,16 @@ class Request
         return isset($this->headers[$key]);
     }
 
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
     public function addHeader($key, $value): self
     {
         $this->headers[$key] = $value;

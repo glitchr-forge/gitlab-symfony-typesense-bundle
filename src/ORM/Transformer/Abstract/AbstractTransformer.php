@@ -9,6 +9,9 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
+/**
+ *
+ */
 abstract class AbstractTransformer implements TransformerInterface
 {
     protected PropertyAccessorInterface $accessor;
@@ -29,11 +32,23 @@ abstract class AbstractTransformer implements TransformerInterface
         return $this->objectManager;
     }
 
+    /**
+     * @param $className
+     * @return TypesenseMetadata|null
+     */
     public function getMapping($className): ?TypesenseMetadata
     {
         return $this->mapping[$className] ?? null;
     }
 
+    /**
+     * @param TypesenseMetadata $metadata
+     * @return $this
+     */
+    /**
+     * @param TypesenseMetadata $metadata
+     * @return $this
+     */
     public function addMapping(TypesenseMetadata $metadata)
     {
         $this->mapping[$metadata->class] = $metadata;
@@ -53,7 +68,7 @@ abstract class AbstractTransformer implements TransformerInterface
     /**
      * Convert a value to an acceptable value for typesense.
      *
-     * @param string $objectClass  the object class name
+     * @param string $objectClass the object class name
      * @param string $propertyName the property of the object
      * @param [type] $value the value to convert
      */

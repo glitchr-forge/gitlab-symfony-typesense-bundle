@@ -7,6 +7,9 @@ namespace Typesense\Bundle\ORM;
 use Typesense\Bundle\ORM\Mapping\Collection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
+/**
+ *
+ */
 interface TypesenseManagerInterface
 {
     public function getCollection(string $collectionName, ?string $connectionName = null): Collection;

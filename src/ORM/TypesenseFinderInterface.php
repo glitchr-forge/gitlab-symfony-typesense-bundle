@@ -7,6 +7,9 @@ namespace Typesense\Bundle\ORM;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 
+/**
+ *
+ */
 interface TypesenseFinderInterface
 {
     public function name(): string;

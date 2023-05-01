@@ -7,6 +7,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Typesense\Bundle\ORM\TypesenseManager;
 
+/**
+ *
+ */
 class MetadataPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void

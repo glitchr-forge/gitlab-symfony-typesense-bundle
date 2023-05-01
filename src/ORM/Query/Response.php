@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Query;
 
+/**
+ *
+ */
 class Response
 {
     protected mixed $facetCounts;
@@ -70,6 +73,9 @@ class Response
         return $this->hits;
     }
 
+    /**
+     * @return mixed|null
+     */
     public function getRawResults()
     {
         return $this->hits;
