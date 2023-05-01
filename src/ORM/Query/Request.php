@@ -35,7 +35,7 @@ class Request
     public function addQueryBy(string $filterBy): self
     {
         $_filterBy = $this->getHeader('query_by');
-        $filterBy = $_filterBy ? trim($_filterBy.', '.$filterBy) : $filterBy;
+        $filterBy = $_filterBy ? trim($_filterBy . ', ' . $filterBy) : $filterBy;
 
         return $this->addHeader('query_by', $filterBy);
     }

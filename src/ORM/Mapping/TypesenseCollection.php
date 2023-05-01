@@ -72,7 +72,7 @@ class TypesenseCollection
 
         try {
             return $this->documents->search($query->getHeaders());
-        } catch (TypesenseClientError | HttpClientException $e) {
+        } catch (TypesenseClientError|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -99,7 +99,7 @@ class TypesenseCollection
                 ['searches' => $searches],
                 $commonSearchParams ? $commonSearchParams->getHeaders() : []
             );
-        } catch (TypesenseClientError | HttpClientException $e) {
+        } catch (TypesenseClientError|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -112,7 +112,7 @@ class TypesenseCollection
 
         try {
             return $this->client()->getCollections()->retrieve();
-        } catch (TypesenseClientError | HttpClientException $e) {
+        } catch (TypesenseClientError|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -131,7 +131,7 @@ class TypesenseCollection
 
         try {
             $this->client()->getCollections()->create($configuration);
-        } catch (TypesenseClientError | HttpClientException $e) {
+        } catch (TypesenseClientError|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -144,7 +144,7 @@ class TypesenseCollection
 
         try {
             return $this->client()->getCollection($this->name())?->delete();
-        } catch (TypesenseClientError | HttpClientException $e) {
+        } catch (TypesenseClientError|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

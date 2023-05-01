@@ -32,7 +32,7 @@ class Connection
             return false;
         }
 
-        $split = '/'.preg_quote($divider_char, '/').'/';
+        $split = '/' . preg_quote($divider_char, '/') . '/';
 
         $ret = [];
         foreach ($array as $key => $val) {
@@ -64,7 +64,7 @@ class Connection
 
     public function getClient(): ?Client
     {
-        $params = array_filter($this->parameterBag->all(), fn ($k) => str_starts_with($k, 'typesense.connections.'.$this->name), ARRAY_FILTER_USE_KEY);
+        $params = array_filter($this->parameterBag->all(), fn ($k) => str_starts_with($k, 'typesense.connections.' . $this->name), ARRAY_FILTER_USE_KEY);
         $params = $this->inflate($params)['typesense']['connections'][$this->name] ?? [];
 
         return $this->getDriver()->connect($params);

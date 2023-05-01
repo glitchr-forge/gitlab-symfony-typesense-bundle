@@ -114,7 +114,7 @@ class TypesenseMetadata extends TypesenseMetadataInfo
                     }
                 }
 
-                $name = (0 == $id) ? 'primary' : 'identifier[' . $id . ']';
+                $name = (0 == $id) ? 'primary' : 'identifier['.$id.']';
                 $this->defaultSortingField ??= $name;
 
                 $this->fields[$name] = new TypesenseMetadataField();
@@ -170,14 +170,14 @@ class TypesenseMetadata extends TypesenseMetadataInfo
                     $subname = array_flip($classMetadata->discriminatorMap)[$subclass];
 
                     $configuration = [];
-                    $configuration['name'] = $this->name . '%' . $subname;
+                    $configuration['name'] = $this->name.'%'.$subname;
                     $configuration['class'] = $subclass;
                     $configuration['fields'] = array_filter($this->fields, fn ($k) => 'id' != $k, ARRAY_FILTER_USE_KEY);
                     $configuration['default_sorting_field'] = $this->defaultSortingField;
                     $configuration['token_separators'] = $this->tokenSeparators;
                     $configuration['symbols_to_index'] = $this->symbolsToIndex;
 
-                    $metadata[] = new TypesenseMetadata($this->name . '%' . $subname, $configuration, $this->transformer);
+                    $metadata[] = new TypesenseMetadata($this->name.'%'.$subname, $configuration, $this->transformer);
                 }
             }
         }

@@ -63,7 +63,7 @@ class TypesenseManager
     {
         $this->metadata[$metadata->getName()] = $metadata;
         foreach ($metadata->getSubMetadata() as $submetadata) {
-            $this->metadata[$metadata->getName() . '_' . $submetadata->getName()] = $submetadata;
+            $this->metadata[$metadata->getName().'_'.$submetadata->getName()] = $submetadata;
         }
 
         return $this;

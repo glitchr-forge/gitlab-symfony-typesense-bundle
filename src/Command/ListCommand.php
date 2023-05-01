@@ -39,17 +39,17 @@ class ListCommand extends Command
         $collectionName = $input->getOption('collection');
 
         foreach ($this->typesenseManager->getConnections() as $connectionName => $connection) {
-            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": ' . ($connection->getHealth() ? 'OK' : 'BAD STATE'), $connectionName));
+            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? 'OK' : 'BAD STATE'), $connectionName));
             foreach ($connection->getCollections()->retrieve() as $collection) {
                 if ($collectionName && $collection['name'] != $collectionName) {
                     continue;
                 }
 
                 $fields = $collection['fields'] ?? [];
-                $output->writeln('- Collection <info>[' . $collection['name'] . '] </info>; ' . count($fields) . ' field(s)');
+                $output->writeln('- Collection <info>['.$collection['name'].'] </info>; '.count($fields).' field(s)');
 
                 foreach ($fields as $field) {
-                    $output->writeln("\t" . 'Field <info>[' . $field['name'] . ']</info> (' . $field['type'] . ')', OutputInterface::VERBOSITY_VERBOSE);
+                    $output->writeln("\t".'Field <info>['.$field['name'].']</info> ('.$field['type'].')', OutputInterface::VERBOSITY_VERBOSE);
                 }
 
                 if (count($fields) > 0) {

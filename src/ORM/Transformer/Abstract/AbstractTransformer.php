@@ -53,7 +53,7 @@ abstract class AbstractTransformer implements TransformerInterface
     /**
      * Convert a value to an acceptable value for typesense.
      *
-     * @param string $objectClass the object class name
+     * @param string $objectClass  the object class name
      * @param string $propertyName the property of the object
      * @param [type] $value the value to convert
      */

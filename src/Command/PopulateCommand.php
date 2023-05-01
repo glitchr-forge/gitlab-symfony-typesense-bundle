@@ -40,10 +40,10 @@ class PopulateCommand extends Command
 
             $output->writeln(sprintf('<info>Populating</info> <comment>%s</comment>', $name));
 
-            $q = $metadata->getObjectManager()->createQuery('select e from ' . $class . ' e');
+            $q = $metadata->getObjectManager()->createQuery('select e from '.$class.' e');
             $entities = $q->toIterable();
 
-            $nbEntities = (int) $metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
+            $nbEntities = (int) $metadata->getObjectManager()->createQuery('select COUNT(u.id) from '.$class.' u')->getSingleScalarResult();
             $populated += $nbEntities;
 
             $data = [];
@@ -51,23 +51,23 @@ class PopulateCommand extends Command
                 $data[] = $metadata->getTransformer()->convert($entity);
             }
 
-            $output->writeln("\t" . 'Importing <info>[' . $name . '] ' . $class . '</info> ');
+            $output->writeln("\t".'Importing <info>['.$name.'] '.$class.'</info> ');
             try {
                 $response = $collection->documents()->import($data, 'upsert');
             } catch (ObjectNotFound $exception) {
                 $this->isError = true;
-                $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
+                $output->writeln("\t".sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
                 continue;
             }
 
             if ($this->printErrors($io, $response ?? [])) {
                 $this->isError = true;
-                $io->error('Error happened during the import of the collection : ' . $name);
+                $io->error('Error happened during the import of the collection : '.$name);
 
                 return 2;
             }
 
-            $io->text("\t" . 'DONE.');
+            $io->text("\t".'DONE.');
         }
 
         $io->newLine();

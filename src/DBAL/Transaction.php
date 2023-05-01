@@ -27,12 +27,12 @@ class Transaction
     {
         $this->mock = [];
         if (is_string($objectOrId)) {
-            $this->id = (string)$objectOrId;
+            $this->id = (string) $objectOrId;
         } else {
             $primaryField = $this->primaryKey($collection->metadata());
 
             $this->mock = $collection->transformer()->convert($objectOrId);
-            $this->id = (string)$this->mock[$primaryField->name];
+            $this->id = (string) $this->mock[$primaryField->name];
         }
 
         $this->collection = $collection;

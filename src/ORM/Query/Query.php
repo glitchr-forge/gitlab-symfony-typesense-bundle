@@ -69,7 +69,7 @@ class Query extends Request
     public function addFilterBy(string $filterBy): self
     {
         $_filterBy = $this->getHeader(self::FILTER_BY);
-        $filterBy = $_filterBy ? trim($_filterBy.' && '.$filterBy, ' &') : $filterBy;
+        $filterBy = $_filterBy ? trim($_filterBy . ' && ' . $filterBy, ' &') : $filterBy;
 
         return $this->addHeader(self::FILTER_BY, $filterBy);
     }
@@ -77,11 +77,11 @@ class Query extends Request
     public function notInstanceOf(string $class): self
     {
         if (!class_exists($class)) {
-            throw new \InvalidArgumentException('Class "'.$class."\" is doesn't exists");
+            throw new \InvalidArgumentException('Class "' . $class . "\" is doesn't exists");
         }
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
-        $discriminateBy = $_discriminateBy ? trim($_discriminateBy.', ^'.$class, ' ,') : '^'.$class;
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ', ^' . $class, ' ,') : '^' . $class;
 
         return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }
@@ -89,11 +89,11 @@ class Query extends Request
     public function instanceOf(string $class): self
     {
         if (!class_exists($class)) {
-            throw new \InvalidArgumentException('Class "'.$class."\" is doesn't exists");
+            throw new \InvalidArgumentException('Class "' . $class . "\" is doesn't exists");
         }
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
-        $discriminateBy = $_discriminateBy ? trim($_discriminateBy.', '.$class, ' ,') : $class;
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ', ' . $class, ' ,') : $class;
 
         return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }

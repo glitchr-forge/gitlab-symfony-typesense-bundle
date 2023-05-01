@@ -32,7 +32,7 @@ class Driver
 
             if (!$secret) {
                 if (is_cli()) {
-                    throw new TypesenseException('Typesense API Key missing for "' . $this->name . '" connection');
+                    throw new TypesenseException('Typesense API Key missing for "'.$this->name.'" connection');
                 }
 
                 return new Configuration(null, [], []);
