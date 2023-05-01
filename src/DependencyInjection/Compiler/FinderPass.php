@@ -15,12 +15,11 @@ class FinderPass implements CompilerPassInterface
             return;
         }
 
-        $definition     = $container->findDefinition(TypesenseManager::class);
-        $taggedServices = $container->findTaggedServiceIds("typesense.finder");
+        $definition = $container->findDefinition(TypesenseManager::class);
+        $taggedServices = $container->findTaggedServiceIds('typesense.finder');
         foreach ($taggedServices as $serviceName => $tags) {
-
             $reference = new Reference($serviceName);
-            $definition->addMethodCall("addFinder", [$reference]);
+            $definition->addMethodCall('addFinder', [$reference]);
         }
     }
 }

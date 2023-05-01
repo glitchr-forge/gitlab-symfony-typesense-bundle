@@ -5,9 +5,7 @@ namespace Typesense\Bundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-
 use Typesense\Bundle\ORM\TypesenseManager;
-use Typesense\Bundle\Typesense;
 
 class ConnectionPass implements CompilerPassInterface
 {
@@ -17,12 +15,11 @@ class ConnectionPass implements CompilerPassInterface
             return;
         }
 
-        $definition     = $container->findDefinition(TypesenseManager::class);
-        $taggedServices = $container->findTaggedServiceIds("typesense.connection");
+        $definition = $container->findDefinition(TypesenseManager::class);
+        $taggedServices = $container->findTaggedServiceIds('typesense.connection');
         foreach ($taggedServices as $className => $tags) {
-
             $reference = new Reference($className);
-            $definition->addMethodCall("addConnection", [$reference]);
+            $definition->addMethodCall('addConnection', [$reference]);
         }
     }
 }

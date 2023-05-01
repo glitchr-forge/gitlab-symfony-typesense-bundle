@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Mapping;
 
 use Doctrine\Common\Util\ClassUtils;
-use Doctrine\Persistence\ObjectManager;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Query;
 use Typesense\Bundle\ORM\Query\Request;
-use Typesense\Bundle\ORM\Query\Response;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
-use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Client;
 use Typesense\Exceptions\TypesenseClientError;
 
@@ -25,22 +22,46 @@ class TypesenseCollection
 
     public function __construct(TypesenseMetadata $metadata, Connection $connection)
     {
-        $this->metadata   = $metadata;
+        $this->metadata = $metadata;
         $this->connection = $connection;
 
-        $this->documents  = new TypesenseDocuments($metadata, $connection);
+        $this->documents = new TypesenseDocuments($metadata, $connection);
     }
 
-    public function name(): string { return $this->metadata->getName(); }
-    public function metadata(): TypesenseMetadata { return $this->metadata; }
-    public function transformer(): TransformerInterface { return $this->metadata->getTransformer(); }
-    public function connection(): Connection { return $this->connection; }
-    public function client(): ?Client { return $this->connection->getClient(); }
-    public function documents(): TypesenseDocuments { return $this->documents; }
+    public function name(): string
+    {
+        return $this->metadata->getName();
+    }
 
-    public function supports($entity):bool
+    public function metadata(): TypesenseMetadata
+    {
+        return $this->metadata;
+    }
+
+    public function transformer(): TransformerInterface
+    {
+        return $this->metadata->getTransformer();
+    }
+
+    public function connection(): Connection
+    {
+        return $this->connection;
+    }
+
+    public function client(): ?Client
+    {
+        return $this->connection->getClient();
+    }
+
+    public function documents(): TypesenseDocuments
+    {
+        return $this->documents;
+    }
+
+    public function supports($entity): bool
     {
         $entityClassname = ClassUtils::getClass($entity);
+
         return is_a($entity, $this->metadata->getClass(), true);
     }
 
@@ -50,8 +71,11 @@ class TypesenseCollection
             throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        try { return $this->documents->search($query->getHeaders()); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $this->documents->search($query->getHeaders());
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function multiSearch(array $searchRequests, ?Request $commonSearchParams)
@@ -72,13 +96,13 @@ class TypesenseCollection
         }
 
         try {
-
             return $this->client()->multiSearch->perform(
-                ['searches' => $searches,],
+                ['searches' => $searches],
                 $commonSearchParams ? $commonSearchParams->getHeaders() : []
             );
-
-        } catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function list()
@@ -87,9 +111,11 @@ class TypesenseCollection
             throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-
-        try { return $this->client()->getCollections()->retrieve(); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $this->client()->getCollections()->retrieve();
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function create()
@@ -99,13 +125,16 @@ class TypesenseCollection
         }
 
         $configuration = $this->metadata->getConfiguration();
-        $configuration["fields"] = array_values(array_map(fn($f) => $f->toArray(), $configuration["fields"]));
-        foreach($configuration["fields"] as &$field)
-            $field["type"] = $this->metadata->getTransformer()->cast($field["type"]);
+        $configuration['fields'] = array_values(array_map(fn ($f) => $f->toArray(), $configuration['fields']));
+        foreach ($configuration['fields'] as &$field) {
+            $field['type'] = $this->metadata->getTransformer()->cast($field['type']);
+        }
 
-
-        try { $this->client()->getCollections()->create($configuration); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            $this->client()->getCollections()->create($configuration);
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     public function delete()
@@ -114,7 +143,10 @@ class TypesenseCollection
             throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
         }
 
-        try { return $this->client()->getCollection($this->name())?->delete(); }
-        catch(TypesenseClientError|HttpClientException $e) { throw new TypesenseException($e->getMessage(), $e->getCode(), $e); }
+        try {
+            return $this->client()->getCollection($this->name())?->delete();
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 }

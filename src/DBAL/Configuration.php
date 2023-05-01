@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
-use Doctrine\ORM\ObjectManager;
-use Doctrine\ORM\ObjectManagerInterface;
-use Typesense\Bundle\Client\CollectionClient;
-use Typesense\Bundle\DBAL\Connection;
-use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Bundle\Transformer\AbstractTransformer;
-use Typesense\Client;
-
 class Configuration
 {
     protected ?string $secret;
@@ -30,12 +22,12 @@ class Configuration
 
     public function __construct(#[SensitiveParameter] ?string $secret, #[SensitiveParameter] array $params, array $options = [])
     {
-        $this->scheme = $params["scheme"] ?? "http";
-        $this->host = $params["host"] ?? "localhost";
+        $this->scheme = $params['scheme'] ?? 'http';
+        $this->host = $params['host'] ?? 'localhost';
 
-        $this->port = $params["port"] ?? 8108;
-      
-        $this->path = $params["path"] ?? "";
+        $this->port = $params['port'] ?? 8108;
+
+        $this->path = $params['path'] ?? '';
 
         $this->secret = $secret;
         $this->options = $options;
@@ -61,7 +53,7 @@ class Configuration
         return ['host' => $this->host, 'port' => $this->port, 'protocol' => $this->scheme];
     }
 
-    public function getEndpoint(string $path = "")
+    public function getEndpoint(string $path = '')
     {
         return sprintf('%s://%s:%d%s%s', $this->scheme, $this->host, $this->port, $this->collectionPrefix, $path);
     }

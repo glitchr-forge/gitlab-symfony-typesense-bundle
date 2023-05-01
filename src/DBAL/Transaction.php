@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
-use Doctrine\ORM\ObjectManager;
-use Doctrine\ORM\ObjectManagerInterface;
-use Exception;
-use Typesense\Bundle\Client\CollectionClient;
-use Typesense\Bundle\DBAL\Connection;
-use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Bundle\Transformer\AbstractTransformer;
-use Typesense\Client;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Exceptions\ObjectNotFound;
@@ -23,9 +15,9 @@ class Transaction
     protected array $mock;
     protected string $id;
 
-    public const PERSIST = "ACTION_PERSIST";
-    public const UPDATE = "ACTION_UPDATE";
-    public const REMOVE = "ACTION_REMOVE";
+    public const PERSIST = 'ACTION_PERSIST';
+    public const UPDATE = 'ACTION_UPDATE';
+    public const REMOVE = 'ACTION_REMOVE';
 
     protected string $action;
     protected array $options;
@@ -34,13 +26,13 @@ class Transaction
     public function __construct(TypesenseCollection $collection, $action, string|object $objectOrId, array $options = [])
     {
         $this->mock = [];
-        if (is_string($objectOrId)) $this->id = (string)$objectOrId;
-        else {
-
+        if (is_string($objectOrId)) {
+            $this->id = (string) $objectOrId;
+        } else {
             $primaryField = $this->primaryKey($collection->metadata());
 
             $this->mock = $collection->transformer()->convert($objectOrId);
-            $this->id = (string)$this->mock[$primaryField->name];
+            $this->id = (string) $this->mock[$primaryField->name];
         }
 
         $this->collection = $collection;
@@ -58,7 +50,7 @@ class Transaction
             }
         }
 
-        throw new Exception(sprintf('Primary key info not found for Typesense collection %s', $collectionConfig['name']));
+        throw new \Exception(sprintf('Primary key info not found for Typesense collection %s', $collectionConfig['name']));
     }
 
     public function action(): string
@@ -68,13 +60,13 @@ class Transaction
 
     public function commit()
     {
-        if ($this->commited) return;
+        if ($this->commited) {
+            return;
+        }
 
         switch ($this->action) {
-
             case self::PERSIST:
             case self::UPDATE:
-
                 try {
                     $this->collection->documents()->delete($this->id);
                 } catch (ObjectNotFound $e) {
@@ -84,7 +76,6 @@ class Transaction
                 break;
 
             case self::REMOVE:
-
                 try {
                     $this->collection->documents()->delete($this->id);
                 } catch (ObjectNotFound $e) {
@@ -92,7 +83,7 @@ class Transaction
 
                 break;
 
-                throw new Exception("Unsupported action");
+                throw new \Exception('Unsupported action');
         }
 
         $this->commited = true;
@@ -100,6 +91,6 @@ class Transaction
 
     public function rollBack()
     {
-        throw new Exception("This method is not implemented yet.");
+        throw new \Exception('This method is not implemented yet.');
     }
 }

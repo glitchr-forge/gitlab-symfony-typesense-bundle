@@ -8,7 +8,6 @@ use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
-use Typesense\Bundle\ORM\TypesenseManager;
 
 abstract class AbstractTransformer implements TransformerInterface
 {
@@ -37,8 +36,8 @@ abstract class AbstractTransformer implements TransformerInterface
 
     public function addMapping(TypesenseMetadata $metadata)
     {
-
         $this->mapping[$metadata->class] = $metadata;
+
         return $this;
     }
 
@@ -54,7 +53,7 @@ abstract class AbstractTransformer implements TransformerInterface
     /**
      * Convert a value to an acceptable value for typesense.
      *
-     * @param string $objectClass the object class name
+     * @param string $objectClass  the object class name
      * @param string $propertyName the property of the object
      * @param [type] $value the value to convert
      */
@@ -65,19 +64,19 @@ abstract class AbstractTransformer implements TransformerInterface
      */
     public function cast(string $type): string
     {
-        if ($type === self::TYPE_COLLECTION) {
+        if (self::TYPE_COLLECTION === $type) {
             return self::TYPE_ARRAY_STRING;
         }
-        if ($type === self::TYPE_DATETIME) {
+        if (self::TYPE_DATETIME === $type) {
             return self::TYPE_INT64;
         }
-        if ($type === self::TYPE_INTEGER) {
+        if (self::TYPE_INTEGER === $type) {
             return self::TYPE_INT32;
         }
-        if ($type === self::TYPE_OBJECT) {
+        if (self::TYPE_OBJECT === $type) {
             return self::TYPE_STRING;
         }
-        if ($type === self::TYPE_TEXT) {
+        if (self::TYPE_TEXT === $type) {
             return self::TYPE_STRING;
         }
 

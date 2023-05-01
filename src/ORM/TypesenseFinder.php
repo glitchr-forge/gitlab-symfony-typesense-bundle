@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM;
 
-use LogicException;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Typesense\Bundle\Exception\TypesenseException;
+use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
+use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
-use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
-use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
 class TypesenseFinder implements TypesenseFinderInterface
 {
@@ -27,9 +26,9 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function __construct(TypesenseCollection $collection, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null)
     {
-        $this->isDebug = $parameterBag->get("kernel.debug");
+        $this->isDebug = $parameterBag->get('kernel.debug');
         $this->collection = $collection;
-        $this->cache = new Psr16Cache(new FilesystemAdapter("typesense", 0, $parameterBag->get("kernel.cache_dir")));
+        $this->cache = new Psr16Cache(new FilesystemAdapter('typesense', 0, $parameterBag->get('kernel.cache_dir')));
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
@@ -53,12 +52,13 @@ class TypesenseFinder implements TypesenseFinderInterface
     public function cacheTTL(?int $ttl)
     {
         $this->cacheTTL = $ttl;
+
         return $this;
     }
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
-        $key = str_replace("\\", "__", static::class) . "_" . $this->collection->name() . "_" . sha1(serialize($request));
+        $key = str_replace('\\', '__', static::class).'_'.$this->collection->name().'_'.sha1(serialize($request));
         if ($cacheable && $this->cache->has($key)) {
             return $this->cache->get($key);
         }
@@ -78,13 +78,15 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function facet(string $facetBy, ?Request $request = null): mixed
     {
-        if ($request)
+        if ($request) {
             $request = clone $request;
+        }
 
         $request ??= new Query($facetBy);
         $request->facetBy($facetBy);
 
         $response = $this->search($request);
+
         return $response->getFacetCounts();
     }
 
@@ -97,20 +99,22 @@ class TypesenseFinder implements TypesenseFinderInterface
             $ids[] = $result['document'][$primaryKey];
         }
 
-        if (!count($ids)) return $response;
+        if (!count($ids)) {
+            return $response;
+        }
 
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
         $response->setHydratedHits($this->objectManager
             ->createQueryBuilder()
             ->select('e')
-            ->from($this->metadata()->class, "e")
-            ->where("e." . $primaryField->property . " IN (:ids)")
-            ->orderBy("FIELD(e." . $primaryField->property . ", " . implode(', ', $ids) . ")")
-            ->setParameter("ids", $ids)
+            ->from($this->metadata()->class, 'e')
+            ->where('e.'.$primaryField->property.' IN (:ids)')
+            ->orderBy('FIELD(e.'.$primaryField->property.', '.implode(', ', $ids).')')
+            ->setParameter('ids', $ids)
             ->setCacheable($cacheable)
             ->getQuery()
             ->useQueryCache($cacheable)
-            ->setCacheRegion($classMetadata->cache["region"] ?? null)
+            ->setCacheRegion($classMetadata->cache['region'] ?? null)
             ->getResult()
         );
 
@@ -120,43 +124,39 @@ class TypesenseFinder implements TypesenseFinderInterface
     private function search(Request $request)
     {
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
-        if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF))
-            throw new LogicException("Class \"" . $this->collection->metadata()->class . "\" doesn't have discriminator values");
+        if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF)) {
+            throw new \LogicException('Class "'.$this->collection->metadata()->class."\" doesn't have discriminator values");
+        }
 
         $classNames = array_filter(
-            explode(",", $request->getHeader(Query::INSTANCE_OF) ?? ""),
-            fn($c) => !empty(trim($c ?? ""))
+            explode(',', $request->getHeader(Query::INSTANCE_OF) ?? ''),
+            fn ($c) => !empty(trim($c ?? ''))
         );
 
         foreach ($classNames as $className) {
+            $relation = str_starts_with(trim($className), '^') ? ':!=' : ':=';
 
-            $relation = str_starts_with(trim($className), "^") ? ":!=" : ":=";
-
-            $classMetadata = $this->objectManager->getClassMetadata(trim($className, " ^"));
-            $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
+            $classMetadata = $this->objectManager->getClassMetadata(trim($className, ' ^'));
+            $request->addFilterBy($classMetadata->discriminatorColumn['name'].$relation.$classMetadata->discriminatorValue);
 
             foreach ($classMetadata->subClasses as $subClassName) {
-
                 $classMetadata = $this->objectManager->getClassMetadata($subClassName);
-                $request->addFilterBy($classMetadata->discriminatorColumn["name"] . $relation . $classMetadata->discriminatorValue);
+                $request->addFilterBy($classMetadata->discriminatorColumn['name'].$relation.$classMetadata->discriminatorValue);
             }
         }
 
         try {
-
             $result = $this->collection->search($request);
+
             return new Response($result);
-
         } catch (TypesenseException $e) {
-
-            return new Response([], $e->getCode(), $this->isDebug ? ["message" => $e->getMessage()] : []);
+            return new Response([], $e->getCode(), $this->isDebug ? ['message' => $e->getMessage()] : []);
         }
     }
 
     private function identifier(): string
     {
         foreach ($this->collection->metadata()->fields as $name => $field) {
-
             if ($field->identifier ?? false) {
                 return $name;
             }

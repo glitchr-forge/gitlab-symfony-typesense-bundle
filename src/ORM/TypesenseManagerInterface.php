@@ -10,7 +10,8 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 interface TypesenseManagerInterface
 {
     public function getCollection(string $collectionName, ?string $connectionName = null): Collection;
-    public function getFinder (string $collectionName, ?string $connectionName = null): ?TypesenseFinder;
-    public function getMetadata(string $className, ?string $connectionName = null): ?TypesenseMetadata;
 
+    public function getFinder(string $collectionName, ?string $connectionName = null): ?TypesenseFinder;
+
+    public function getMetadata(string $className, ?string $connectionName = null): ?TypesenseMetadata;
 }

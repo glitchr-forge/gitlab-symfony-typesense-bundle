@@ -5,35 +5,16 @@ declare(strict_types=1);
 namespace Typesense\Bundle\DBAL;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Typesense\Bundle\DBAL\Configuration;
-use Typesense\Bundle\DBAL\Driver;
-use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Bundle\ORM\CollectionFinder;
-use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
-use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
-use Typesense\Bundle\ORM\TypesenseFinder;
-use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
-use Typesense\Aliases;
-use Typesense\Bundle\Transformer\DoctrineTransformer;
 use Typesense\Client;
 use Typesense\Collection;
+use Typesense\Collections;
 use Typesense\Document;
 use Typesense\Documents;
-use Typesense\Collections;
-use Typesense\Debug;
-use Typesense\Health;
-use Typesense\Keys;
-use Typesense\Metrics;
-use Typesense\MultiSearch;
-use Typesense\Operations;
 
 class Connection
 {
     protected ParameterBagInterface $parameterBag;
 
-    /**
-     * @var string $name
-     */
     protected string $name;
 
     protected Driver $driver;
@@ -45,30 +26,34 @@ class Connection
         $this->driver = new Driver($name);
     }
 
-    private function inflate($array, $divider_char = ".")
+    private function inflate($array, $divider_char = '.')
     {
-        if (!is_array($array))
+        if (!is_array($array)) {
             return false;
+        }
 
-        $split = '/' . preg_quote($divider_char, '/') . '/';
+        $split = '/'.preg_quote($divider_char, '/').'/';
 
-        $ret = array();
+        $ret = [];
         foreach ($array as $key => $val) {
             $parts = preg_split($split, $key, -1, PREG_SPLIT_NO_EMPTY);
             $leafpart = array_pop($parts);
             $parent = &$ret;
             foreach ($parts as $part) {
-                if (!isset($parent[$part]))
-                    $parent[$part] = array();
-                else if (!is_array($parent[$part]))
-                    $parent[$part] = array();
+                if (!isset($parent[$part])) {
+                    $parent[$part] = [];
+                } elseif (!is_array($parent[$part])) {
+                    $parent[$part] = [];
+                }
 
                 $parent = &$parent[$part];
             }
 
-            if (empty($parent[$leafpart]))
+            if (empty($parent[$leafpart])) {
                 $parent[$leafpart] = $val;
+            }
         }
+
         return $ret;
     }
 
@@ -79,8 +64,8 @@ class Connection
 
     public function getClient(): ?Client
     {
-        $params = array_filter($this->parameterBag->all(), fn($k) => str_starts_with($k, "typesense.connections." . $this->name), ARRAY_FILTER_USE_KEY);
-        $params = $this->inflate($params)["typesense"]["connections"][$this->name] ?? [];
+        $params = array_filter($this->parameterBag->all(), fn ($k) => str_starts_with($k, 'typesense.connections.'.$this->name), ARRAY_FILTER_USE_KEY);
+        $params = $this->inflate($params)['typesense']['connections'][$this->name] ?? [];
 
         return $this->getDriver()->connect($params);
     }
@@ -102,7 +87,7 @@ class Connection
 
     public function isConnected(): bool
     {
-        return $this->getClient() !== null;
+        return null !== $this->getClient();
     }
 
     public function getCollections(): ?Collections
@@ -127,7 +112,7 @@ class Connection
 
     public function getHealth(): bool
     {
-        return $this->getClient()?->getHealth()?->retrieve()["ok"] ?? false;
+        return $this->getClient()?->getHealth()?->retrieve()['ok'] ?? false;
     }
 
     public function getDebug(): ?array

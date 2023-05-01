@@ -5,9 +5,7 @@ namespace Typesense\Bundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-
 use Typesense\Bundle\ORM\TypesenseManager;
-use Typesense\Bundle\Typesense;
 
 class MetadataPass implements CompilerPassInterface
 {
@@ -17,12 +15,11 @@ class MetadataPass implements CompilerPassInterface
             return;
         }
 
-        $definition     = $container->findDefinition(TypesenseManager::class);
-        $taggedServices = $container->findTaggedServiceIds("typesense.metadata");
+        $definition = $container->findDefinition(TypesenseManager::class);
+        $taggedServices = $container->findTaggedServiceIds('typesense.metadata');
         foreach ($taggedServices as $className => $tags) {
-
             $reference = new Reference($className);
-            $definition->addMethodCall("addMetadata", [$reference]);
+            $definition->addMethodCall('addMetadata', [$reference]);
         }
     }
 }

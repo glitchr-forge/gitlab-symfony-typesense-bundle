@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DependencyInjection;
 
-use InvalidArgumentException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -21,7 +20,7 @@ class TypesenseExtension extends Extension
     public function load(array $configs, ContainerBuilder $container)
     {
         // Format XML
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
         // Configuration file: ./config/package/base.yaml
@@ -31,27 +30,25 @@ class TypesenseExtension extends Extension
 
         $this->setConfiguration($container, $typesense, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
 
-        $this->defaultConnection = $config["default_connection"] ?? "default";
+        $this->defaultConnection = $config['default_connection'] ?? 'default';
         $this->initialize($container);
 
-        foreach($typesense["connections"] ?? [] as $connectionName => $configuration)
-        {
+        foreach ($typesense['connections'] ?? [] as $connectionName => $configuration) {
             $this->loadConnection($connectionName, $configuration, $container);
         }
 
-        foreach($typesense["mappings"] ?? [] as $collectionName => $configuration)
-        {
+        foreach ($typesense['mappings'] ?? [] as $collectionName => $configuration) {
             $this->loadMetadata($collectionName, $configuration ?? [], $container);
             $this->loadCollections($collectionName, $configuration ?? [], $container);
             $this->loadFinders($collectionName, $container);
         }
     }
 
-    public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = "")
+    public function setConfiguration(ContainerBuilder $container, array $config, $globalKey = '')
     {
         foreach ($config as $key => $value) {
             if (!empty($globalKey)) {
-                $key = $globalKey . "." . $key;
+                $key = $globalKey.'.'.$key;
             }
 
             if (is_array($value)) {
@@ -81,55 +78,52 @@ class TypesenseExtension extends Extension
      */
     private function loadConnection(string $connectionName, array $connection, ContainerBuilder $container): void
     {
-        $id  = sprintf('typesense.connection.%s', $connectionName);
+        $id = sprintf('typesense.connection.%s', $connectionName);
         $definition = new ChildDefinition('typesense.connection');
         $definition->replaceArgument(0, $connectionName);
 
         $container->setDefinition($id, $definition);
-        $definition->addTag("typesense.connection");
-
+        $definition->addTag('typesense.connection');
     }
 
     /**
      * Loads the configured collection.
      *
-     * @param array            $mappings An array of collection configurations
-     * @param ContainerBuilder $container   A ContainerBuilder instance
+     * @param array            $mappings  An array of collection configurations
+     * @param ContainerBuilder $container A ContainerBuilder instance
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     private function loadMetadata(string $name, array $collection, ContainerBuilder $container): void
     {
-        $id  = sprintf('typesense.metadata.%s', $name);
+        $id = sprintf('typesense.metadata.%s', $name);
         $definition = new ChildDefinition('typesense.metadata');
         $definition->replaceArgument(0, $name);
         $definition->replaceArgument(1, $collection);
 
         $container->setDefinition($id, $definition);
-        $definition->addTag("typesense.metadata");
-
+        $definition->addTag('typesense.metadata');
     }
 
     /**
      * Loads the configured collection.
      *
-     * @param array            $mappings An array of collection configurations
-     * @param ContainerBuilder $container   A ContainerBuilder instance
+     * @param array            $mappings  An array of collection configurations
+     * @param ContainerBuilder $container A ContainerBuilder instance
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     private function loadCollections(string $name, array $collection, ContainerBuilder $container): void
     {
-        $connectionName = $collection["connection"] ?? $this->defaultConnection;
+        $connectionName = $collection['connection'] ?? $this->defaultConnection;
 
-        $id  = sprintf('typesense.collection.%s', $name);
+        $id = sprintf('typesense.collection.%s', $name);
         $definition = new ChildDefinition('typesense.collection');
         $definition->replaceArgument(0, new Reference(sprintf('typesense.metadata.%s', $name)));
         $definition->replaceArgument(1, new Reference(sprintf('typesense.connection.%s', $connectionName)));
 
         $container->setDefinition($id, $definition);
-        $definition->addTag("typesense.collection");
-
+        $definition->addTag('typesense.collection');
     }
 
     /**
@@ -137,12 +131,11 @@ class TypesenseExtension extends Extension
      */
     private function loadFinders(string $name, ContainerBuilder $container): void
     {
-        $id  = sprintf('typesense.finder.%s', $name);
+        $id = sprintf('typesense.finder.%s', $name);
         $definition = new ChildDefinition('typesense.finder');
         $definition->replaceArgument(0, new Reference(sprintf('typesense.collection.%s', $name)));
 
-        $definition->addTag("typesense.finder");
+        $definition->addTag('typesense.finder');
         $container->setDefinition($id, $definition);
-
     }
 }

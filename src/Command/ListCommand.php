@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\Command;
 
-use Typesense\Bundle\DBAL\Collections;
-use Typesense\Bundle\DBAL\Documents;
-use Typesense\Bundle\ORM\TypesenseManager;
-use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
-use Doctrine\ORM\ObjectManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Attribute\AsCommand;
+use Typesense\Bundle\ORM\TypesenseManager;
 
 #[AsCommand(name: 'typesense:list', aliases: [], description: 'List collections from typesense database')]
 class ListCommand extends Command
@@ -43,23 +39,23 @@ class ListCommand extends Command
         $collectionName = $input->getOption('collection');
 
         foreach ($this->typesenseManager->getConnections() as $connectionName => $connection) {
-
-            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": ' . ($connection->getHealth() ? "OK" : "BAD STATE"), $connectionName));
+            $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": '.($connection->getHealth() ? 'OK' : 'BAD STATE'), $connectionName));
             foreach ($connection->getCollections()->retrieve() as $collection) {
-
-                if ($collectionName && $collection["name"] != $collectionName)
+                if ($collectionName && $collection['name'] != $collectionName) {
                     continue;
-
-                $fields = $collection["fields"] ?? [];
-                $output->writeln('- Collection <info>[' . $collection["name"] . '] </info>; ' . count($fields) . ' field(s)');
-
-                foreach ($fields as $field) {
-                    $output->writeln("\t" . 'Field <info>[' . $field["name"] . ']</info> (' . $field["type"] . ')', OutputInterface::VERBOSITY_VERBOSE);
                 }
 
-                if (count($fields) > 0) $output->writeln("", OutputInterface::VERBOSITY_VERBOSE);
-            }
+                $fields = $collection['fields'] ?? [];
+                $output->writeln('- Collection <info>['.$collection['name'].'] </info>; '.count($fields).' field(s)');
 
+                foreach ($fields as $field) {
+                    $output->writeln("\t".'Field <info>['.$field['name'].']</info> ('.$field['type'].')', OutputInterface::VERBOSITY_VERBOSE);
+                }
+
+                if (count($fields) > 0) {
+                    $output->writeln('', OutputInterface::VERBOSITY_VERBOSE);
+                }
+            }
         }
 
         return 0;

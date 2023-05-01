@@ -33,7 +33,10 @@ class Response
 
     public function getStatus(): int
     {
-        if ($this->status == 0) return 200;
+        if (0 == $this->status) {
+            return 200;
+        }
+
         return $this->status;
     }
 
@@ -44,7 +47,7 @@ class Response
 
     public function getContent(): string
     {
-        return $this->headers["message"] ?? "";
+        return $this->headers['message'] ?? '';
     }
 
     /**

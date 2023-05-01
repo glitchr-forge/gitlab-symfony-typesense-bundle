@@ -13,7 +13,7 @@ trait TypesenseTrait
 
         // Look for property value based on property path
         $value = $this;
-        $propertyPath = explode(".", $propertyName);
+        $propertyPath = explode('.', $propertyName);
         foreach ($propertyPath as $propertyName) {
             $value = $value instanceof Collection
                 ? $value->Map(fn ($v) => $accessor->getValue($v, $propertyName))
@@ -21,13 +21,13 @@ trait TypesenseTrait
         }
 
         // Turn collections into array
-        $propertyName = implode(".", $propertyPath);
+        $propertyName = implode('.', $propertyPath);
         if ($value instanceof Collection) {
-            $value = $value->Map(function ($v) use ($propertyName) {
+            $value = $value->Map(function ($v) {
                 if ($v instanceof TypesenseInterface) {
                     return $v->__typesense();
                 }
-                if (is_object($v) && method_exists($v, "__toString")) {
+                if (is_object($v) && method_exists($v, '__toString')) {
                     return $v->__toString();
                 }
 
@@ -36,7 +36,7 @@ trait TypesenseTrait
         }
 
         // Flatten array
-        $arrayCast = str_ends_with($propertyInfo["type"], "[]") && !is_array($value);
+        $arrayCast = str_ends_with($propertyInfo['type'], '[]') && !is_array($value);
         $v = $arrayCast ? [$value] : $value;
         if (is_array($v)) {
             $flattenArray = [];

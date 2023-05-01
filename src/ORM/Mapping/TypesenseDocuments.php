@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Mapping;
 
 use Http\Client\Exception as HttpClientException;
-use JsonException;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Client;
 use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseDocuments
@@ -109,7 +107,7 @@ class TypesenseDocuments
 
         try {
             return $documents->import($data, ['action' => $action]);
-        } catch (JsonException|HttpClientException $e) {
+        } catch (\JsonException|HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

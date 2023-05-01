@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Query;
 
-use InvalidArgumentException;
-
 class Query extends Request
 {
-    public const INFIX_OFF = "off";
-    public const INFIX_ALWAYS = "always";
-    public const INFIX_FALLBACK = "fallback";
+    public const INFIX_OFF = 'off';
+    public const INFIX_ALWAYS = 'always';
+    public const INFIX_FALLBACK = 'fallback';
 
     private const INFIX_ALLOWED_VALUES = [
         self::INFIX_OFF,
@@ -18,29 +16,29 @@ class Query extends Request
         self::INFIX_FALLBACK,
     ];
 
-    public const MAX_HITS = "max_hits";
-    public const SORT_BY = "sort_by";
-    public const FACET_BY = "facet_by";
-    public const INSTANCE_OF = "instance_of";
-    public const FILTER_BY = "filter_by";
-    public const PREFIX = "prefix";
+    public const MAX_HITS = 'max_hits';
+    public const SORT_BY = 'sort_by';
+    public const FACET_BY = 'facet_by';
+    public const INSTANCE_OF = 'instance_of';
+    public const FILTER_BY = 'filter_by';
+    public const PREFIX = 'prefix';
 
-    public const FACET_QUERY = "facet_query";
-    public const NUM_TYPOS = "num_typos";
-    public const PAGE = "page";
-    public const PER_PAGE = "per_page";
-    public const GROUP_BY = "group_by";
-    public const GROUP_LIMIT = "group_limit";
-    public const INCLUDE_FIELDS = "include_fields";
-    public const EXCLUDE_FIELDS = "exclude_fields";
-    public const HIGHLIGHT_FULL_FIELDS = "highlight_full_fields";
-    public const SNIPPET_THRESHOLD = "snippet_threshold";
-    public const DROP_TOKENS_THRESHOLD = "drop_tokens_threshold";
-    public const TYPE_TOKENS_THRESHOLD = "typo_tokens_threshold";
-    public const PINNED_HITS = "pinned_hits";
-    public const HIDDEN_HITS = "hidden_hits";
-    public const INFIX = "infix";
-    public const MAX_FACET_VALUES = "max_facet_values";
+    public const FACET_QUERY = 'facet_query';
+    public const NUM_TYPOS = 'num_typos';
+    public const PAGE = 'page';
+    public const PER_PAGE = 'per_page';
+    public const GROUP_BY = 'group_by';
+    public const GROUP_LIMIT = 'group_limit';
+    public const INCLUDE_FIELDS = 'include_fields';
+    public const EXCLUDE_FIELDS = 'exclude_fields';
+    public const HIGHLIGHT_FULL_FIELDS = 'highlight_full_fields';
+    public const SNIPPET_THRESHOLD = 'snippet_threshold';
+    public const DROP_TOKENS_THRESHOLD = 'drop_tokens_threshold';
+    public const TYPE_TOKENS_THRESHOLD = 'typo_tokens_threshold';
+    public const PINNED_HITS = 'pinned_hits';
+    public const HIDDEN_HITS = 'hidden_hits';
+    public const INFIX = 'infix';
+    public const MAX_FACET_VALUES = 'max_facet_values';
 
     /**
      * Maximum number of hits returned. Increasing this value might increase search latency. Use all to return all hits found.
@@ -63,7 +61,6 @@ class Query extends Request
     /**
      * Filter conditions for refining your search results. A field can be matched against one or more values.
      */
-
     public function filterBy(string $filterBy): self
     {
         return $this->addHeader(self::FILTER_BY, $filterBy);
@@ -72,29 +69,31 @@ class Query extends Request
     public function addFilterBy(string $filterBy): self
     {
         $_filterBy = $this->getHeader(self::FILTER_BY);
-        $filterBy = $_filterBy ? trim($_filterBy . " && " . $filterBy, " &") : $filterBy;
+        $filterBy = $_filterBy ? trim($_filterBy.' && '.$filterBy, ' &') : $filterBy;
 
         return $this->addHeader(self::FILTER_BY, $filterBy);
     }
 
     public function notInstanceOf(string $class): self
     {
-        if(!class_exists($class))
-            throw new InvalidArgumentException("Class \"".$class."\" is doesn't exists");
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException('Class "'.$class."\" is doesn't exists");
+        }
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
-        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", ^" . $class, " ,") : "^" . $class;
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy.', ^'.$class, ' ,') : '^'.$class;
 
         return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }
 
     public function instanceOf(string $class): self
     {
-        if(!class_exists($class))
-            throw new InvalidArgumentException("Class \"".$class."\" is doesn't exists");
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException('Class "'.$class."\" is doesn't exists");
+        }
 
         $_discriminateBy = $this->getHeader(self::INSTANCE_OF);
-        $discriminateBy = $_discriminateBy ? trim($_discriminateBy . ", " . $class, " ,") : $class;
+        $discriminateBy = $_discriminateBy ? trim($_discriminateBy.', '.$class, ' ,') : $class;
 
         return $this->addHeader(self::INSTANCE_OF, $discriminateBy);
     }

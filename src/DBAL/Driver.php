@@ -4,27 +4,21 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
-use Doctrine\DBAL\Driver\Exception;
-use Doctrine\ORM\ObjectManager;
-use Doctrine\ORM\ObjectManagerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Typesense\Bundle\Client\CollectionClient;
-use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Bundle\Transformer\AbstractTransformer;
 use Typesense\Client;
 use Typesense\Exceptions\ConfigError;
 
 class Driver
 {
-    public const NODES = "nodes";
-    public const API_KEY = "api_key";
-    public const CONNECTION_TIMOUT_SECONDS = "connection_timeout_seconds";
+    public const NODES = 'nodes';
+    public const API_KEY = 'api_key';
+    public const CONNECTION_TIMOUT_SECONDS = 'connection_timeout_seconds';
 
     public string $name;
     private ?Client $client = null;
     private ?Configuration $configuration = null;
     private ?ConfigError $configError = null;
+
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -33,25 +27,25 @@ class Driver
     public function prepare(#[SentitiveParameter] array $params): Configuration
     {
         if (!$this->configuration) {
-
             // API Key extraction
-            $secret = $params["secret"];
+            $secret = $params['secret'];
 
             if (!$secret) {
-
                 if (is_cli()) {
-                    throw new TypesenseException("Typesense API Key missing for \"".$this->name."\" connection");
+                    throw new TypesenseException('Typesense API Key missing for "'.$this->name.'" connection');
                 }
 
                 return new Configuration(null, [], []);
             }
 
             // Parsing URL: return array
-            $parsedUrl = parse_url( $params["url"] ??"");
-            if($parsedUrl) $params = array_merge($params, array_filter($parsedUrl));
+            $parsedUrl = parse_url($params['url'] ?? '');
+            if ($parsedUrl) {
+                $params = array_merge($params, array_filter($parsedUrl));
+            }
 
             // Options
-            $options = $params["options"] ?? [];
+            $options = $params['options'] ?? [];
             $this->configuration = new Configuration($secret, $params, $options);
         }
 
@@ -61,17 +55,18 @@ class Driver
     public function connect(#[SentitiveParameter] array $params): ?Client
     {
         if (!$this->client) {
-
             $this->configuration = $this->prepare($params);
 
             $options = $this->configuration->getOptions();
-            $options[self::NODES]   = [$this->configuration->getNode()];
+            $options[self::NODES] = [$this->configuration->getNode()];
             $options[self::API_KEY] = $this->configuration->getSecret();
 
             $this->configError = null;
-            try { $this->client = new Client($options); }
-            catch (ConfigError $configError) {
+            try {
+                $this->client = new Client($options);
+            } catch (ConfigError $configError) {
                 $this->configError = $configError;
+
                 return null;
             }
         }
@@ -79,7 +74,8 @@ class Driver
         return $this->client;
     }
 
-    public function getConfigError(): ?ConfigError {
+    public function getConfigError(): ?ConfigError
+    {
         return $this->configError;
     }
 }
