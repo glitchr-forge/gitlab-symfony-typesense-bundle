@@ -20,7 +20,7 @@ class TypesenseExtension extends Extension
     public function load(array $configs, ContainerBuilder $container)
     {
         // Format XML
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
 
         // Configuration file: ./config/package/base.yaml
@@ -48,7 +48,7 @@ class TypesenseExtension extends Extension
     {
         foreach ($config as $key => $value) {
             if (!empty($globalKey)) {
-                $key = $globalKey.'.'.$key;
+                $key = $globalKey . '.' . $key;
             }
 
             if (is_array($value)) {

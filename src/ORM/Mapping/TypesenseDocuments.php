@@ -35,7 +35,7 @@ class TypesenseDocuments
 
         try {
             return $documents[$id]?->delete();
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -52,7 +52,7 @@ class TypesenseDocuments
 
         try {
             return $documents->create($data, $options);
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -69,7 +69,7 @@ class TypesenseDocuments
 
         try {
             return $documents->update($data, $options);
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -86,7 +86,7 @@ class TypesenseDocuments
 
         try {
             return $documents->search($searchParams);
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -107,7 +107,7 @@ class TypesenseDocuments
 
         try {
             return $documents->import($data, ['action' => $action]);
-        } catch (\JsonException|HttpClientException $e) {
+        } catch (\JsonException | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

@@ -27,12 +27,12 @@ class Transaction
     {
         $this->mock = [];
         if (is_string($objectOrId)) {
-            $this->id = (string) $objectOrId;
+            $this->id = (string)$objectOrId;
         } else {
             $primaryField = $this->primaryKey($collection->metadata());
 
             $this->mock = $collection->transformer()->convert($objectOrId);
-            $this->id = (string) $this->mock[$primaryField->name];
+            $this->id = (string)$this->mock[$primaryField->name];
         }
 
         $this->collection = $collection;
@@ -50,7 +50,7 @@ class Transaction
             }
         }
 
-        throw new \Exception(sprintf('Primary key info not found for Typesense collection %s', $collectionConfig['name']));
+        throw new \Exception(sprintf('Primary key info not found for Typesense collection %s', $metadata->getName()));
     }
 
     public function action(): string

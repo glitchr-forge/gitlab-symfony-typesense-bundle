@@ -7,7 +7,6 @@ namespace Typesense\Bundle\ORM\Mapping;
 use Doctrine\Common\Util\ClassUtils;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
-use Typesense\Bundle\ORM\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Client;
@@ -73,7 +72,7 @@ class TypesenseCollection
 
         try {
             return $this->documents->search($query->getHeaders());
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -100,7 +99,7 @@ class TypesenseCollection
                 ['searches' => $searches],
                 $commonSearchParams ? $commonSearchParams->getHeaders() : []
             );
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -113,7 +112,7 @@ class TypesenseCollection
 
         try {
             return $this->client()->getCollections()->retrieve();
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -132,7 +131,7 @@ class TypesenseCollection
 
         try {
             $this->client()->getCollections()->create($configuration);
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -145,7 +144,7 @@ class TypesenseCollection
 
         try {
             return $this->client()->getCollection($this->name())?->delete();
-        } catch (TypesenseClientError|HttpClientException $e) {
+        } catch (TypesenseClientError | HttpClientException $e) {
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

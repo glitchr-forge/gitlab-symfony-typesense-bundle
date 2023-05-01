@@ -53,7 +53,7 @@ abstract class AbstractTransformer implements TransformerInterface
     /**
      * Convert a value to an acceptable value for typesense.
      *
-     * @param string $objectClass  the object class name
+     * @param string $objectClass the object class name
      * @param string $propertyName the property of the object
      * @param [type] $value the value to convert
      */
@@ -65,7 +65,7 @@ abstract class AbstractTransformer implements TransformerInterface
     public function cast(string $type): string
     {
         if (self::TYPE_COLLECTION === $type) {
-            return self::TYPE_ARRAY_STRING;
+            return self::TYPE_STRING_ARRAY;
         }
         if (self::TYPE_DATETIME === $type) {
             return self::TYPE_INT64;
