@@ -109,8 +109,11 @@ class TypesenseIndexer
     {
         foreach ($this->transactions as $transaction) {
             try {
+
                 $transaction->commit();
+
             } catch (TypesenseException|NetworkException $e) {
+
                 if ($this->first) {
                     $flashBag = $this->requestStack->getCurrentRequest()?->getSession()?->getFlashBag();
                     $flashBag->add('warning', 'Typesense ' . $e->getCode() . ': ' . $e->getMessage());

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
+use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Exceptions\ObjectNotFound;
@@ -82,19 +83,15 @@ class Transaction
         switch ($this->action) {
             case self::PERSIST:
             case self::UPDATE:
-                try {
-                    $this->collection->documents()->delete($this->id);
-                } catch (ObjectNotFound $e) {
-                }
+                try { $this->collection->documents()->delete($this->id); }
+                catch (TypesenseException|ObjectNotFound $e) {}
 
                 $this->collection->documents()->create($this->mock, $this->options);
                 break;
 
             case self::REMOVE:
-                try {
-                    $this->collection->documents()->delete($this->id);
-                } catch (ObjectNotFound $e) {
-                }
+                try { $this->collection->documents()->delete($this->id); }
+                catch (TypesenseException|ObjectNotFound $e) {}
 
                 break;
 
