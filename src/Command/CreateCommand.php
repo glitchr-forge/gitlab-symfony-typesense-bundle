@@ -44,6 +44,8 @@ class CreateCommand extends Command
         foreach ($this->typesenseManager->getCollections() as $name => $collection) {
             $output->writeln("\t" . sprintf('<info>Creating</info> <comment>%s</comment>', $name));
             $collection->create();
+
+            $this->typesenseManager->getFinder($name)->cache()->clear();
         }
 
         return 0;

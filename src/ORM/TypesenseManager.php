@@ -5,7 +5,6 @@ namespace Typesense\Bundle\ORM;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
-
 /**
  *
  */
@@ -127,6 +126,7 @@ class TypesenseManager
     // Additional instances for autowiring..
     public function getFinder(string $collectionName): ?TypesenseFinder
     {
+        $collectionName = explode("%", $collectionName)[0];
         return $this->finders[$collectionName];
     }
 

@@ -20,11 +20,13 @@ use Typesense\Bundle\ORM\Query\Response;
  */
 class TypesenseFinder implements TypesenseFinderInterface
 {
+    protected ?int $cacheTTL = null;
+
     protected $cache;
+    protected $cacheDir;
+
     protected $collection;
     protected $objectManager;
-
-    protected $cacheDir;
     protected $isDebug;
 
     public function __construct(TypesenseCollection $collection, ParameterBagInterface $parameterBag, ?CacheInterface $cache = null)
@@ -50,8 +52,6 @@ class TypesenseFinder implements TypesenseFinderInterface
         return $this->collection;
     }
 
-    protected ?int $cacheTTL = null;
-
     /**
      * @param int|null $ttl
      * @return $this
@@ -65,6 +65,11 @@ class TypesenseFinder implements TypesenseFinderInterface
         $this->cacheTTL = $ttl;
 
         return $this;
+    }
+
+    public function cache(): CacheInterface
+    {
+        return $this->cache;
     }
 
     public function raw(Request $request, bool $cacheable = false): Response

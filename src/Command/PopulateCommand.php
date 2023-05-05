@@ -70,6 +70,7 @@ class PopulateCommand extends Command
                 return 2;
             }
 
+            $this->typesenseManager->getFinder($name)->cache()->clear();
             $io->text("\t" . 'DONE.');
         }
 
