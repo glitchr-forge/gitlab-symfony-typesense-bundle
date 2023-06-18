@@ -20,7 +20,7 @@ class TypesenseExtension extends Extension
 {
     private string $defaultConnection;
 
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         // Format XML
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
