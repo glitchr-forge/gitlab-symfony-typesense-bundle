@@ -34,7 +34,7 @@ class ActionCommand extends Command
         $this->typesenseManager = $typesenseManager;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->addArgument('action', null, 'Action modes for typesense import ("create", "upsert" or "update")', 'upsert');
         $this->addOption('collection', null, InputOption::VALUE_OPTIONAL, 'Collection name');

@@ -26,7 +26,7 @@ class ListCommand extends Command
         $this->typesenseManager = $typesenseManager;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->addOption('collection', null, InputOption::VALUE_OPTIONAL, 'Collection name');
     }
