@@ -17,7 +17,7 @@ use Typesense\Bundle\DependencyInjection\Compiler\MetadataPass;
  */
 class TypesenseBundle extends Bundle
 {
-    public function boot()
+    public function boot(): void
     {
         if ($this->container->has('doctrine.orm.entity_manager')) {
             $objectManager = $this->container->get('doctrine.orm.entity_manager');
@@ -30,7 +30,7 @@ class TypesenseBundle extends Bundle
         }
     }
 
-    public function build(ContainerBuilder $container)
+    public function build(ContainerBuilder $container): void
     {
         parent::build($container);
         $this->container = $container;
