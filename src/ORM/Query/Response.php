@@ -37,7 +37,7 @@ class Response
     public function getStatus(): int
     {
         if (0 == $this->status) {
-            return 200;
+            return $this->getFound() ? 200 : ($this->getContent() ? 500 : 404);
         }
 
         return $this->status;
