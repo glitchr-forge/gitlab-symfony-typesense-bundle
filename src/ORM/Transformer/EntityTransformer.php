@@ -19,7 +19,7 @@ class EntityTransformer extends AbstractTransformer
     {
         $entityClass = ClassUtils::getClass($entity);
         if (!$entity instanceof TypesenseInterface) {
-            throw new \Exception('Class ' . $entityClass . ' does not implement "' . TypesenseInterface::class . '"');
+            throw new \Exception('Class ' . $this->getRootMapping($entityClass)->getClass() . ' does not implement "' . TypesenseInterface::class . '"');
         }
 
         if (!$this->getMapping($entityClass) instanceof TypesenseMetadata) {

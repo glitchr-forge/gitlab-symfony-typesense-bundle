@@ -65,10 +65,15 @@ class TypesenseMetadata extends TypesenseMetadataInfo
         return $this->name;
     }
 
+    public function getRootName(): string
+    {
+        return explode("%", $this->name)[0];
+    }
+
     public function getConfiguration(): array
     {
         $configuration = [];
-        $configuration['name'] = $this->name;
+        $configuration['name'] = $this->getName();
         $configuration['fields'] = $this->fields;
         $configuration['default_sorting_field'] = $this->defaultSortingField;
         $configuration['token_separators'] = $this->tokenSeparators;
@@ -143,9 +148,6 @@ class TypesenseMetadata extends TypesenseMetadataInfo
     /**
      * @return $this
      */
-    /**
-     * @return $this
-     */
     protected function addDiscriminatorColumn()
     {
         $className = $this->class ?? null;
@@ -154,8 +156,7 @@ class TypesenseMetadata extends TypesenseMetadataInfo
 
             $discriminatorColumn = $classMetadata->discriminatorColumn['name'];
             $discriminatorType = $classMetadata->discriminatorColumn['type'] ?? 'string';
-            $discriminatorValue = $classMetadata->discriminatorValue;
-
+            
             if (!array_key_exists($discriminatorColumn, $this->fields)) {
                 $this->fields[$discriminatorColumn] = new TypesenseMetadataField();
             }
@@ -185,7 +186,7 @@ class TypesenseMetadata extends TypesenseMetadataInfo
                     $subname = array_flip($classMetadata->discriminatorMap)[$subclass];
 
                     $configuration = [];
-                    $configuration['name'] = $this->name . '%' . $subname;
+                    $configuration['name'] = $this->getName() . '%' . $subname;
                     $configuration['class'] = $subclass;
                     $configuration['fields'] = array_filter($this->fields, fn($k) => 'id' != $k, ARRAY_FILTER_USE_KEY);
                     $configuration['default_sorting_field'] = $this->defaultSortingField;

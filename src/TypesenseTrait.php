@@ -18,6 +18,8 @@ trait TypesenseTrait
         $value = $this;
         $propertyPath = explode('.', $propertyName);
         foreach ($propertyPath as $propertyName) {
+
+            if(!$value) continue;
             $value = $value instanceof Collection
                 ? $value->Map(fn($v) => $accessor->getValue($v, $propertyName))
                 : $accessor->getValue($value, $propertyName);

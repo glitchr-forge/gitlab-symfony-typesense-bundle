@@ -37,6 +37,7 @@ class PopulateCommand extends Command
         $io->newLine();
 
         foreach ($this->typesenseManager->getCollections() as $name => $collection) {
+
             $metadata = $collection->metadata();
             $metadata->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
             $class = $metadata->getClass();
@@ -55,23 +56,18 @@ class PopulateCommand extends Command
             }
 
             $output->writeln("\t" . 'Importing <info>[' . $name . '] ' . $class . '</info> ');
-            try {
-                $response = $collection->documents()->import($data, 'upsert');
-            } catch (ObjectNotFound $exception) {
-                $this->isError = true;
-                $output->writeln("\t" . sprintf('Collection <comment>%s</comment> <info>does not exists</info> ', $name));
-                continue;
-            }
+            $response = $collection->documents()->import($data, 'upsert');
 
             if ($this->printErrors($io, $response ?? [])) {
                 $this->isError = true;
-                $io->error('Error happened during the import of the collection : ' . $name);
+                $io->error('Something wrong happened during the import of the collection ' . $name);
 
                 return 2;
             }
 
             $this->typesenseManager->getFinder($name)->cache()->clear();
-            $io->text("\t" . 'DONE.');
+            if($this->isError) $io->text("\t" . 'ERR.');
+            else $io->text("\t" . 'DONE.');
         }
 
         $io->newLine();
