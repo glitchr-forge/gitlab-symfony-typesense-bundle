@@ -11,6 +11,8 @@ use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Client;
+use Typesense\Exceptions\ObjectAlreadyExists;
+use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 
 /**
@@ -148,8 +150,13 @@ class TypesenseCollection
         }
 
         try {
+
             $this->client()->getCollections()->create($configuration);
+
+        } catch (ObjectAlreadyExists) {
+
         } catch (TypesenseClientError|HttpClientException $e) {
+
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -164,8 +171,13 @@ class TypesenseCollection
         }
 
         try {
-            return $this->client()->getCollection($this->name())?->delete();
+        
+            return $this->client()->getCollections()[$this->name()]?->delete();
+        
+        } catch (ObjectNotFound) {
+
         } catch (TypesenseClientError|HttpClientException $e) {
+        
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

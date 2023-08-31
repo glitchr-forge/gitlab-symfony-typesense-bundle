@@ -67,7 +67,7 @@ class TypesenseMetadata extends TypesenseMetadataInfo
 
     public function getRootName(): string
     {
-        return explode("%", $this->name)[0];
+        return explode("__", $this->name)[0];
     }
 
     public function getConfiguration(): array
@@ -186,14 +186,14 @@ class TypesenseMetadata extends TypesenseMetadataInfo
                     $subname = array_flip($classMetadata->discriminatorMap)[$subclass];
 
                     $configuration = [];
-                    $configuration['name'] = $this->getName() . '%' . $subname;
+                    $configuration['name'] = $this->getName() . '__' . $subname;
                     $configuration['class'] = $subclass;
                     $configuration['fields'] = array_filter($this->fields, fn($k) => 'id' != $k, ARRAY_FILTER_USE_KEY);
                     $configuration['default_sorting_field'] = $this->defaultSortingField;
                     $configuration['token_separators'] = $this->tokenSeparators;
                     $configuration['symbols_to_index'] = $this->symbolsToIndex;
 
-                    $metadata[] = new TypesenseMetadata($this->name . '%' . $subname, $configuration, $this->transformer);
+                    $metadata[] = new TypesenseMetadata($this->name . '__' . $subname, $configuration, $this->transformer);
                 }
             }
         }

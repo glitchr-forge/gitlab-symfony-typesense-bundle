@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DependencyInjection;
 
+use LogicException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -41,6 +42,11 @@ class TypesenseExtension extends Extension
         }
 
         foreach ($typesense['mappings'] ?? [] as $collectionName => $configuration) {
+
+            if(str_contains($collectionName,"__")) {
+                throw new LogicException("Collection name cannot contains `__`");
+            }
+
             $this->loadMetadata($collectionName, $configuration ?? [], $container);
             $this->loadCollections($collectionName, $configuration ?? [], $container);
             $this->loadFinders($collectionName, $container);

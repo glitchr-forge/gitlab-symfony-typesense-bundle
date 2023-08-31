@@ -51,10 +51,6 @@ class TypesenseManager
      * @param Connection $connection
      * @return $this
      */
-    /**
-     * @param Connection $connection
-     * @return $this
-     */
     public function addConnection(Connection $connection)
     {
         $this->connections[$connection->getName()] = $connection;
@@ -103,10 +99,6 @@ class TypesenseManager
      * @param TypesenseCollection $collection
      * @return $this
      */
-    /**
-     * @param TypesenseCollection $collection
-     * @return $this
-     */
     public function addCollection(TypesenseCollection $collection)
     {
         $this->collections[$collection->name()] = $collection;
@@ -126,7 +118,7 @@ class TypesenseManager
     // Additional instances for autowiring..
     public function getFinder(string $collectionName): ?TypesenseFinder
     {
-        $collectionName = explode("%", $collectionName)[0];
+        $collectionName = explode("__", $collectionName)[0];
         return $this->finders[$collectionName];
     }
 
