@@ -20,6 +20,44 @@ class Request
         $this->addHeader(self::TERM, $term ?? '');
     }
 
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * @param $key
+     * @return ?string
+     */
+    public function getHeader(string $key): ?string
+    {
+        return $this->headers[$key] ?? null;
+    }
+
+    /**
+     * @param $key
+     * @return boolean
+     */
+    public function hasHeader(string $key): bool
+    {
+        return isset($this->headers[$key]);
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function addHeader($key, $value): self
+    {
+        $this->headers[$key] = $value;
+
+        return $this;
+    }
+
     public function q(string $q): self
     {
         return $this->addHeader(self::TERM, $q);
@@ -32,46 +70,14 @@ class Request
 
     public function queryBy(string $filterBy): self
     {
-        return $this->addHeader(self::TERM, $filterBy);
+        return $this->addHeader(self::QUERY_BY, $filterBy);
     }
 
     public function addQueryBy(string $filterBy): self
     {
-        $_filterBy = $this->getHeader('query_by');
+        $_filterBy = $this->getHeader(self::QUERY_BY);
         $filterBy = $_filterBy ? trim($_filterBy . ', ' . $filterBy) : $filterBy;
 
-        return $this->addHeader('query_by', $filterBy);
-    }
-
-    public function getHeaders(): array
-    {
-        return $this->headers;
-    }
-
-    public function getHeader(string $key): ?string
-    {
-        return $this->headers[$key] ?? null;
-    }
-
-    public function hasHeader(string $key): bool
-    {
-        return isset($this->headers[$key]);
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @return $this
-     */
-    /**
-     * @param $key
-     * @param $value
-     * @return $this
-     */
-    public function addHeader($key, $value): self
-    {
-        $this->headers[$key] = $value;
-
-        return $this;
+        return $this->addHeader(self::QUERY_BY, $filterBy);
     }
 }

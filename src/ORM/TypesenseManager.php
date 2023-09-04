@@ -8,7 +8,7 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 /**
  *
  */
-class TypesenseManager
+class TypesenseManager implements TypesenseManagerInterface
 {
     protected string $defaultConnection;
     protected array $connections = [];

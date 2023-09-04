@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
-use Doctrine\Common\Util\ClassUtils;
-use Http\Client\Exception;
+use Http\Client\Exception as HttpClientException;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
+use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Client;
@@ -69,8 +69,6 @@ class TypesenseCollection
      */
     public function supports($entity): bool
     {
-        $entityClassname = ClassUtils::getClass($entity);
-
         return is_a($entity, $this->metadata->getClass(), true);
     }
 
@@ -115,7 +113,7 @@ class TypesenseCollection
         }
 
         try {
-            return $this->client()->multiSearch->perform(
+            return $this->client()->getMultiSearch()->perform(
                 ['searches' => $searches],
                 $commonSearchParams ? $commonSearchParams->getHeaders() : []
             );
