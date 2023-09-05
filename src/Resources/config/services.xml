@@ -59,6 +59,10 @@
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
         </service>
+        <service id="typesense.command.health" class="Typesense\Bundle\Command\HealthCommand" public="true">
+            <tag name="console.command"/>
+             <argument type="service" id="typesense_manager"/>
+        </service>
         <service id="typesense.command.action" class="Typesense\Bundle\Command\ActionCommand" public="true">
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
