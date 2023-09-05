@@ -69,7 +69,7 @@ class Response
      */
     public function getFacetCounts(array $checkbox = [], bool $sortByName = false, ?int $mode = self::FACETS_USE_INDEX)
     {
-        $facetCounts = $this->facetCounts; // array clone
+        $facetCounts = $this->facetCounts ?? []; // array clone
 
         // Sort facet by alphabetic order instead of count frequency 
         if($sortByName) {

@@ -180,9 +180,9 @@ class TypesenseFinder implements TypesenseFinderInterface
             }
         }
 
-        return $request;
+        return $query;
     }
-    
+
     private function identifier(): string
     {
         foreach ($this->collection->metadata()->fields as $name => $field) {
