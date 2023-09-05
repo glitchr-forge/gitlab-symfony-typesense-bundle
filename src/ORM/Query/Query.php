@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Query;
 
 /**
- *
+ * Advanced request including additional options
  */
 class Query extends Request
 {

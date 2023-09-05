@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Query;
 
 /**
- *
+ * Minimum needed to send a request to typesense server
  */
 class Request
 {
@@ -68,16 +68,16 @@ class Request
         return $this->addHeader(self::TERM, $q);
     }
 
-    public function queryBy(string $filterBy): self
+    public function queryBy(string $queryBy): self
     {
-        return $this->addHeader(self::QUERY_BY, $filterBy);
+        return $this->addHeader(self::QUERY_BY, $queryBy);
     }
 
-    public function addQueryBy(string $filterBy): self
+    public function addQueryBy(string $queryBy): self
     {
-        $_filterBy = $this->getHeader(self::QUERY_BY);
-        $filterBy = $_filterBy ? trim($_filterBy . ', ' . $filterBy) : $filterBy;
+        $_queryBy = $this->getHeader(self::QUERY_BY);
+        $queryBy = $_queryBy ? trim($_queryBy . ', ' . $queryBy) : $queryBy;
 
-        return $this->addHeader(self::QUERY_BY, $filterBy);
+        return $this->addHeader(self::QUERY_BY, $queryBy);
     }
 }

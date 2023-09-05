@@ -142,29 +142,28 @@ class TypesenseFinder implements TypesenseFinderInterface
     }
 
     /**
-     * @param Request $request
+     * @param Query $query
      * @return Response
      */
-    private function search(Request $request)
+    private function search(Query $query)
     {
-        $request = $this->addQueryByDiscriminatorMap(clone $request);
-
+        $query = $this->addQueryByDiscriminatorMap(clone $query);
         try {
-            return new Response($this->collection->search($request));
+            return new Response($this->collection->search($query));
         } catch (TypesenseException $e) {
             return new Response([], $e->getCode(), $this->isDebug ? [Response::MESSAGE => $e->getMessage()] : []);
         }
     }
 
-    private function addQueryByDiscriminatorMap(Request $request): Request
+    private function addQueryByDiscriminatorMap(Query $query): Query
     {
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
-        if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF)) {
+        if (!$classMetadata->discriminatorColumn && $query->getHeader(Query::INSTANCE_OF)) {
             throw new \LogicException('Class "' . $this->collection->metadata()->class . "\" doesn't have discriminator values");
         }
 
         $classNames = array_filter(
-            explode(',', $request->getHeader(Query::INSTANCE_OF) ?? ''),
+            explode(',', $query->getHeader(Query::INSTANCE_OF) ?? ''),
             fn($c) => !empty(trim($c ?? ''))
         );
 
@@ -173,11 +172,11 @@ class TypesenseFinder implements TypesenseFinderInterface
             $relation = str_starts_with(trim($className), '^') ? ':!=' : ':=';
 
             $classMetadata = $this->objectManager->getClassMetadata(trim($className, ' ^'));
-            $request->addQueryBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
+            $query->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
 
             foreach ($classMetadata->subClasses as $subClassName) {
                 $classMetadata = $this->objectManager->getClassMetadata($subClassName);
-                $request->addQueryBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
+                $query->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
             }
         }
 
