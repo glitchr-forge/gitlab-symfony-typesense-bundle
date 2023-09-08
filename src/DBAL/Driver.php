@@ -31,6 +31,7 @@ class Driver
     public function prepare(#[SensitiveParameter] array $params): Configuration
     {
         if (!$this->configuration) {
+
             // API Key extraction
             $secret = $params['secret'];
 

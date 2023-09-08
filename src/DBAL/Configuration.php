@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
+use SensitiveParameter;
+
 /**
  *
  */
@@ -30,7 +32,8 @@ class Configuration
 
         $this->port = $params['port'] ?? 8108;
 
-        $this->path = $params['path'] ?? '';
+        $this->path = str_strip($params['path'] ?? null, '/', '/');
+        $this->path = $this->path ? ("/".$this->path) : '';
 
         $this->secret = $secret;
         $this->options = $options;
@@ -71,6 +74,6 @@ class Configuration
      */
     public function getEndpoint(string $path = '')
     {
-        return sprintf('%s://%s:%d%s%s', $this->scheme, $this->host, $this->port, $this->collectionPrefix, $path);
+        return sprintf('%s://%s:%d%s%s', $this->scheme, $this->host, $this->port, $this->path, $path);
     }
 }
