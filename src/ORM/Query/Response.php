@@ -20,9 +20,15 @@ class Response
     protected array $headers;
     protected int $status;
 
+    public const MESSAGE  = 'message';
+
+    public const FACETS_USE_INDEX = 0;
+    public const FACETS_USE_KEY   = 1;
+    
     public function __construct(?array $result, int $status = 200, array $headers = [])
     {
         $this->facetCounts = $result['facet_counts'] ?? null;
+
         $this->found = $result['found'] ?? null;
         $this->hits = $result['hits'] ?? null;
         $this->page = $result['page'] ?? null;
@@ -37,7 +43,7 @@ class Response
     public function getStatus(): int
     {
         if (0 == $this->status) {
-            return 200;
+            return $this->getFound() ? 200 : ($this->getContent() ? 500 : 404);
         }
 
         return $this->status;
@@ -48,17 +54,80 @@ class Response
         return $this->headers;
     }
 
+    public function getHeader(string $key)
+    {
+        return $this->headers[$key] ?? null;
+    }
+
     public function getContent(): string
     {
-        return $this->headers['message'] ?? '';
+        return $this->getHeader(self::MESSAGE) ?? '';
     }
 
     /**
      * Get the value of facetCounts.
      */
-    public function getFacetCounts()
+    public function getFacetCounts(array $checkbox = [], bool $sortByName = false, ?int $mode = self::FACETS_USE_INDEX)
     {
-        return $this->facetCounts;
+        $facetCounts = $this->facetCounts ?? []; // array clone
+
+        // Sort facet by alphabetic order instead of count frequency 
+        if($sortByName) {
+
+            foreach($facetCounts as &$facetCount) {
+                $facetCountCounts = &$facetCount['counts'] ?? [];
+                usort_column($facetCountCounts, 'value', fn($f1, $f2) => strcmp($f1, $f2));
+            }
+        }
+
+        // Mark as checked if `facet_by` list provided
+        foreach($facetCounts as &$facetCount) {
+
+            $counts = &$facetCount["counts"];
+            $fieldName = $facetCount["field_name"];
+
+            foreach($counts as &$count) {
+                $count["checked"] = in_array($count["value"], $checkbox[$fieldName] ?? []);
+            } 
+        }
+
+        // Replace numerical indexes by associative keys
+        if($mode == self::FACETS_USE_KEY) {
+
+            $facetCounts = array_column($facetCounts, null, 'field_name');
+            foreach($facetCounts as &$facetCount) {
+                $facetCount["counts"] = array_column($facetCount["counts"], null, 'value');
+            }
+        }
+
+        return $facetCounts;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getHits()
+    {
+         return $this->hits;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getHit(mixed $hydratedHit): ?array
+    {
+        $hitIndex = array_search($hydratedHit, $this->hydratedHits);
+        if($hitIndex === false) return null;
+        
+        return $this->hits[$hitIndex] ?? null;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getRawResults()
+    {
+        return $this->hits;
     }
 
     /**
@@ -70,15 +139,7 @@ class Response
             return $this->hydratedHits;
         }
 
-        return $this->hits;
-    }
-
-    /**
-     * @return mixed|null
-     */
-    public function getRawResults()
-    {
-        return $this->hits;
+        return $this->getRawResults();
     }
 
     /**

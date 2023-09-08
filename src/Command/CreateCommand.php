@@ -31,8 +31,8 @@ class CreateCommand extends Command
             $output->writeln(sprintf('<info>Connection Typesense </info> "<comment>%s</comment>": ' . ($connection->getHealth() ? 'OK' : 'BAD STATE'), $connectionName));
 
             foreach ($connection->getCollections()->retrieve() as $collection) {
+                $name = $collection['name'];
                 try {
-                    $name = $collection['name'];
                     $output->writeln("\t" . sprintf('<info>Deleting</info> <comment>%s</comment> (<comment>%s</comment> in Typesense)', $name, $name));
                     $connection->getCollection($name)->delete();
                 } catch (ObjectNotFound $exception) {

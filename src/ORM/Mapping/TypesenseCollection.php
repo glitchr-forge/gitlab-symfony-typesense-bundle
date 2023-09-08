@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
-use Doctrine\Common\Util\ClassUtils;
-use Http\Client\Exception;
+use Http\Client\Exception as HttpClientException;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\Exception\TypesenseException;
+use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 use Typesense\Client;
+use Typesense\Exceptions\ObjectAlreadyExists;
+use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 
 /**
@@ -67,8 +69,6 @@ class TypesenseCollection
      */
     public function supports($entity): bool
     {
-        $entityClassname = ClassUtils::getClass($entity);
-
         return is_a($entity, $this->metadata->getClass(), true);
     }
 
@@ -113,7 +113,7 @@ class TypesenseCollection
         }
 
         try {
-            return $this->client()->multiSearch->perform(
+            return $this->client()->getMultiSearch()->perform(
                 ['searches' => $searches],
                 $commonSearchParams ? $commonSearchParams->getHeaders() : []
             );
@@ -148,8 +148,13 @@ class TypesenseCollection
         }
 
         try {
+
             $this->client()->getCollections()->create($configuration);
+
+        } catch (ObjectAlreadyExists) {
+
         } catch (TypesenseClientError|HttpClientException $e) {
+
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }
@@ -164,8 +169,13 @@ class TypesenseCollection
         }
 
         try {
-            return $this->client()->getCollection($this->name())?->delete();
+        
+            return $this->client()->getCollections()[$this->name()]?->delete();
+        
+        } catch (ObjectNotFound) {
+
         } catch (TypesenseClientError|HttpClientException $e) {
+        
             throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
         }
     }

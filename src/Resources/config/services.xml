@@ -6,12 +6,14 @@
     <services>
         <defaults public="true"/>
 
+
         <!-- @todo: Structure for multiserver configuration.. There will be multiple clients..  -->
         <service id="typesense_manager" alias="Typesense\Bundle\ORM\TypesenseManager" />
+        <service id="Typesense\Bundle\ORM\TypesenseManagerInterface" alias="typesense_manager"/>
         <service id="Typesense\Bundle\ORM\TypesenseManager" public="true">
             <argument/>
         </service>
-
+       
         <!-- Abstract definition for client. -->
         <service id="typesense.connection" class="Typesense\Bundle\DBAL\Connection" public="true" abstract="true">
              <argument/> <!-- connection name -->
@@ -54,6 +56,10 @@
             <argument type="service" id="typesense_manager"/>
         </service>
         <service id="typesense.command.list" class="Typesense\Bundle\Command\ListCommand" public="true">
+            <tag name="console.command"/>
+             <argument type="service" id="typesense_manager"/>
+        </service>
+        <service id="typesense.command.health" class="Typesense\Bundle\Command\HealthCommand" public="true">
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
         </service>

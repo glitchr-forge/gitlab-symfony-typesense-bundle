@@ -36,15 +36,29 @@ abstract class AbstractTransformer implements TransformerInterface
      * @param $className
      * @return TypesenseMetadata|null
      */
+    public function getRootMapping($className): ?TypesenseMetadata
+    {
+        $rootClassName = $className;
+        while( get_parent_class($rootClassName) ) {
+
+            if(!array_key_exists(get_parent_class($rootClassName), $this->mapping))
+                break;
+
+            $rootClassName = get_parent_class($rootClassName);
+        }
+
+        return $this->mapping[$rootClassName] ?? null;
+    }
+
+    /**
+     * @param $className
+     * @return TypesenseMetadata|null
+     */
     public function getMapping($className): ?TypesenseMetadata
     {
         return $this->mapping[$className] ?? null;
     }
 
-    /**
-     * @param TypesenseMetadata $metadata
-     * @return $this
-     */
     /**
      * @param TypesenseMetadata $metadata
      * @return $this

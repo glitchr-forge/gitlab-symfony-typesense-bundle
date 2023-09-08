@@ -8,7 +8,7 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 /**
  *
  */
-class TypesenseManager
+class TypesenseManager implements TypesenseManagerInterface
 {
     protected string $defaultConnection;
     protected array $connections = [];
@@ -47,10 +47,6 @@ class TypesenseManager
         return $this->connections[$connectionName ?? $this->getDefaultConnectionName()];
     }
 
-    /**
-     * @param Connection $connection
-     * @return $this
-     */
     /**
      * @param Connection $connection
      * @return $this
@@ -103,10 +99,6 @@ class TypesenseManager
      * @param TypesenseCollection $collection
      * @return $this
      */
-    /**
-     * @param TypesenseCollection $collection
-     * @return $this
-     */
     public function addCollection(TypesenseCollection $collection)
     {
         $this->collections[$collection->name()] = $collection;
@@ -126,7 +118,7 @@ class TypesenseManager
     // Additional instances for autowiring..
     public function getFinder(string $collectionName): ?TypesenseFinder
     {
-        $collectionName = explode("%", $collectionName)[0];
+        $collectionName = explode("__", $collectionName)[0];
         return $this->finders[$collectionName];
     }
 

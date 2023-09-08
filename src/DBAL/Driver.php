@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\DBAL;
 
+use SensitiveParameter;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Client;
 use Typesense\Exceptions\ConfigError;
@@ -27,9 +28,10 @@ class Driver
         $this->name = $name;
     }
 
-    public function prepare(#[SentitiveParameter] array $params): Configuration
+    public function prepare(#[SensitiveParameter] array $params): Configuration
     {
         if (!$this->configuration) {
+
             // API Key extraction
             $secret = $params['secret'];
 
@@ -55,7 +57,7 @@ class Driver
         return $this->configuration;
     }
 
-    public function connect(#[SentitiveParameter] array $params): ?Client
+    public function connect(#[SensitiveParameter] array $params): ?Client
     {
         if (!$this->client) {
             $this->configuration = $this->prepare($params);

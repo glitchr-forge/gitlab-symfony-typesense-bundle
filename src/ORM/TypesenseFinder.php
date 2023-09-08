@@ -33,7 +33,7 @@ class TypesenseFinder implements TypesenseFinderInterface
     {
         $this->isDebug = $parameterBag->get('kernel.debug');
         $this->collection = $collection;
-        $this->cache = new Psr16Cache(new FilesystemAdapter('typesense', 0, $parameterBag->get('kernel.cache_dir')));
+        $this->cache = $cache ?? new Psr16Cache(new FilesystemAdapter('typesense', 0, $parameterBag->get('kernel.cache_dir')));
         $this->objectManager = $collection->metadata()->getObjectManager();
     }
 
@@ -74,9 +74,15 @@ class TypesenseFinder implements TypesenseFinderInterface
 
     public function raw(Request $request, bool $cacheable = false): Response
     {
-        $key = str_replace('\\', '__', static::class) . '_' . $this->collection->name() . '_' . sha1(serialize($request));
+        $key = [];
+        $key[] = str_replace('\\', '__', static::class);
+        $key[] = $this->collection->name();
+        $key[] = sha1(serialize($request));
+        $key = implode("_", $key);
+
         if ($cacheable && $this->cache->has($key)) {
-            return $this->cache->get($key);
+            $response = $this->cache->get($key);
+            if($response instanceof Response) return $response;
         }
 
         $response = $this->search($request);
@@ -92,18 +98,17 @@ class TypesenseFinder implements TypesenseFinderInterface
         return $this->hydrate($this->raw($request, $cacheable), $cacheable);
     }
 
-    public function facet(string $facetBy, ?Request $request = null): mixed
+    public function facet(string $facetBy, ?Query $query = null, array $checkbox = [], bool $sortByName = false, ?int $mode = Response::FACETS_USE_INDEX): mixed
     {
-        if ($request) {
-            $request = clone $request;
+        if ($query) {
+            $query = clone $query;
         }
 
-        $request ??= new Query($facetBy);
-        $request->facetBy($facetBy);
+        $query ??= new Query($facetBy);
+        $query->facetBy($facetBy);
 
-        $response = $this->search($request);
-
-        return $response->getFacetCounts();
+        $response = $this->search($query);
+        return $response->getFacetCounts($checkbox, $sortByName, $mode);
     }
 
     private function hydrate(Response $response, bool $cacheable = false): Response
@@ -137,40 +142,45 @@ class TypesenseFinder implements TypesenseFinderInterface
     }
 
     /**
-     * @param Request $request
+     * @param Query $query
      * @return Response
      */
-    private function search(Request $request)
+    private function search(Query $query)
+    {
+        $query = $this->addQueryByDiscriminatorMap(clone $query);
+        try {
+            return new Response($this->collection->search($query));
+        } catch (TypesenseException $e) {
+            return new Response([], $e->getCode(), $this->isDebug ? [Response::MESSAGE => $e->getMessage()] : []);
+        }
+    }
+
+    private function addQueryByDiscriminatorMap(Query $query): Query
     {
         $classMetadata = $this->objectManager->getClassMetadata($this->collection->metadata()->class);
-        if (!$classMetadata->discriminatorColumn && $request->getHeader(Query::INSTANCE_OF)) {
+        if (!$classMetadata->discriminatorColumn && $query->getHeader(Query::INSTANCE_OF)) {
             throw new \LogicException('Class "' . $this->collection->metadata()->class . "\" doesn't have discriminator values");
         }
 
         $classNames = array_filter(
-            explode(',', $request->getHeader(Query::INSTANCE_OF) ?? ''),
+            explode(',', $query->getHeader(Query::INSTANCE_OF) ?? ''),
             fn($c) => !empty(trim($c ?? ''))
         );
 
         foreach ($classNames as $className) {
+
             $relation = str_starts_with(trim($className), '^') ? ':!=' : ':=';
 
             $classMetadata = $this->objectManager->getClassMetadata(trim($className, ' ^'));
-            $request->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
+            $query->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
 
             foreach ($classMetadata->subClasses as $subClassName) {
                 $classMetadata = $this->objectManager->getClassMetadata($subClassName);
-                $request->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
+                $query->addFilterBy($classMetadata->discriminatorColumn['name'] . $relation . $classMetadata->discriminatorValue);
             }
         }
 
-        try {
-            $result = $this->collection->search($request);
-
-            return new Response($result);
-        } catch (TypesenseException $e) {
-            return new Response([], $e->getCode(), $this->isDebug ? ['message' => $e->getMessage()] : []);
-        }
+        return $query;
     }
 
     private function identifier(): string

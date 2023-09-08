@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typesense\Bundle\ORM\Query;
 
 /**
- *
+ * Minimum needed to send a request to typesense server
  */
 class Request
 {
@@ -20,39 +20,27 @@ class Request
         $this->addHeader(self::TERM, $term ?? '');
     }
 
-    public function q(string $q): self
-    {
-        return $this->addHeader(self::TERM, $q);
-    }
-
-    public function term(string $q): self
-    {
-        return $this->addHeader(self::TERM, $q);
-    }
-
-    public function queryBy(string $filterBy): self
-    {
-        return $this->addHeader(self::TERM, $filterBy);
-    }
-
-    public function addQueryBy(string $filterBy): self
-    {
-        $_filterBy = $this->getHeader('query_by');
-        $filterBy = $_filterBy ? trim($_filterBy . ', ' . $filterBy) : $filterBy;
-
-        return $this->addHeader('query_by', $filterBy);
-    }
-
+    /**
+     * @return array
+     */
     public function getHeaders(): array
     {
         return $this->headers;
     }
 
+    /**
+     * @param $key
+     * @return ?string
+     */
     public function getHeader(string $key): ?string
     {
         return $this->headers[$key] ?? null;
     }
 
+    /**
+     * @param $key
+     * @return boolean
+     */
     public function hasHeader(string $key): bool
     {
         return isset($this->headers[$key]);
@@ -63,15 +51,33 @@ class Request
      * @param $value
      * @return $this
      */
-    /**
-     * @param $key
-     * @param $value
-     * @return $this
-     */
     public function addHeader($key, $value): self
     {
         $this->headers[$key] = $value;
 
         return $this;
+    }
+
+    public function q(string $q): self
+    {
+        return $this->addHeader(self::TERM, $q);
+    }
+
+    public function term(string $q): self
+    {
+        return $this->addHeader(self::TERM, $q);
+    }
+
+    public function queryBy(string $queryBy): self
+    {
+        return $this->addHeader(self::QUERY_BY, $queryBy);
+    }
+
+    public function addQueryBy(string $queryBy): self
+    {
+        $_queryBy = $this->getHeader(self::QUERY_BY);
+        $queryBy = $_queryBy ? trim($_queryBy . ', ' . $queryBy) : $queryBy;
+
+        return $this->addHeader(self::QUERY_BY, $queryBy);
     }
 }
