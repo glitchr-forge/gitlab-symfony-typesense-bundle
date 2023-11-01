@@ -73,8 +73,9 @@
         </service>
 
         <!-- transformers -->
-        <service id="Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface" alias="typesense.transformer"/>
         <service id="typesense.transformer" class="Typesense\Bundle\ORM\Transformer\Abstract\AbstractTransformer" public="true" abstract="true" />
+        <!-- <service id="Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface" alias="typesense.transformer" /> -->
+        
         <service id="typesense.transformer.entity" class="Typesense\Bundle\ORM\Transformer\EntityTransformer" public="true" parent="typesense.transformer">
              <argument type="service" id="doctrine.orm.entity_manager"/>
         </service>
