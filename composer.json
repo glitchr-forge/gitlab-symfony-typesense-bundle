@@ -18,7 +18,7 @@
         "typesense/typesense-php": "<4.9",
         "php-http/curl-client": "^2.2",
 
-        "monolog/monolog": "^2.3",
+//        "monolog/monolog": "^2.3",
         "symfony/property-access": "^3.4|^4.3|^5|^6.0|^7.0",
         "beberlei/doctrineextensions": "^1.0"
     },
