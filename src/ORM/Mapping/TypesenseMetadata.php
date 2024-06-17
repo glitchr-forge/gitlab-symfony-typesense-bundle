@@ -154,8 +154,8 @@ class TypesenseMetadata extends TypesenseMetadataInfo
         if ($className && class_exists($className)) {
             $classMetadata = $this->objectManager->getClassMetadata($className);
 
-            $discriminatorColumn = $classMetadata->discriminatorColumn['name'];
-            $discriminatorType = $classMetadata->discriminatorColumn['type'] ?? 'string';
+            $discriminatorColumn = $classMetadata->discriminatorColumn->name;
+            $discriminatorType = $classMetadata->discriminatorColumn->type ?? 'string';
             
             if (!array_key_exists($discriminatorColumn, $this->fields)) {
                 $this->fields[$discriminatorColumn] = new TypesenseMetadataField();

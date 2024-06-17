@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Transformer;
 
-use Doctrine\Common\Util\ClassUtils;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\Transformer\Abstract\AbstractTransformer;
@@ -17,7 +16,7 @@ class EntityTransformer extends AbstractTransformer
 {
     public function convert(object $entity): array
     {
-        $entityClass = ClassUtils::getClass($entity);
+        $entityClass = get_class($entity);
         if (!$entity instanceof TypesenseInterface) {
             throw new \Exception('Class ' . $this->getRootMapping($entityClass)->getClass() . ' does not implement "' . TypesenseInterface::class . '"');
         }
