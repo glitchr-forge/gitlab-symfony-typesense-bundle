@@ -115,8 +115,9 @@ class TypesenseIndexer
             } catch (TypesenseException|NetworkException $e) {
 
                 if ($this->first) {
+
                     $flashBag = $this->requestStack->getCurrentRequest()?->getSession()?->getFlashBag();
-                    $flashBag->add('warning', 'Typesense ' . $e->getCode() . ': ' . $e->getMessage());
+                    if($flashBag) $flashBag->add('warning', 'Typesense ' . $e->getCode() . ': ' . $e->getMessage());
                     $this->first = false;
                 }
             }
