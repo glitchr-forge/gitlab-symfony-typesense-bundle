@@ -15,8 +15,8 @@ use Typesense\Exceptions\ObjectNotFound;
 /**
  *
  */
-#[AsCommand(name: 'typesense:populate', aliases: [], description: 'Import collections from Database')]
-class PopulateCommand extends Command
+#[AsCommand(name: 'typesense:update', aliases: [], description: 'Update typesense collections in database')]
+class UpdateCommand extends Command
 {
     private TypesenseManager $typesenseManager;
     private bool $isError = false;
@@ -32,7 +32,7 @@ class PopulateCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $execStart = microtime(true);
-        $populated = 0;
+        $entries = 0;
 
         $io->newLine();
 
@@ -42,13 +42,13 @@ class PopulateCommand extends Command
             $metadata->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
             $class = $metadata->getClass();
 
-            $output->writeln(sprintf('<info>Populating</info> <comment>%s</comment>', $name));
+            $output->writeln(sprintf('<info>Updating</info> <comment>%s</comment>', $name));
 
             $q = $metadata->getObjectManager()->createQuery('select e from ' . $class . ' e');
             $entities = $q->toIterable();
 
             $nbEntities = (int)$metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
-            $populated += $nbEntities;
+            $entries += $nbEntities;
 
             $data = [];
             foreach ($entities as $entity) {
@@ -73,9 +73,9 @@ class PopulateCommand extends Command
         $io->newLine();
         if (!$this->isError) {
             $io->success(sprintf(
-                '%s element%s populated in %s seconds',
-                $populated,
-                $populated > 1 ? 's' : '',
+                '%s element%s updated in %s seconds',
+                $entries,
+                $entries > 1 ? 's' : '',
                 round(microtime(true) - $execStart, PHP_ROUND_HALF_DOWN)
             ));
         }

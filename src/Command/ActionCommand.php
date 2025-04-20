@@ -16,7 +16,7 @@ use Typesense\Exceptions\ObjectNotFound;
 /**
  *
  */
-#[AsCommand(name: 'typesense:action', aliases: [], description: 'Import collections from Database')]
+#[AsCommand(name: 'typesense:action', aliases: [], description: 'Perform actions (create, upsert, update, delete) on collections in Typesense')]
 class ActionCommand extends Command
 {
     private TypesenseManager $typesenseManager;
@@ -52,7 +52,7 @@ class ActionCommand extends Command
         }
 
         $execStart = microtime(true);
-        $populated = 0;
+        $entries = 0;
 
         $io->newLine();
 
@@ -61,13 +61,13 @@ class ActionCommand extends Command
             $metadata->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
             $class = $metadata->getClass();
 
-            $output->writeln(sprintf('<info>Populating</info> <comment>%s</comment>', $name));
+            $output->writeln(sprintf('<info>Updating</info> <comment>%s</comment>', $name));
 
             $q = $metadata->getObjectManager()->createQuery('select e from ' . $class . ' e');
             $entities = $q->toIterable();
 
             $nbEntities = (int)$metadata->getObjectManager()->createQuery('select COUNT(u.id) from ' . $class . ' u')->getSingleScalarResult();
-            $populated += $nbEntities;
+            $entries += $nbEntities;
 
             $data = [];
             foreach ($entities as $entity) {
@@ -100,9 +100,9 @@ class ActionCommand extends Command
         $io->newLine();
         if (!$this->isError) {
             $io->success(sprintf(
-                '%s element%s populated in %s seconds',
-                $populated,
-                $populated > 1 ? 's' : '',
+                '%s element%s updated in %s seconds',
+                $entries,
+                $entries > 1 ? 's' : '',
                 round(microtime(true) - $execStart, PHP_ROUND_HALF_DOWN)
             ));
         }

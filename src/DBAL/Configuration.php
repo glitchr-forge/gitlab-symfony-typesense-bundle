@@ -25,7 +25,7 @@ class Configuration
         return $this->getEndpoint();
     }
 
-    public function __construct(#[SensitiveParameter] ?string $secret, #[SensitiveParameter] array $params, array $options = [])
+    public function __construct(#[SensitiveParameter] ?string $secret, array $params, array $options = [])
     {
         $this->scheme = $params['scheme'] ?? 'http';
         $this->host = $params['host'] ?? 'localhost';

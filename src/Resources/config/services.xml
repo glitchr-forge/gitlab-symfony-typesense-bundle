@@ -67,7 +67,7 @@
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
         </service>
-        <service id="typesense.command.populate" class="Typesense\Bundle\Command\PopulateCommand" public="true">
+        <service id="typesense.command.update" class="Typesense\Bundle\Command\UpdateCommand" public="true">
             <tag name="console.command"/>
              <argument type="service" id="typesense_manager"/>
         </service>
