@@ -39,7 +39,6 @@ class UpdateCommand extends Command
         foreach ($this->typesenseManager->getCollections() as $name => $collection) {
 
             $metadata = $collection->metadata();
-            $metadata->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
             $class = $metadata->getClass();
 
             $output->writeln(sprintf('<info>Updating</info> <comment>%s</comment>', $name));
