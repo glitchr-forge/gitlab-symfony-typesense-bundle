@@ -14,11 +14,37 @@ use Typesense\Bundle\TypesenseInterface;
  */
 class EntityTransformer extends AbstractTransformer
 {
+    protected function get_class_implementing(object|string $entityOrClass, string $interface): ?string
+    {
+        if (!interface_exists($interface)) {
+            throw new \InvalidArgumentException(sprintf('Interface "%s" does not exist.', $interface));
+        }
+
+        $class = is_object($entityOrClass) ? get_class($entityOrClass) : ltrim($entityOrClass, '\\');
+
+        while ($class) {
+            $currentInterfaces = class_implements($class) ?: [];
+            $parent            = get_parent_class($class);
+            $parentInterfaces  = $parent ? (class_implements($parent) ?? []) : [];
+
+            // Which interfaces were introduced at this level?
+            $introduced = array_diff($currentInterfaces, $parentInterfaces);
+
+            if (in_array($interface, $introduced, true)) {
+                return $class;
+            }
+
+            $class = $parent;
+        }
+
+        return null;
+    }
+
     public function convert(object $entity): array
     {
-        $entityClass = get_class($entity);
-        if (!$entity instanceof TypesenseInterface) {
-            throw new \Exception('Class ' . $this->getRootMapping($entityClass)->getClass() . ' does not implement "' . TypesenseInterface::class . '"');
+        $entityClass = $this->get_class_implementing($entity, TypesenseInterface::class);
+        if (!$entityClass) {
+            throw new \Exception('Class ' . $this->getRootMapping(get_class($entity))->getClass() . ' does not implement "' . TypesenseInterface::class . '"');
         }
 
         if (!$this->getMapping($entityClass) instanceof TypesenseMetadata) {
