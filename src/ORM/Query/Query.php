@@ -112,9 +112,23 @@ class Query extends Request
     /**
      * A list of fields that will be used for faceting your results on. Separate multiple fields with a comma.
      */
-    public function facetBy(string $facetBy): self
+    public function facetBy(array|string $facetBy): self
     {
+        $facetBy = $this->normalizeString($facetBy);
         return $this->addHeader(self::FACET_BY, $facetBy);
+    }
+
+    private function normalizeString(array|string $value): string
+    {
+        $value = is_array($value) ? implode(',', $value) : $value;
+        $fields = explode(',', $value);
+        $numFields = $this->getNumFields();
+        
+        while (count($fields) < $numFields) {
+            $fields = array_merge($fields, $fields);
+        }
+        
+        return implode(',', array_slice($fields, 0, $numFields));
     }
 
     /**
@@ -254,6 +268,7 @@ class Query extends Request
      */
     public function infix(string $infix): self
     {
+        $infix = $this->normalizeString($infix);
         if (!in_array($infix, self::INFIX_ALLOWED_VALUES)) {
             return $this;
         }

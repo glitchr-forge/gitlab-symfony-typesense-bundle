@@ -14,12 +14,23 @@ class Request
     public const TERM = 'q';
     public const QUERY_BY = 'query_by';
 
-    public function __construct(string $queryBy, ?string $term = null)
+    public function __construct(array|string $queryBy, ?string $term = null)
     {
+        if(is_array($queryBy)) { $queryBy = implode(", ", (array) $queryBy); }
         $this->addHeader(self::QUERY_BY, $queryBy);
         $this->addHeader(self::TERM, $term ?? '');
     }
+ 
+    public function getFields(): array
+    {
+        return explode(',', $this->getHeader(self::QUERY_BY) ?? '');
+    }
 
+    public function getNumFields(): int
+    {
+        return count($this->getFields());
+    }
+    
     /**
      * @return array
      */

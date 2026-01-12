@@ -105,7 +105,7 @@ class TypesenseFinder implements TypesenseFinderInterface
         }
 
         $query ??= new Query($facetBy);
-        $query->facetBy($facetBy);
+        $query->facetBy(Query::INFIX_ALWAYS);
 
         $response = $this->search($query);
         return $response->getFacetCounts($checkbox, $sortByName, $mode);
@@ -149,6 +149,8 @@ class TypesenseFinder implements TypesenseFinderInterface
     {
         $query = $this->addQueryByDiscriminatorMap(clone $query);
         try {
+            // dump($this->collection->search($query), $query);
+            // exit(1);
             return new Response($this->collection->search($query));
         } catch (TypesenseException $e) {
             return new Response([], $e->getCode(), $this->isDebug ? [Response::MESSAGE => $e->getMessage()] : []);
