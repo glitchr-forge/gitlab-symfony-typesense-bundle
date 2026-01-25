@@ -5,9 +5,6 @@ namespace Typesense\Bundle;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-/**
- *
- */
 trait TypesenseTrait
 {
     public function __typesenseGetter(string $propertyName, array $propertyInfo): mixed

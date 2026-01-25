@@ -10,9 +10,6 @@ use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Client;
 use Typesense\Exceptions\TypesenseClientError;
 
-/**
- *
- */
 class TypesenseDocuments
 {
     private ?Connection $connection;

@@ -10,9 +10,6 @@ use Typesense\Bundle\DBAL\Collections;
 use Typesense\Bundle\DBAL\Documents;
 use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
 
-/**
- *
- */
 class TypesenseMetadataInfo
 {
     /**

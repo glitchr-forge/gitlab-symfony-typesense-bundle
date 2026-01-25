@@ -11,9 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Exceptions\ObjectNotFound;
 
-/**
- *
- */
 #[AsCommand(name: 'typesense:create', aliases: [], description: 'Create Typesenses indexes')]
 class CreateCommand extends Command
 {

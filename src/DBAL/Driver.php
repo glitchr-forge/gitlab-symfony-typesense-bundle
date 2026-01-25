@@ -9,9 +9,6 @@ use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Client;
 use Typesense\Exceptions\ConfigError;
 
-/**
- *
- */
 class Driver
 {
     public const NODES = 'nodes';

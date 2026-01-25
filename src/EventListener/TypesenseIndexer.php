@@ -18,9 +18,6 @@ use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Bundle\TypesenseInterface;
 
-/**
- *
- */
 class TypesenseIndexer
 {
     protected array $transactions = [];

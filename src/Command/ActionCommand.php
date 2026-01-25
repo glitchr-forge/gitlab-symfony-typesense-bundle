@@ -13,9 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Exceptions\ObjectNotFound;
 
-/**
- *
- */
 #[AsCommand(name: 'typesense:action', aliases: [], description: 'Perform actions (create, upsert, update, delete) on collections in Typesense')]
 class ActionCommand extends Command
 {

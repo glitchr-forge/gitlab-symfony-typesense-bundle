@@ -8,9 +8,6 @@ use Doctrine\Persistence\ObjectManager;
 use Typesense\Bundle\Exception\TypesenseException;
 use Typesense\Bundle\ORM\Transformer\Abstract\TransformerInterface;
 
-/**
- *
- */
 class TypesenseMetadata extends TypesenseMetadataInfo
 {
     protected TransformerInterface $transformer;

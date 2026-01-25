@@ -2,9 +2,6 @@
 
 namespace Typesense\Bundle;
 
-/**
- *
- */
 interface TypesenseInterface
 {
     public function __typesense(): ?string;

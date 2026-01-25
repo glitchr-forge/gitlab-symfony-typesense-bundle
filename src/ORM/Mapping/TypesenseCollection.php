@@ -15,9 +15,6 @@ use Typesense\Exceptions\ObjectAlreadyExists;
 use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 
-/**
- *
- */
 class TypesenseCollection
 {
     protected $connection;

@@ -9,9 +9,6 @@ use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Bundle\ORM\Transformer\Abstract\AbstractTransformer;
 use Typesense\Bundle\TypesenseInterface;
 
-/**
- *
- */
 class EntityTransformer extends AbstractTransformer
 {
     protected function get_class_implementing(object|string $entityOrClass, string $interface): ?string

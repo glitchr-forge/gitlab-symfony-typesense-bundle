@@ -15,9 +15,6 @@ use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 
-/**
- *
- */
 class TypesenseFinder implements TypesenseFinderInterface
 {
     protected ?int $cacheTTL = null;

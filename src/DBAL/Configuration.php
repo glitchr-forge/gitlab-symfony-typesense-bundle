@@ -6,9 +6,6 @@ namespace Typesense\Bundle\DBAL;
 
 use SensitiveParameter;
 
-/**
- *
- */
 class Configuration
 {
     protected ?string $secret;

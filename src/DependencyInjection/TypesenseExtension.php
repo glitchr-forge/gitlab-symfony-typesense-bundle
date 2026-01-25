@@ -14,9 +14,6 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Typesense\Bundle\ORM\TypesenseManager;
 
-/**
- *
- */
 class TypesenseExtension extends Extension
 {
     private string $defaultConnection;

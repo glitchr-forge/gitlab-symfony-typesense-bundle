@@ -11,9 +11,6 @@ use Typesense\Collections;
 use Typesense\Document;
 use Typesense\Documents;
 
-/**
- *
- */
 class Connection
 {
     protected ParameterBagInterface $parameterBag;

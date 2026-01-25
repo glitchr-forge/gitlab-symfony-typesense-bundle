@@ -12,9 +12,6 @@ use Typesense\Bundle\DependencyInjection\Compiler\ConnectionPass;
 use Typesense\Bundle\DependencyInjection\Compiler\FinderPass;
 use Typesense\Bundle\DependencyInjection\Compiler\MetadataPass;
 
-/**
- *
- */
 class TypesenseBundle extends Bundle
 {
     public function boot(): void

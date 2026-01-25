@@ -18,9 +18,6 @@ use Typesense\Exceptions\RequestUnauthorized;
 use Typesense\Exceptions\ServerError;
 use Typesense\Exceptions\ServiceUnavailable;
 
-/**
- *
- */
 final class TypesenseException extends \RuntimeException
 {
     public $status;

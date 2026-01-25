@@ -12,9 +12,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Typesense\Bundle\ORM\TypesenseManager;
 use Typesense\Exceptions\ObjectNotFound;
 
-/**
- *
- */
 #[AsCommand(name: 'typesense:update', aliases: [], description: 'Update typesense collections in database')]
 class UpdateCommand extends Command
 {

@@ -9,9 +9,6 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 
-/**
- *
- */
 abstract class AbstractTransformer implements TransformerInterface
 {
     protected PropertyAccessorInterface $accessor;

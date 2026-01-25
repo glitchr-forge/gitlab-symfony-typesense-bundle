@@ -7,9 +7,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Typesense\Bundle\ORM\TypesenseManager;
 
-/**
- *
- */
 class FinderPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void

@@ -12,9 +12,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Typesense\Bundle\ORM\TypesenseManager;
 
-/**
- *
- */
 #[AsCommand(name: 'typesense:health', aliases: [], description: 'Typesense health check')]
 class HealthCommand extends Command
 {

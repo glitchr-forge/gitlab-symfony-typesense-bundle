@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
-/**
- *
- */
 class TypesenseMetadataField
 {
     public string $name;

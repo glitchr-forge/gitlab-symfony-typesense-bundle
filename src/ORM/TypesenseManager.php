@@ -5,9 +5,6 @@ namespace Typesense\Bundle\ORM;
 use Typesense\Bundle\DBAL\Connection;
 use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
-/**
- *
- */
 class TypesenseManager implements TypesenseManagerInterface
 {
     protected string $defaultConnection;

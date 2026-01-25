@@ -9,9 +9,6 @@ use Typesense\Bundle\ORM\Mapping\TypesenseCollection;
 use Typesense\Bundle\ORM\Mapping\TypesenseMetadata;
 use Typesense\Exceptions\ObjectNotFound;
 
-/**
- *
- */
 class Transaction
 {
     protected TypesenseCollection $collection;

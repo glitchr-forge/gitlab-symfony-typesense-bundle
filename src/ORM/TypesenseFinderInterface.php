@@ -8,9 +8,6 @@ use Typesense\Bundle\ORM\Query\Query;
 use Typesense\Bundle\ORM\Query\Request;
 use Typesense\Bundle\ORM\Query\Response;
 
-/**
- *
- */
 interface TypesenseFinderInterface
 {
     public const USE_KEY = 1;
