@@ -22,6 +22,7 @@ class TypesenseIndexer
 {
     protected array $transactions = [];
 
+    protected array $objectIds = [];
     protected $requestStack;
     protected $typesenseManager;
     protected $propertyAccessor;
