@@ -55,7 +55,17 @@ class ActionCommand extends Command
 
         foreach ($this->typesenseManager->getCollections() as $name => $collection) {
             $metadata = $collection->metadata();
-            $metadata->getObjectManager()->getConnection()->getConfiguration()->setSQLLogger(null);
+
+            // Silences Doctrine's SQL logger before the big bulk export query
+            // below, so DBAL doesn't accumulate a log entry per row. DBAL 4.x
+            // removed Configuration::setSQLLogger() entirely (logging moved to
+            // middleware, configured at connection-build time, not toggleable
+            // here) — guard so this optimization degrades to a no-op instead
+            // of fataling the whole command on newer DBAL.
+            $connectionConfig = $metadata->getObjectManager()->getConnection()->getConfiguration();
+            if (method_exists($connectionConfig, 'setSQLLogger')) {
+                $connectionConfig->setSQLLogger(null);
+            }
             $class = $metadata->getClass();
 
             $output->writeln(sprintf('<info>Updating</info> <comment>%s</comment>', $name));
