@@ -31,7 +31,7 @@ class TypesenseExtension extends Extension
 
         $this->setConfiguration($container, $typesense, $configuration->getTreeBuilder()->getRootNode()->getNode()->getName());
 
-        $this->defaultConnection = $config['default_connection'] ?? 'default';
+        $this->defaultConnection = $typesense['default_connection'] ?? 'default';
         $this->initialize($container);
 
         foreach ($typesense['connections'] ?? [] as $connectionName => $configuration) {

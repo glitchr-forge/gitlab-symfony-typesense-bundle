@@ -30,7 +30,7 @@ class Driver
         if (!$this->configuration) {
 
             // API Key extraction
-            $secret = $params['secret'];
+            $secret = $params['secret'] ?? null;
 
             if (!$secret) {
                 if (is_cli()) {

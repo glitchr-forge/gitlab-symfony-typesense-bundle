@@ -34,5 +34,9 @@
         }
     },
     "scripts": {
+        "test": "phpunit",
+        "test-unit": "phpunit --testsuite unit",
+        "test-integration": "phpunit --testsuite integration",
+        "test-coverage": "XDEBUG_MODE=coverage phpunit --coverage-html var/coverage --coverage-text"
     }
 }

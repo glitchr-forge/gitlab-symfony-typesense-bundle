@@ -72,7 +72,8 @@ class Response
         if($sortByName) {
 
             foreach($facetCounts as &$facetCount) {
-                $facetCountCounts = &$facetCount['counts'] ?? [];
+                $facetCount['counts'] ??= [];
+                $facetCountCounts = &$facetCount['counts'];
                 usort_column($facetCountCounts, 'value', fn($f1, $f2) => strcmp($f1, $f2));
             }
         }
@@ -113,7 +114,9 @@ class Response
      */
     public function getHit(mixed $hydratedHit): ?array
     {
-        $hitIndex = array_search($hydratedHit, $this->hydratedHits);
+        // Strict: two distinct entities with equal property values (e.g.
+        // two transient, not-yet-persisted objects) must not collide.
+        $hitIndex = array_search($hydratedHit, $this->hydratedHits, true);
         if($hitIndex === false) return null;
         
         return $this->hits[$hitIndex] ?? null;

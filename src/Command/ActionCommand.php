@@ -43,7 +43,7 @@ class ActionCommand extends Command
 
         $action = $input->getArgument('action');
         if (!in_array($action, self::ACTIONS, true)) {
-            $io->error('Action option only takes the values : "' . implode('","', $action) . '\"');
+            $io->error('Action option only takes the values : "' . implode('","', self::ACTIONS) . '\"');
 
             return 1;
         }

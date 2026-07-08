@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+#
+# Standalone test runner for glitchr/typesense-bundle — installs the bundle
+# as its own root package (require-dev pulls in phpunit/phpstan), independent
+# of any host Symfony app. Pair with docker-compose.test.yml, which also
+# starts a real Typesense server for the Integration/ suite — the Unit/
+# suite needs none of this and runs against a bare PHP image just as well.
+#
+#   docker compose -f docker-compose.test.yml run --rm test                       # unit + integration
+#   docker compose -f docker-compose.test.yml run --rm test vendor/bin/phpunit --testsuite unit
+#   docker compose -f docker-compose.test.yml run --rm test composer test-coverage
+
+FROM php:8.4-cli
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git unzip libcurl4-openssl-dev libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-install -j"$(nproc)" curl zip \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+WORKDIR /srv/typesense-bundle
+COPY . .
+
+RUN composer install --no-interaction --no-progress
+
+CMD ["vendor/bin/phpunit"]

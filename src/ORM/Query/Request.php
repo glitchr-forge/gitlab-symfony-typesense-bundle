@@ -40,10 +40,14 @@ class Request
     }
 
     /**
+     * Headers aren't all strings — Query's own setters store ints
+     * (maxHits, page, perPage, ...) and bools (prefix) through the same
+     * addHeader() this reads back from.
+     *
      * @param $key
-     * @return ?string
+     * @return mixed
      */
-    public function getHeader(string $key): ?string
+    public function getHeader(string $key): mixed
     {
         return $this->headers[$key] ?? null;
     }

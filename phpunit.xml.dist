@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" colors="true" beStrictAboutOutputDuringTests="true" beStrictAboutTestsThatDoNotTestAnything="false" convertDeprecationsToExceptions="false" verbose="true" bootstrap="vendor/autoload.php">
-  <coverage>
-    <include>
-      <directory>./src</directory>
-    </include>
-    <exclude>
-      <directory>./src/Resources</directory>
-    </exclude>
-  </coverage>
+<!-- bootstrap="vendor/autoload.php" only works installed standalone (CI's own
+     composer install); a host app's autoloader never picks up this bundle's
+     autoload-dev, so tests/bootstrap.php self-registers the test namespace —
+     same dual-runner-compatible pattern as base-bundle/well-known. -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" beStrictAboutOutputDuringTests="true" beStrictAboutTestsThatDoNotTestAnything="false" verbose="true" bootstrap="tests/bootstrap.php">
   <php>
     <env name="KERNEL_CLASS" value="App\Kernel" />
+    <!-- Real Typesense server for the Integration/ suite — see Dockerfile.test
+         and docker-compose.test.yml. Unit/ tests never touch these. -->
     <env name="TYPESENSE_URL" value="http://localhost:8108" />
-    <env name="TYPESENSE_KEY" value="123" />
+    <env name="TYPESENSE_KEY" value="xyz" />
   </php>
   <testsuites>
-    <testsuite name="Typesense Test Suite">
-      <directory>./tests</directory>
+    <testsuite name="unit">
+      <directory>tests/Unit</directory>
+    </testsuite>
+    <testsuite name="integration">
+      <directory>tests/Integration</directory>
     </testsuite>
   </testsuites>
+  <source>
+    <include>
+      <directory>src</directory>
+    </include>
+    <exclude>
+      <directory>src/Resources</directory>
+    </exclude>
+  </source>
 </phpunit>

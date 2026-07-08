@@ -26,6 +26,7 @@ class TypesenseMetadataField
         $this->facet = false;
         $this->discriminator = false;
         $this->identifier = false;
+        $this->property = null;
     }
 
     public function toArray(): array

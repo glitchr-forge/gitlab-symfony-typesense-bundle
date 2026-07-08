@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Typesense\Bundle\ORM\Mapping;
 
-use Doctrine\ORM\ObjectManagerInterface;
-use Typesense\Bundle\ORM\CollectionFinder;
-use Typesense\Bundle\DBAL\Collections;
-use Typesense\Bundle\DBAL\Documents;
-use Typesense\Bundle\Transformer\DoctrineToTypesenseTransformer;
-
 class TypesenseMetadataInfo
 {
     /**

@@ -39,7 +39,7 @@ phpstan:
 	../../vendor/bin/phpstan analyse
 
 tests:
-	@echo "Not implemented yet."
+	docker compose -f docker-compose.test.yml run --rm test
 
 clean:
 	@$(RM) -rf composer.lock vendor assets/build assets/package-lock.json assets/yarn.lock

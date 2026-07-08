@@ -92,6 +92,7 @@ class Transaction
 
                 break;
 
+            default:
                 throw new \Exception('Unsupported action');
         }
 

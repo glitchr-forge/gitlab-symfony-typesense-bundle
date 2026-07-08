@@ -1,0 +1,28 @@
+services:
+  # Real Typesense server for the Integration/ suite. Ephemeral (tmpfs) data
+  # dir — every CI run starts from a clean collection-less instance, which
+  # is exactly what the Integration tests assume (they create/delete their
+  # own collections; nothing is expected to pre-exist).
+  typesense:
+    image: typesense/typesense:27.1
+    command: --data-dir /data --api-key=${TYPESENSE_KEY:-xyz} --enable-cors
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8108/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      typesense:
+        condition: service_healthy
+    environment:
+      TYPESENSE_URL: http://typesense:8108
+      TYPESENSE_KEY: ${TYPESENSE_KEY:-xyz}
+    volumes:
+      - ./var/coverage:/srv/typesense-bundle/var/coverage

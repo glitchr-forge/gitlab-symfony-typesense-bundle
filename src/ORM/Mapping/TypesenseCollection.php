@@ -103,7 +103,7 @@ class TypesenseCollection
             if (!$sr instanceof Query) {
                 throw new TypesenseException('searchRequests must be an array  of Request objects', 500);
             }
-            if (!$sr->hasParameter('collection')) {
+            if (!$sr->hasHeader('collection')) {
                 throw new TypesenseException('Request must have the key : `collection` in order to perform multiSearch', 500);
             }
             $searches[] = $sr->getHeaders();
