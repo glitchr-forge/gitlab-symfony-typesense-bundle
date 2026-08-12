@@ -32,7 +32,14 @@ class TransactionTest extends TestCase
         return [$collection, $documents, $metadata];
     }
 
-    public function testPersistConvertsTheObjectThenDeletesAndCreates(): void
+    /**
+     * PERSIST/UPDATE must use the server-side atomic upsert action rather
+     * than delete-then-create: two overlapping writes for the same id could
+     * both pass a since-deleted delete() and then race into create(),
+     * producing a Typesense 409 "document already exists" (this happened
+     * in production on 2026-07-12). upsert() has no such race.
+     */
+    public function testPersistConvertsTheObjectThenUpserts(): void
     {
         [$collection, $documents] = $this->makeCollectionWithDocuments();
 
@@ -41,31 +48,26 @@ class TransactionTest extends TestCase
         $transformer->method('convert')->willReturn($mock);
         $collection->method('transformer')->willReturn($transformer);
 
-        $documents->expects($this->once())->method('delete')->with('42');
-        $documents->expects($this->once())->method('create')->with($mock, []);
+        $documents->expects($this->never())->method('delete');
+        $documents->expects($this->once())->method('upsert')->with($mock, []);
 
         $transaction = new Transaction($collection, Transaction::PERSIST, (object) ['id' => 42, 'title' => 'Hello']);
         $transaction->commit();
     }
 
-    /**
-     * A pre-existing "not found" error on the delete-before-create step
-     * (there's nothing to delete the first time a document is indexed) is
-     * expected and swallowed — commit() must still proceed to create().
-     */
-    public function testPersistToleratesDeleteFailingBecauseNothingExistedYet(): void
+    public function testUpdateConvertsTheObjectThenUpserts(): void
     {
         [$collection, $documents] = $this->makeCollectionWithDocuments();
 
-        $mock = ['id' => 42];
+        $mock = ['id' => 42, 'title' => 'Hello'];
         $transformer = $this->createMock(AbstractTransformer::class);
         $transformer->method('convert')->willReturn($mock);
         $collection->method('transformer')->willReturn($transformer);
 
-        $documents->method('delete')->willThrowException(new \Typesense\Exceptions\ObjectNotFound());
-        $documents->expects($this->once())->method('create')->with($mock, []);
+        $documents->expects($this->never())->method('delete');
+        $documents->expects($this->once())->method('upsert')->with($mock, []);
 
-        $transaction = new Transaction($collection, Transaction::PERSIST, (object) ['id' => 42]);
+        $transaction = new Transaction($collection, Transaction::UPDATE, (object) ['id' => 42, 'title' => 'Hello']);
         $transaction->commit();
     }
 

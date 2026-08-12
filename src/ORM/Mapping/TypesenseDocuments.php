@@ -61,6 +61,23 @@ class TypesenseDocuments
         }
     }
 
+    public function upsert(array $data, array $options): ?array
+    {
+        if (!$this->connection?->isConnected()) {
+            throw new TypesenseException($this->connection->getStatus(), $this->connection->getStatusCode());
+        }
+
+        $collectionName = $this->metadata->getName();
+        $collection = $this->connection?->getCollections()[$collectionName];
+        $documents = $collection->documents;
+
+        try {
+            return $documents->upsert($data, $options);
+        } catch (TypesenseClientError|HttpClientException $e) {
+            throw new TypesenseException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
     public function update(array $data, array $options): ?array
     {
         if (!$this->connection?->isConnected()) {

@@ -80,10 +80,7 @@ class Transaction
         switch ($this->action) {
             case self::PERSIST:
             case self::UPDATE:
-                try { $this->collection->documents()->delete($this->id); }
-                catch (TypesenseException|ObjectNotFound $e) {}
-
-                $this->collection->documents()->create($this->mock, $this->options);
+                $this->collection->documents()->upsert($this->mock, $this->options);
                 break;
 
             case self::REMOVE:
